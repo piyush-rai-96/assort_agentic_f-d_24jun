@@ -16,117 +16,157 @@ import { panelSx, softSx } from "../styles/panelSx.js";
 const paneSx = { ...panelSx, padding: 0, overflow: "hidden" };
 
 const DEPT_FILTERS = ["All", "Wood", "Tile", "Laminate & Vinyl"];
-const DEPT_OPTIONS = DEPT_FILTERS.map((d) => ({ value: d, label: d }));
 const STORE_OPTIONS = FD_STORES.map((s) => ({ value: String(s.id), label: `${s.name} · ${s.region}` }));
 const DEPT_BADGE = { Wood: "warning", Tile: "success", "Laminate & Vinyl": "info" };
-const VEL_BADGE = { A: "success", B: "info", C: "warning", D: "error" };
+const VEL_BADGE  = { A: "success", B: "info", C: "warning", D: "error" };
 
-const NEW_PLR = newPlrSkus();
+const NEW_PLR     = newPlrSkus();
 const NEW_PLR_IDS = new Set(NEW_PLR.map((s) => s.sku));
-const MANDATORY = FD_SKUS.filter(isMandatory);
+const MANDATORY   = FD_SKUS.filter(isMandatory);
 
-/* ── One curation row: identity · stats · local-price · add/drop control ──── */
+/* ── Curation row ────────────────────────────────────────────────────────── */
 function CurationRow({ sku, assocRow, locked, decision, localPrice, onDecision, onPrice }) {
-  const isActive = !!assocRow;
+  const isActive  = !!assocRow;
   const menuPrice = assocRow ? assocRow.menuPrice : sku.price;
-  const r13 = assocRow ? assocRow.r13Sqft : 0;
-  const lp = localPrice != null ? localPrice : menuPrice;
-  const lpEdited = localPrice != null && localPrice !== menuPrice;
-  const cls = `sc-row${decision === "add" ? " is-add" : ""}${decision === "drop" ? " is-drop" : ""}`;
+  const r13       = assocRow ? assocRow.r13Sqft   : 0;
+  const lp        = localPrice != null ? localPrice : menuPrice;
+  const lpEdited  = localPrice != null && localPrice !== menuPrice;
+
+  const stateClass = decision === "add" ? " is-add" : decision === "drop" ? " is-drop" : "";
 
   return (
-    <Stack className={cls} direction="row" align="center" gap={3} wrap paddingX={4} paddingY={2}>
-      {/* Identity */}
-      <Stack direction="column" gap={1} flex="1 1 240px" style={{ minWidth: 0 }}>
-        <Stack direction="row" align="center" gap={1}>
-          <SkuSwatch sku={sku} size={24} />
-          <Text variant="caption" tone="strong">{sku.desc}</Text>
-        </Stack>
-        <Stack direction="row" gap={1} wrap align="center">
-          <Text variant="micro" tone="subtle" mono>{sku.sku}</Text>
-          {sku.tag ? <Badge variant="subtle" size="small" color="success" label={sku.tag} /> : null}
-          {sku.status === "Discontinued" ? <Badge variant="subtle" size="small" color="error" label="Disc." /> : null}
-          {!isActive && !locked ? <Badge variant="subtle" size="small" color="info" label="Not carried" /> : null}
-        </Stack>
-      </Stack>
+    <div className={`sc-row${stateClass}`}>
+      {/* Left: swatch + identity */}
+      <div className="sc-row-identity">
+        <SkuSwatch sku={sku} size={28} />
+        <div className="sc-row-meta">
+          <span className="sc-row-desc">{sku.desc}</span>
+          <div className="sc-row-sub">
+            <span className="sc-row-skuid">{sku.sku}</span>
+            <span className="sc-row-subdept">{sku.subDept}</span>
+            {sku.tag && <Badge variant="subtle" size="small" color="success" label={sku.tag} />}
+            {sku.status === "Discontinued" && <Badge variant="subtle" size="small" color="error" label="Disc." />}
+            {!isActive && !locked && <Badge variant="subtle" size="small" color="neutral" label="Not carried" />}
+          </div>
+        </div>
+      </div>
 
-      <Badge variant="subtle" size="small" color={DEPT_BADGE[sku.dept] || "default"} label={sku.dept} />
-      <Text variant="micro" tone="muted" style={{ width: 110, flexShrink: 0 }}>{sku.subDept}</Text>
-      <Text variant="micro" tone="muted" mono style={{ width: 60, flexShrink: 0 }}>{sku.size}</Text>
-      <Text variant="caption" tone="strong" mono style={{ width: 60, flexShrink: 0 }}>${menuPrice.toFixed(2)}</Text>
-      <Text
-        variant="caption"
-        mono
-        tone={r13 > 100 ? "success" : r13 > 50 ? "default" : "subtle"}
-        style={{ width: 70, flexShrink: 0, fontWeight: r13 > 100 ? 700 : 400 }}
-      >
-        {r13 ? `${Math.round(r13)} sqft` : "—"}
-      </Text>
+      {/* Middle: dept + size + prices + r13 */}
+      <div className="sc-row-stats">
+        <Badge variant="subtle" size="small" color={DEPT_BADGE[sku.dept] || "default"} label={sku.dept} />
+        <span className="sc-row-size">{sku.size}</span>
+        <span className="sc-row-price">${menuPrice.toFixed(2)}</span>
+        <span className={`sc-row-r13 ${r13 > 100 ? "sc-row-r13--strong" : r13 > 0 ? "" : "sc-row-r13--empty"}`}>
+          {r13 ? `${Math.round(r13)} sqft` : "—"}
+        </span>
+      </div>
 
-      {/* Local price override */}
-      <Stack direction="row" align="center" gap={1} style={{ width: 110, flexShrink: 0 }}>
-        <Text variant="micro" tone={lpEdited ? "info" : "subtle"}>$</Text>
-        <div style={{ width: 84 }}>
-          <Input
+      {/* Right: local price override + decision */}
+      <div className="sc-row-actions">
+        <div className={`sc-price-field${lpEdited ? " sc-price-field--edited" : ""}`}>
+          <span className="sc-price-prefix">$</span>
+          <input
+            className="sc-price-input"
             type="number"
             step="0.01"
-            size="small"
             value={lp.toFixed(2)}
+            aria-label={`Local price for ${sku.sku}`}
             onChange={(e) => onPrice(parseFloat(e.target.value))}
-            fullWidth
           />
+          {lpEdited && <span className="sc-price-edited-dot" title="Price overridden" />}
         </div>
-      </Stack>
 
-      {/* Decision control */}
-      <Stack align="center" justify="center" style={{ width: 110, flexShrink: 0 }}>
         {locked ? (
-          <Text variant="caption" tone="muted" title="Mandatory — cannot change">🔒</Text>
+          <span className="sc-locked-badge" title="Mandatory — cannot change">Locked</span>
         ) : isActive ? (
-          <Button
-            variant={decision === "drop" ? "primary" : "secondary"}
-            type="destructive"
-            size="small"
+          <button
+            className={`sc-decision-btn sc-decision-btn--drop${decision === "drop" ? " active" : ""}`}
             onClick={() => onDecision("drop")}
-            title="Drop from assortment"
           >
-            {decision === "drop" ? "− Dropped" : "− Drop"}
-          </Button>
+            {decision === "drop" ? "Dropped" : "Drop"}
+          </button>
         ) : (
-          <Button
-            variant={decision === "add" ? "primary" : "secondary"}
-            size="small"
+          <button
+            className={`sc-decision-btn sc-decision-btn--add${decision === "add" ? " active" : ""}`}
             onClick={() => onDecision("add")}
-            title="Add to assortment"
           >
-            {decision === "add" ? "+ Added" : "+ Add"}
-          </Button>
+            {decision === "add" ? "Added" : "+ Add"}
+          </button>
         )}
-      </Stack>
-    </Stack>
+      </div>
+    </div>
   );
 }
 
-/* ── Section header + row container ───────────────────────────────────────── */
-function SCSection({ icon, title, count, sub, tone, badgeColor, scroll, children }) {
+/* ── Section ─────────────────────────────────────────────────────────────── */
+const SECTION_META = {
+  mandatory:    { label: "Mandatory — Core / BG",   indicator: "locked",  sub: "Cannot be added or removed from any store" },
+  newPlr:       { label: "New PLR Items",            indicator: "new",     sub: "Not yet in any store — add to carry this season" },
+  clusterLocked:{ label: "Cluster Assortment",       indicator: "cluster", sub: "Set in Regional Review — locked for this cluster" },
+  existingFree: { label: "Existing Assortment",      indicator: "existing",sub: "Currently carried — drop to remove this season" },
+  available:    { label: "Available to Add",         indicator: "add",     sub: "Not in your store — add to carry this season" },
+};
+
+function SCSection({ sectionKey, count, scroll, children }) {
+  const meta = SECTION_META[sectionKey] || {};
   return (
-    <Stack direction="column" gap={2}>
-      <Stack direction="row" align="center" gap={2} wrap>
-        <Text variant="body-strong" tone={tone}>{icon} {title}</Text>
-        <Badge variant="subtle" size="small" color={badgeColor} label={`${count}`} />
-        {sub ? <Text variant="caption" tone="muted">{sub}</Text> : null}
-      </Stack>
+    <div className="sc-section">
+      <div className="sc-section-header">
+        <span className={`sc-section-indicator sc-section-indicator--${meta.indicator}`} aria-hidden="true" />
+        <span className="sc-section-title">{meta.label}</span>
+        <span className="sc-section-count">{count}</span>
+        {meta.sub && <span className="sc-section-sub">{meta.sub}</span>}
+      </div>
       <Card sx={paneSx}>
         <div className={scroll ? "sc-scroll" : undefined}>{children}</div>
       </Card>
-    </Stack>
+    </div>
   );
 }
 
+/* ── OTB Banner ──────────────────────────────────────────────────────────── */
+function OtbBanner({ storeId, store, decisions, lists }) {
+  const allRows = [...(lists.existingFree || []), ...(lists.available || [])];
+  const storeDecisions = {};
+  Object.entries(decisions).forEach(([k, v]) => {
+    const [sid, skuId] = k.split(":");
+    if (parseInt(sid, 10) === storeId) storeDecisions[skuId] = v;
+  });
+  const otb  = otbStoreConsumed(storeId, storeDecisions, allRows.map((r) => ({ sku: r.sku.sku, price: r.sku.price })));
+  const over = otb.net < 0;
+  const pct  = Math.min(100, Math.round(otb.pct));
+
+  return (
+    <div className={`sc-otb${over ? " sc-otb--over" : ""}`}>
+      <div className="sc-otb-left">
+        <span className="sc-otb-title">Location OTB Budget</span>
+        <span className="sc-otb-band">({store.velocity}-band)</span>
+      </div>
+      <div className="sc-otb-bar-wrap">
+        <div className="sc-otb-bar-track">
+          <div className="sc-otb-bar-fill" style={{ width: `${pct}%`, background: over ? "var(--color-error)" : "var(--color-success)" }} />
+        </div>
+        <div className="sc-otb-bar-labels">
+          <span>$0</span>
+          <span>{fmtCurrency(otb.budget)}</span>
+        </div>
+      </div>
+      <div className="sc-otb-right">
+        {over
+          ? <span className="sc-otb-stat sc-otb-stat--over">{fmtCurrency(Math.abs(otb.net))} over budget</span>
+          : <span className="sc-otb-stat">{fmtCurrency(otb.adds)} adds · <strong>{fmtCurrency(otb.budget - otb.adds + otb.drops)} remaining</strong></span>
+        }
+        <span className="sc-otb-budget-label">Budget: {fmtCurrency(otb.budget)}</span>
+      </div>
+    </div>
+  );
+}
+
+/* ── Main view ───────────────────────────────────────────────────────────── */
 export default function StoreCuration({ onNavigate, user }) {
   const defaultStore = user?.storeId || 101;
-  const [storeId, setStoreId] = useState(defaultStore);
-  const [view, setView] = useState("form");
+  const [storeId, setStoreId]     = useState(defaultStore);
+  const [view, setView]           = useState("form");
   const [deptFilter, setDeptFilter] = useState("All");
   const [decisions, setDecisions] = useState({});
   const [localPrices, setLocalPrices] = useState({});
@@ -137,47 +177,33 @@ export default function StoreCuration({ onNavigate, user }) {
     setDecisions((prev) => {
       const k = key(storeId, skuId);
       const next = { ...prev };
-      if (next[k] === val) delete next[k];
-      else next[k] = val;
+      if (next[k] === val) delete next[k]; else next[k] = val;
       return next;
     });
   const setPrice = (skuId, val) =>
     setLocalPrices((prev) => ({ ...prev, [key(storeId, skuId)]: Number.isNaN(val) ? undefined : val }));
 
   const store = FD_STORES.find((s) => s.id === storeId) || FD_STORES[0];
-  const byDeptSkus = (arr) => (deptFilter === "All" ? arr : arr.filter((s) => s.dept === deptFilter));
 
-  /* Per-store tiered SKU lists. */
   const lists = useMemo(() => {
-    const existing = storeUniqueRows(storeId);
-    const existIds = new Set(existing.map((r) => r.sku));
+    const existing  = storeUniqueRows(storeId);
+    const existIds  = new Set(existing.map((r) => r.sku));
     const clusterLocked = clusterLockedIds(storeId);
-    const inactive = FD_SKUS.filter((s) => !existIds.has(s.sku) && !NEW_PLR_IDS.has(s.sku));
-
-    const existingNonCore = existing.filter((r) => {
-      const s = FD_SKUS.find((x) => x.sku === r.sku);
-      return s && !isMandatory(s);
-    });
-
+    const inactive  = FD_SKUS.filter((s) => !existIds.has(s.sku) && !NEW_PLR_IDS.has(s.sku));
+    const existingNonCore = existing.filter((r) => { const s = FD_SKUS.find((x) => x.sku === r.sku); return s && !isMandatory(s); });
     return {
       existing,
-      mandatory: MANDATORY.map((sku) => ({ sku, assocRow: existing.find((r) => r.sku === sku.sku) || null, locked: true })),
-      newPlr: NEW_PLR.map((sku) => ({ sku, assocRow: null, locked: false })),
-      clusterLocked: existingNonCore
-        .filter((r) => clusterLocked.has(r.sku))
-        .map((r) => ({ sku: FD_SKUS.find((s) => s.sku === r.sku), assocRow: r, locked: true }))
-        .filter((x) => x.sku),
-      existingFree: existingNonCore
-        .filter((r) => !clusterLocked.has(r.sku))
-        .map((r) => ({ sku: FD_SKUS.find((s) => s.sku === r.sku), assocRow: r, locked: false }))
-        .filter((x) => x.sku),
-      available: inactive.filter((s) => !isMandatory(s)).map((sku) => ({ sku, assocRow: null, locked: false })),
+      mandatory:     MANDATORY.map((sku) => ({ sku, assocRow: existing.find((r) => r.sku === sku.sku) || null, locked: true })),
+      newPlr:        NEW_PLR.map((sku) => ({ sku, assocRow: null, locked: false })),
+      clusterLocked: existingNonCore.filter((r) => clusterLocked.has(r.sku)).map((r) => ({ sku: FD_SKUS.find((s) => s.sku === r.sku), assocRow: r, locked: true })).filter((x) => x.sku),
+      existingFree:  existingNonCore.filter((r) => !clusterLocked.has(r.sku)).map((r) => ({ sku: FD_SKUS.find((s) => s.sku === r.sku), assocRow: r, locked: false })).filter((x) => x.sku),
+      available:     inactive.filter((s) => !isMandatory(s)).map((sku) => ({ sku, assocRow: null, locked: false })),
     };
   }, [storeId]);
 
-  const filterRows = (rows) => (deptFilter === "All" ? rows : rows.filter((r) => r.sku.dept === deptFilter));
+  const filterRows = (rows) => deptFilter === "All" ? rows : rows.filter((r) => r.sku.dept === deptFilter);
 
-  const totalAdds = Object.entries(decisions).filter(([k, v]) => k.startsWith(`${storeId}:`) && v === "add").length;
+  const totalAdds  = Object.entries(decisions).filter(([k, v]) => k.startsWith(`${storeId}:`) && v === "add").length;
   const totalDrops = Object.entries(decisions).filter(([k, v]) => k.startsWith(`${storeId}:`) && v === "drop").length;
 
   const renderRow = (r) => (
@@ -193,156 +219,112 @@ export default function StoreCuration({ onNavigate, user }) {
     />
   );
 
-  /* Shared header (title + view toggle). */
   const ViewToggle = (
-    <Stack direction="row" gap={2} wrap>
-      <Button variant={view === "form" ? "primary" : "secondary"} size="small" onClick={() => setView("form")}>Store Form</Button>
+    <Stack direction="row" gap={2}>
+      <Button variant={view === "form"    ? "primary" : "secondary"} size="small" onClick={() => setView("form")}>Store Form</Button>
       <Button variant={view === "summary" ? "primary" : "secondary"} size="small" onClick={() => setView("summary")}>Summary Roll-up</Button>
-    </Stack>
-  );
-
-  const DeptFilterButtons = (
-    <Stack direction="row" gap={2} wrap align="center" style={{ paddingTop: "var(--sp-3)", borderTop: "1px solid var(--color-border)" }}>
-      <Text variant="micro" tone="subtle">Department</Text>
-      {DEPT_FILTERS.map((d) => (
-        <Button key={d} variant={deptFilter === d ? "primary" : "secondary"} size="small" onClick={() => setDeptFilter(d)}>{d}</Button>
-      ))}
     </Stack>
   );
 
   if (view === "summary") {
     return (
       <SummaryRollup
-        decisions={decisions}
-        localPrices={localPrices}
-        deptFilter={deptFilter}
+        decisions={decisions} localPrices={localPrices} deptFilter={deptFilter}
         viewToggle={ViewToggle}
-        deptButtons={DeptFilterButtons}
         onEdit={(sid) => { setStoreId(sid); setView("form"); }}
         onOpenForm={() => setView("form")}
       />
     );
   }
 
-  const mandatory = filterRows(lists.mandatory);
-  const newPlr = filterRows(lists.newPlr);
+  const mandatory     = filterRows(lists.mandatory);
+  const newPlr        = filterRows(lists.newPlr);
   const clusterLocked = filterRows(lists.clusterLocked);
-  const existingFree = filterRows(lists.existingFree);
-  const available = filterRows(lists.available);
+  const existingFree  = filterRows(lists.existingFree);
+  const available     = filterRows(lists.available);
 
   return (
     <Stack direction="column" gap={4}>
-      {/* ── Header ─────────────────────────────────────────────────────────── */}
+
+      {/* ── Header card ─────────────────────────────────────────────────── */}
       <Card sx={panelSx}>
-        <Stack direction="column" gap={3}>
-          <Stack direction="row" justify="space-between" align="center" gap={4} wrap>
-            <Stack direction="column" gap={1} flex="1 1 auto" style={{ minWidth: 0 }}>
-              <Stack direction="row" align="center" gap={2}>
-                <Text variant="title">Store Curation</Text>
-                {user?.id === "store" ? (
-                  <span className="sc-persona-badge sc-persona-badge--store">My Store View</span>
-                ) : (
-                  <span className="sc-persona-badge sc-persona-badge--corp">All Stores</span>
-                )}
-              </Stack>
-              <Text variant="caption" tone="muted">Add / Drop decisions per store · SS 2026 PLR live</Text>
-            </Stack>
+        {/* Top row */}
+        <div className="sc-header-top">
+          <div className="sc-header-title-block">
+            <div className="sc-header-title-row">
+              <h1 className="sc-title">Store Curation</h1>
+              <span className={`sc-persona-badge ${user?.id === "store" ? "sc-persona-badge--store" : "sc-persona-badge--corp"}`}>
+                {user?.id === "store" ? "My Store View" : "All Stores"}
+              </span>
+            </div>
+            <p className="sc-subtitle">Add / Drop decisions per store · SS 2026 PLR live</p>
+          </div>
+          <div className="sc-header-controls">
             {ViewToggle}
-          </Stack>
-          <Stack direction="row" gap={4} align="flex-end" wrap justify="space-between">
-            <Stack direction="row" gap={3} align="flex-end" wrap>
-              <FdSelect label="Store" value={String(storeId)} options={STORE_OPTIONS} onChange={(v) => setStoreId(parseInt(v, 10))} width={260} isWithSearch />
-              <Stack direction="column" gap={1}>
-                <Text variant="micro" tone="subtle">Status</Text>
-                <Stack direction="row" gap={2} align="center">
-                  <Badge variant="subtle" size="small" color={VEL_BADGE[store.velocity] || "default"} label={`Vel ${store.velocity}`} />
-                  <Text variant="caption" tone="muted">{store.region} · DC{store.dc}</Text>
-                </Stack>
-              </Stack>
-            </Stack>
-            <Stack direction="row" gap={2} align="center">
-              <Stack direction="column" align="center" paddingX={3} paddingY={2} style={{ background: "var(--color-error-soft)", borderRadius: "var(--r2)" }}>
-                <Text variant="body-strong" tone="error">{totalDrops}</Text>
-                <Text variant="micro" tone="muted">Drops</Text>
-              </Stack>
-              <Stack direction="column" align="center" paddingX={3} paddingY={2} style={{ background: "var(--color-success-soft)", borderRadius: "var(--r2)" }}>
-                <Text variant="body-strong" tone="success">{totalAdds}</Text>
-                <Text variant="micro" tone="muted">Adds</Text>
-              </Stack>
-            </Stack>
-          </Stack>
-          {DeptFilterButtons}
-        </Stack>
+          </div>
+        </div>
+
+        {/* Store selector + status + counters */}
+        <div className="sc-header-middle">
+          <div className="sc-store-selector">
+            <FdSelect label="Store" value={String(storeId)} options={STORE_OPTIONS} onChange={(v) => setStoreId(parseInt(v, 10))} width={280} isWithSearch />
+          </div>
+          <div className="sc-store-status">
+            <span className="sc-status-label">Status</span>
+            <Badge variant="subtle" size="small" color={VEL_BADGE[store.velocity] || "default"} label={`Vel ${store.velocity}`} />
+            <span className="sc-store-region">{store.region} · DC{store.dc}</span>
+          </div>
+          <div className="sc-decision-counters">
+            <div className="sc-counter sc-counter--drop">
+              <span className="sc-counter-num">{totalDrops}</span>
+              <span className="sc-counter-lbl">Drops</span>
+            </div>
+            <div className="sc-counter sc-counter--add">
+              <span className="sc-counter-num">{totalAdds}</span>
+              <span className="sc-counter-lbl">Adds</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Dept filter */}
+        <div className="sc-dept-filter">
+          <span className="sc-dept-filter-label">Department</span>
+          <div className="sc-dept-tabs">
+            {DEPT_FILTERS.map((d) => (
+              <button
+                key={d}
+                className={`sc-dept-tab${deptFilter === d ? " active" : ""}`}
+                onClick={() => setDeptFilter(d)}
+              >
+                {d}
+              </button>
+            ))}
+          </div>
+        </div>
       </Card>
 
-      {/* ── OTB Banner ─────────────────────────────────────────────────────── */}
-      {(() => {
-        const allRows = [...(lists.existingFree || []), ...(lists.available || [])].map((r) => ({ sku: r.sku.sku, price: r.sku.price }));
-        const storeDecisions = {};
-        Object.entries(decisions).forEach(([k, v]) => {
-          const parts = k.split(":");
-          if (parseInt(parts[0], 10) === storeId) storeDecisions[parts[1]] = v;
-        });
-        const otb = otbStoreConsumed(storeId, storeDecisions, allRows.map((r) => ({ sku: r.sku, price: r.price })));
-        const over = otb.net < 0;
-        return (
-          <div className={`sc-otb-banner ${over ? "sc-otb-banner--over" : ""}`}>
-            <span className="sc-otb-icon">{over ? "⚠️" : "💰"}</span>
-            <span className="sc-otb-label">Location OTB Budget ({store.velocity}-band)</span>
-            <div className="sc-otb-bar-wrap">
-              <div className="sc-otb-bar-track">
-                <div className="sc-otb-bar-fill" style={{ width: `${Math.min(100, otb.pct)}%`, background: over ? "var(--color-error)" : "var(--color-success)" }} />
-              </div>
-            </div>
-            <span className="sc-otb-stats">
-              {over
-                ? <span className="sc-otb-over">{fmtCurrency(Math.abs(otb.net))} over budget</span>
-                : <span>{fmtCurrency(otb.adds)} adds · {fmtCurrency(otb.budget - otb.adds + otb.drops)} remaining</span>
-              }
-            </span>
-            <span className="sc-otb-budget">Budget: {fmtCurrency(otb.budget)}</span>
-          </div>
-        );
-      })()}
+      {/* ── OTB Budget bar ──────────────────────────────────────────────── */}
+      <OtbBanner storeId={storeId} store={store} decisions={decisions} lists={lists} />
 
-      {/* ── Tiered sections ────────────────────────────────────────────────── */}
-      {mandatory.length ? (
-        <SCSection icon="🔒" title="Mandatory — Core / BG" count={mandatory.length} tone="success" badgeColor="success" sub="Cannot be added or removed from any store">
-          {mandatory.map(renderRow)}
-        </SCSection>
-      ) : null}
+      {/* ── Column header row ───────────────────────────────────────────── */}
+      <div className="sc-col-header">
+        <span className="sc-col-identity">SKU / Description</span>
+        <span className="sc-col-stats">Dept · Sub-dept · Size · Price · R13</span>
+        <span className="sc-col-actions">Local Price · Decision</span>
+      </div>
 
-      {newPlr.length ? (
-        <SCSection icon="✨" title="New PLR Items" count={newPlr.length} tone="info" badgeColor="info" sub="Not yet in any store — add to carry this season">
-          {newPlr.map(renderRow)}
-        </SCSection>
-      ) : null}
+      {/* ── Tiered sections ─────────────────────────────────────────────── */}
+      {mandatory.length     ? <SCSection sectionKey="mandatory"     count={mandatory.length}>    {mandatory.map(renderRow)}</SCSection>     : null}
+      {newPlr.length        ? <SCSection sectionKey="newPlr"        count={newPlr.length}>       {newPlr.map(renderRow)}</SCSection>        : null}
+      {clusterLocked.length ? <SCSection sectionKey="clusterLocked" count={clusterLocked.length}>{clusterLocked.map(renderRow)}</SCSection> : null}
+      {existingFree.length  ? <SCSection sectionKey="existingFree"  count={existingFree.length} scroll>{existingFree.map(renderRow)}</SCSection>  : null}
+      {available.length     ? <SCSection sectionKey="available"     count={available.length}    scroll>{available.map(renderRow)}</SCSection>     : null}
 
-      {clusterLocked.length ? (
-        <SCSection icon="🗂" title="Cluster Assortment" count={clusterLocked.length} tone="teal" badgeColor="info" sub="Set in Regional Review — locked for this cluster · cannot drop">
-          {clusterLocked.map(renderRow)}
-        </SCSection>
-      ) : null}
-
-      {existingFree.length ? (
-        <SCSection icon="📦" title="Existing Assortment" count={existingFree.length} tone="warning" badgeColor="warning" sub="Currently carried — drop to remove this season" scroll>
-          {existingFree.map(renderRow)}
-        </SCSection>
-      ) : null}
-
-      {available.length ? (
-        <SCSection icon="➕" title="Available to Add" count={available.length} tone="accent" badgeColor="default" sub="Not in your store — add to carry" scroll>
-          {available.map(renderRow)}
-        </SCSection>
-      ) : null}
-
-      {/* ── Submit bar ─────────────────────────────────────────────────────── */}
+      {/* ── Submit bar ──────────────────────────────────────────────────── */}
+      {submitted && (
+        <Alert severity="success" title="Decisions submitted successfully" subtleBackground onClose={() => setSubmitted(false)} />
+      )}
       <Card sx={panelSx}>
-        {submitted && (
-          <div style={{ marginBottom: "var(--sp-3)" }}>
-            <Alert severity="success" title="Decisions submitted successfully" subtleBackground onClose={() => setSubmitted(false)} />
-          </div>
-        )}
         <Stack direction="row" align="center" justify="space-between" gap={3} wrap>
           <Text variant="caption" tone="muted">{totalAdds} adds · {totalDrops} drops · review in Summary Roll-up before submitting</Text>
           <Stack direction="row" gap={2}>
@@ -355,86 +337,78 @@ export default function StoreCuration({ onNavigate, user }) {
   );
 }
 
-/* ════════════ SUMMARY ROLL-UP VIEW ════════════ */
-function SummaryRollup({ decisions, localPrices, deptFilter, viewToggle, deptButtons, onEdit, onOpenForm }) {
+/* ════════════ SUMMARY ROLL-UP VIEW ════════════════════════════════════════ */
+function SummaryRollup({ decisions, localPrices, deptFilter, viewToggle, onEdit, onOpenForm }) {
   const relevantIds = useMemo(
     () => new Set((deptFilter === "All" ? FD_SKUS : FD_SKUS.filter((s) => s.dept === deptFilter)).map((s) => s.sku)),
     [deptFilter]
   );
-
-  const decKeys = Object.keys(decisions).filter((k) => relevantIds.has(parseInt(k.split(":")[1], 10)));
-  const regions = [...new Set(FD_STORES.map((s) => s.region))].sort();
+  const decKeys   = Object.keys(decisions).filter((k) => relevantIds.has(parseInt(k.split(":")[1], 10)));
+  const regions   = [...new Set(FD_STORES.map((s) => s.region))].sort();
   const totalAdds = decKeys.filter((k) => decisions[k] === "add").length;
-  const totalDrops = decKeys.filter((k) => decisions[k] === "drop").length;
-  const storeCount = new Set(decKeys.map((k) => k.split(":")[0])).size;
+  const totalDrops= decKeys.filter((k) => decisions[k] === "drop").length;
+  const storeCount= new Set(decKeys.map((k) => k.split(":")[0])).size;
 
   return (
     <Stack direction="column" gap={4}>
       <Card sx={panelSx}>
-        <Stack direction="column" gap={3}>
-          <Stack direction="row" justify="space-between" align="center" gap={4} wrap>
-            <Stack direction="column" gap={1} flex="1 1 auto" style={{ minWidth: 0 }}>
-              <Text variant="title">Add / Drop Summary</Text>
-              <Text variant="caption" tone="muted">Roll-up by region and store · validate before submission</Text>
-            </Stack>
-            {viewToggle}
+        <Stack direction="row" justify="space-between" align="center" gap={4} wrap>
+          <Stack direction="column" gap={1} flex="1 1 auto" style={{ minWidth: 0 }}>
+            <Text variant="title">Add / Drop Summary</Text>
+            <Text variant="caption" tone="muted">Roll-up by region and store · validate before submission</Text>
           </Stack>
-          {deptButtons}
+          {viewToggle}
         </Stack>
       </Card>
 
       {!decKeys.length ? (
         <Card sx={softSx}>
           <Stack direction="column" gap={3} align="center" paddingY={5}>
-            <EmptyState
-              heading="No decisions yet"
-              description="Go to the Store Form and use + / − to make add/drop decisions per store."
-            />
+            <EmptyState heading="No decisions yet" description="Go to the Store Form and use + / − to make add/drop decisions per store." />
             <Button variant="primary" size="medium" onClick={onOpenForm}>Open Store Form →</Button>
           </Stack>
         </Card>
       ) : (
         <>
           {regions.map((region) => {
-            const regionStores = FD_STORES.filter((s) => s.region === region);
+            const regionStores   = FD_STORES.filter((s) => s.region === region);
             const storesWithDecs = regionStores.filter((s) => decKeys.some((k) => k.startsWith(`${s.id}:`)));
             if (!storesWithDecs.length) return null;
-
             return (
               <Stack key={region} direction="column" gap={2}>
                 <Text variant="overline" tone="muted">{region}</Text>
                 {storesWithDecs.map((s) => {
                   const storeDecKeys = decKeys.filter((k) => k.startsWith(`${s.id}:`));
-                  const adds = storeDecKeys.filter((k) => decisions[k] === "add").length;
+                  const adds  = storeDecKeys.filter((k) => decisions[k] === "add").length;
                   const drops = storeDecKeys.filter((k) => decisions[k] === "drop").length;
                   return (
                     <Card key={s.id} sx={paneSx}>
                       <Stack direction="row" align="center" gap={3} wrap paddingX={4} paddingY={2} style={{ background: "var(--color-surface-alt)", borderBottom: "1px solid var(--color-border)" }}>
                         <Text variant="body-strong" tone="strong" style={{ flex: "1 1 auto", minWidth: 0 }}>{s.name}</Text>
                         <Badge variant="subtle" size="small" color="success" label={`+${adds} adds`} />
-                        <Badge variant="subtle" size="small" color="error" label={`−${drops} drops`} />
+                        <Badge variant="subtle" size="small" color="error"   label={`−${drops} drops`} />
                         <Button variant="tertiary" size="small" onClick={() => onEdit(s.id)}>Edit →</Button>
                       </Stack>
                       {storeDecKeys.map((k) => {
                         const skuId = parseInt(k.split(":")[1], 10);
-                        const sku = FD_SKUS.find((x) => x.sku === skuId);
+                        const sku   = FD_SKUS.find((x) => x.sku === skuId);
                         if (!sku) return null;
-                        const dec = decisions[k];
+                        const dec      = decisions[k];
                         const lpOverride = localPrices[k];
-                        const lp = lpOverride != null ? lpOverride : sku.price;
+                        const lp       = lpOverride != null ? lpOverride : sku.price;
                         const lpEdited = lpOverride != null && lpOverride !== sku.price;
                         return (
-                          <Stack key={k} className={`sc-row ${dec === "drop" ? "is-drop" : "is-add"}`} direction="row" align="center" gap={3} wrap paddingX={4} paddingY={2}>
-                            <Text variant="body-strong" tone={dec === "drop" ? "error" : "success"} style={{ width: 20, flexShrink: 0 }}>{dec === "drop" ? "−" : "+"}</Text>
-                            <Stack direction="column" gap={1} flex="1 1 220px" style={{ minWidth: 0 }}>
+                          <div key={k} className={`sc-row ${dec === "drop" ? "is-drop" : "is-add"}`} style={{ padding: "var(--sp-2) var(--sp-4)", display: "flex", alignItems: "center", gap: "var(--sp-3)", flexWrap: "wrap" }}>
+                            <span style={{ fontWeight: 800, fontSize: 16, color: dec === "drop" ? color.error : color.success, width: 20, flexShrink: 0 }}>{dec === "drop" ? "−" : "+"}</span>
+                            <div style={{ flex: "1 1 220px", minWidth: 0 }}>
                               <Text variant="caption" tone="strong">{sku.desc}</Text>
                               <Text variant="micro" tone="subtle" mono>{sku.sku} · {sku.vsn}</Text>
-                            </Stack>
+                            </div>
                             <Badge variant="subtle" size="small" color={DEPT_BADGE[sku.dept] || "default"} label={sku.dept} />
                             <Text variant="micro" tone="muted" style={{ width: 110, flexShrink: 0 }}>{sku.subDept}</Text>
                             <Text variant="caption" tone="strong" mono style={{ width: 60, flexShrink: 0 }}>${sku.price.toFixed(2)}</Text>
                             <Text variant="caption" mono tone={lpEdited ? "info" : "muted"} style={{ width: 90, flexShrink: 0 }}>${lp.toFixed(2)}{lpEdited ? " ✎" : ""}</Text>
-                          </Stack>
+                          </div>
                         );
                       })}
                     </Card>
@@ -449,7 +423,7 @@ function SummaryRollup({ decisions, localPrices, deptFilter, viewToggle, deptBut
               <Text variant="caption" tone="strong">
                 {totalAdds} adds · {totalDrops} drops across {storeCount} {storeCount === 1 ? "store" : "stores"}
               </Text>
-              <Button variant="primary" size="medium" onClick={() => alert("Assortment submitted to OMS. Feedback capture begins at publish (Oct 1).")}>Validate &amp; Submit all →</Button>
+              <Button variant="primary" size="medium" onClick={() => alert("Assortment submitted to OMS.")}>Validate &amp; Submit all →</Button>
             </Stack>
           </Card>
         </>
