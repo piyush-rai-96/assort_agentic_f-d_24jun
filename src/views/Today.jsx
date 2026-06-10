@@ -121,7 +121,7 @@ export default function Today({ onNavigate, user: userProp }) {
       <Stack direction="row" justify="space-between" align="center" gap={4} wrap>
         <Stack direction="column" gap={1}>
           <Text variant="display">
-            {model.greeting}, {model.firstName} 👋
+            {model.greeting}, {model.firstName}
           </Text>
           <Text variant="caption" tone="muted">
             Floor &amp; Decor · {user?.role || "Assortment Planning"} · SS 2026
@@ -129,10 +129,12 @@ export default function Today({ onNavigate, user: userProp }) {
         </Stack>
         <Stack direction="row" align="center" gap={2} wrap>
           <button type="button" className="today-header-pill today-header-pill--intel" onClick={() => go("intel")}>
-            📡 {model.unreadIntel} intel signals
+            <span className="today-pill-dot" />
+            {model.unreadIntel} Intel Signals
           </button>
           <button type="button" className="today-header-pill today-header-pill--plans" onClick={() => go("workspace")}>
-            📋 {model.activePlans} active plans
+            <span className="today-pill-dot" />
+            {model.activePlans} Active Plans
           </button>
           <Badge variant="subtle" color="warning" label="Sep 20 deadline" />
         </Stack>

@@ -33,12 +33,30 @@
 
 /* ── Header pills ────────────────────────────────────────────────────────── */
 .today-header-pill {
+  display: inline-flex; align-items: center; gap: var(--sp-2);
   padding: var(--sp-1) var(--sp-3); border-radius: var(--r); font-size: var(--fs-caption);
   font-weight: var(--fw-bold); cursor: pointer; border: 1px solid; transition: opacity .12s;
+  font-family: inherit;
 }
 .today-header-pill:hover { opacity: .8; }
 .today-header-pill--intel  { background: var(--color-info-soft); color: var(--color-info); border-color: var(--color-info-border); }
 .today-header-pill--plans  { background: var(--color-primary-soft); color: var(--color-primary); border-color: var(--color-border); }
+
+/* Animated signal dot inside header pills */
+.today-pill-dot {
+  width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; display: inline-block;
+}
+.today-header-pill--intel .today-pill-dot {
+  background: var(--color-info);
+  animation: pill-pulse 2s ease-in-out infinite;
+}
+.today-header-pill--plans .today-pill-dot {
+  background: var(--color-primary);
+}
+@keyframes pill-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
 
 /* ── Persona context banner ──────────────────────────────────────────────── */
 .today-persona-banner {
