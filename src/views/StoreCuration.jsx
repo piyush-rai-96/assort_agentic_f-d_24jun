@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { Card, Button, Badge, Input, EmptyState } from "impact-ui";
+import { Card, Button, Badge, Input, EmptyState, Alert } from "impact-ui";
 import FdSelect from "../components/FdSelect.jsx";
 import Text from "../components/Text.jsx";
 import Stack from "../components/Stack.jsx";
@@ -134,6 +134,7 @@ export default function StoreCuration({ onNavigate }) {
   const [deptFilter, setDeptFilter] = useState("All");
   const [decisions, setDecisions] = useState({});
   const [localPrices, setLocalPrices] = useState({});
+  const [submitted, setSubmitted] = useState(false);
 
   const key = (sid, skuId) => `${sid}:${skuId}`;
   const setDecision = (skuId, val) =>
@@ -198,14 +199,14 @@ export default function StoreCuration({ onNavigate }) {
 
   /* Shared header (title + view toggle). */
   const ViewToggle = (
-    <Stack direction="row" gap={2}>
+    <Stack direction="row" gap={2} wrap>
       <Button variant={view === "form" ? "primary" : "secondary"} size="small" onClick={() => setView("form")}>Store Form</Button>
       <Button variant={view === "summary" ? "primary" : "secondary"} size="small" onClick={() => setView("summary")}>Summary Roll-up</Button>
     </Stack>
   );
 
   const DeptFilterButtons = (
-    <Stack direction="row" gap={2} wrap align="center">
+    <Stack direction="row" gap={2} wrap align="center" style={{ paddingTop: "var(--sp-3)", borderTop: "1px solid var(--color-border)" }}>
       <Text variant="micro" tone="subtle">Department</Text>
       {DEPT_FILTERS.map((d) => (
         <Button key={d} variant={deptFilter === d ? "primary" : "secondary"} size="small" onClick={() => setDeptFilter(d)}>{d}</Button>
@@ -304,11 +305,16 @@ export default function StoreCuration({ onNavigate }) {
 
       {/* ── Submit bar ─────────────────────────────────────────────────────── */}
       <Card sx={panelSx}>
+        {submitted && (
+          <div style={{ marginBottom: "var(--sp-3)" }}>
+            <Alert severity="success" title="Decisions submitted successfully" subtleBackground onClose={() => setSubmitted(false)} />
+          </div>
+        )}
         <Stack direction="row" align="center" justify="space-between" gap={3} wrap>
           <Text variant="caption" tone="muted">{totalAdds} adds · {totalDrops} drops · review in Summary Roll-up before submitting</Text>
           <Stack direction="row" gap={2}>
             <Button variant="secondary" size="medium" onClick={() => setView("summary")}>View Summary →</Button>
-            <Button variant="primary" size="medium">Submit decisions</Button>
+            <Button variant="primary" size="medium" onClick={() => setSubmitted(true)}>Submit decisions</Button>
           </Stack>
         </Stack>
       </Card>
@@ -348,8 +354,8 @@ function SummaryRollup({ decisions, localPrices, deptFilter, viewToggle, deptBut
         <Card sx={softSx}>
           <Stack direction="column" gap={3} align="center" paddingY={5}>
             <EmptyState
-              title="No decisions yet"
-              subText="Go to the Store Form and use + / − to make add/drop decisions per store."
+              heading="No decisions yet"
+              description="Go to the Store Form and use + / − to make add/drop decisions per store."
             />
             <Button variant="primary" size="medium" onClick={onOpenForm}>Open Store Form →</Button>
           </Stack>
@@ -410,7 +416,7 @@ function SummaryRollup({ decisions, localPrices, deptFilter, viewToggle, deptBut
               <Text variant="caption" tone="strong">
                 {totalAdds} adds · {totalDrops} drops across {storeCount} {storeCount === 1 ? "store" : "stores"}
               </Text>
-              <Button variant="primary" size="medium">Validate &amp; Submit all →</Button>
+              <Button variant="primary" size="medium" onClick={() => alert("Assortment submitted to OMS. Feedback capture begins at publish (Oct 1).")}>Validate &amp; Submit all →</Button>
             </Stack>
           </Card>
         </>

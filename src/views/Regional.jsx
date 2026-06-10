@@ -47,18 +47,19 @@ const SC = FD_CLUST_SCENARIOS.B;
 function SkuTable({ rows, carryHeader }) {
   const columns = useMemo(
     () => [
-      { field: "desc", headerName: "Description", minWidth: 220, flex: 1 },
-      { field: "sku", headerName: "SKU", width: 120, cellStyle: () => ({ fontFamily: "var(--font-mono)", color: color.textMuted }) },
-      { field: "dept", headerName: "Dept", width: 140 },
-      { field: "size", headerName: "Size", width: 90 },
-      { field: "price", headerName: "Price", width: 90, valueFormatter: (p) => `$${Number(p.value).toFixed(2)}` },
-      { field: "r13", headerName: "R13 Sqft", width: 110, valueFormatter: (p) => (p.value ? `${Math.round(p.value)} sqft` : "—") },
+      { field: "desc", headerName: "Description", minWidth: 220, flex: 1, filter: "agTextColumnFilter" },
+      { field: "sku", headerName: "SKU", width: 120, filter: "agTextColumnFilter", cellStyle: () => ({ fontFamily: "var(--font-mono)", color: color.textMuted }) },
+      { field: "dept", headerName: "Dept", width: 140, filter: "agSetColumnFilter" },
+      { field: "size", headerName: "Size", width: 90, filter: "agSetColumnFilter" },
+      { field: "price", headerName: "Price", width: 90, filter: "agNumberColumnFilter", valueFormatter: (p) => `$${Number(p.value).toFixed(2)}` },
+      { field: "r13", headerName: "R13 Sqft", width: 110, filter: "agNumberColumnFilter", valueFormatter: (p) => (p.value ? `${Math.round(p.value)} sqft` : "—") },
       { field: "carry", headerName: carryHeader || "Carry", minWidth: 130, flex: 1 },
     ],
     [carryHeader]
   );
   return (
     <Table
+      defaultColDef={{ floatingFilter: true }}
       cardContainer
       rowHeight="compact"
       tableHeader=" "
@@ -126,7 +127,7 @@ export default function Regional({ onNavigate }) {
             ) : null}
           </Stack>
 
-          <Stack direction="row" justify="space-between" align="center" gap={3} wrap>
+          <Stack direction="column" gap={3}>
             <Stack direction="row" gap={2} wrap>
               {TIERS.map((t) => (
                 <Stack
@@ -147,7 +148,7 @@ export default function Regional({ onNavigate }) {
               ))}
             </Stack>
 
-            <Stack direction="row" gap={2} wrap align="center">
+            <Stack direction="row" gap={2} wrap align="center" style={{ paddingTop: "var(--sp-2)", borderTop: "1px solid var(--color-border)" }}>
               <Text variant="micro" tone="subtle">Department</Text>
               {DEPT_OPTIONS.map((d) => (
                 <Button
@@ -245,7 +246,7 @@ function ClusterOverview({ byDept, clusterAdds, onReview, onStore }) {
                     {addCount ? <Badge variant="subtle" size="small" color="info" label={`+${addCount} regional adds`} /> : null}
                   </Stack>
                 </Stack>
-                <Stack direction="row" gap={2} align="center">
+                <Stack direction="row" gap={3} align="center" wrap>
                   <Stack direction="column" align="center" paddingX={3} paddingY={2} style={{ background: "var(--color-surface-alt)", borderRadius: "var(--r2)" }}>
                     <Text variant="body-strong" tone="teal">{clSkus.length}</Text>
                     <Text variant="micro" tone="muted">Cluster SKUs</Text>
@@ -425,7 +426,7 @@ function ClusterDetail({ clusterId, activeStore, deptFilter, byDept, clusterAdds
           </Card>
         ) : (
           <Card sx={softSx}>
-            <EmptyState title="No cluster-level SKUs" subText="No non-core SKUs reach the 50% cluster-carry threshold for this department filter." />
+            <EmptyState heading="No cluster-level SKUs" description="No non-core SKUs reach the 50% cluster-carry threshold for this department filter." />
           </Card>
         )}
       </Stack>

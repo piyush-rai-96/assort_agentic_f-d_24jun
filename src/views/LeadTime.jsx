@@ -60,7 +60,7 @@ export default function LeadTime() {
               {pendingOracle ? <Badge variant="subtle" size="small" color="warning" label={`${pendingOracle} pending Oracle`} /> : null}
             </Stack>
           </Stack>
-          <Grid columns="1fr 1fr 1fr 1fr" gap={2} min={170}>
+          <Grid min={170} gap={2}>
             {kpis.map((k) => (
               <div key={k.l} className="lt-kpi">
                 <Text variant="kpi" tone={k.tone}>{k.v}</Text>
@@ -105,8 +105,7 @@ export default function LeadTime() {
                 <Badge variant="subtle" size="small" color={meta.badge} label={meta.label} />
               </Stack>
 
-              <Stack direction="row" align="center" gap={3}>
-                <Text variant="micro" tone="subtle" style={{ width: 70, flexShrink: 0 }}>Pipeline</Text>
+              <Stack direction="row" align="center" gap={3} wrap>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <ProgressBar value={meta.prog} status={meta.prog >= 100 ? "completed" : "remaining"} showTime={false} customLabel=" " />
                 </div>

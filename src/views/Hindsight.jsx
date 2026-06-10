@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Card, Badge, Table } from "impact-ui";
 import FdSelect from "../components/FdSelect.jsx";
 import Text from "../components/Text.jsx";
@@ -26,7 +26,6 @@ const panelSx = {
 const DEPT_OPTIONS = ["All", "Wood", "Tile", "Laminate & Vinyl"].map((d) => ({ value: d, label: d }));
 const STORE_OPTIONS = FD_STORES.map((s) => ({ value: s.id, label: s.name }));
 
-const VELOCITY_BADGE = { A: "success", B: "info", C: "warning", D: "error" };
 const DEPT_BADGE = { Wood: "warning", Tile: "success", "Laminate & Vinyl": "info" };
 
 const fmtK = (n) => (n >= 1000 ? `$${Math.round(n / 1000)}K` : `$${Math.round(n)}`);
@@ -225,13 +224,14 @@ export default function Hindsight() {
 
   const benchmarkColumns = useMemo(
     () => [
-      { field: "subDept", headerName: "Sub-Dept", minWidth: 170, flex: 1 },
-      { field: "storePct", headerName: "Store %", width: 100, valueFormatter: (p) => `${p.value}%` },
-      { field: "natPct", headerName: "Nat %", width: 95, valueFormatter: (p) => `${p.value}%` },
+      { field: "subDept", headerName: "Sub-Dept", minWidth: 170, flex: 1, filter: "agTextColumnFilter" },
+      { field: "storePct", headerName: "Store %", width: 100, filter: "agNumberColumnFilter", valueFormatter: (p) => `${p.value}%` },
+      { field: "natPct", headerName: "Nat %", width: 95, filter: "agNumberColumnFilter", valueFormatter: (p) => `${p.value}%` },
       {
         field: "gap",
         headerName: "Gap",
         width: 85,
+        filter: "agNumberColumnFilter",
         valueFormatter: (p) => `${p.value > 0 ? "+" : ""}${p.value}`,
         cellStyle: (p) => ({
           color: p.value > 3 ? color.success : p.value < -3 ? color.error : color.textSubtle,
@@ -246,24 +246,20 @@ export default function Hindsight() {
   return (
     <Stack direction="column" gap={4}>
       {/* ── Header: store / dept filters ──────────────────────────────────── */}
-      <Stack direction="row" justify="space-between" align="center" gap={4} wrap className="hs-header">
-        <Stack direction="column" gap={2} flex="1 1 auto" style={{ minWidth: 0 }}>
-          <Stack direction="row" align="baseline" gap={2} wrap>
-            <Text variant="title">{store.name}</Text>
-            <Text variant="caption" tone="subtle">Business Review · R13</Text>
+      <Card sx={{ ...panelSx, padding: "var(--sp-3) var(--sp-4)" }}>
+        <Stack direction="row" justify="space-between" align="center" gap={4} wrap>
+          <Stack direction="column" gap={2} flex="1 1 auto" style={{ minWidth: 0 }}>
+            <Stack direction="row" align="baseline" gap={2} wrap>
+              <Text variant="title">{store.name}</Text>
+              <Text variant="caption" tone="subtle">Business Review · R13</Text>
+            </Stack>
           </Stack>
-          <Stack direction="row" align="center" gap={2}>
-            <Text variant="micro" tone="subtle">{store.region}</Text>
-            <Text variant="micro" tone="subtle">·</Text>
-            <Text variant="micro" tone="subtle">DC {store.dc}</Text>
-            <Badge variant="subtle" size="small" color={VELOCITY_BADGE[store.velocity]} label={`Velocity ${store.velocity}`} />
-          </Stack>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--sp-3)", flex: "0 0 auto", minWidth: 0, width: "clamp(260px, 28vw, 380px)" }}>
+            <FdSelect label="Store" value={storeId} options={STORE_OPTIONS} onChange={(v) => setStoreId(Number(v))} width={220} isWithSearch />
+            <FdSelect label="Department" value={dept} options={DEPT_OPTIONS} onChange={setDept} width={180} />
+          </div>
         </Stack>
-        <Stack direction="row" gap={3} align="flex-end" wrap justify="flex-end" flex="0 1 420px" style={{ minWidth: 0 }}>
-          <FdSelect label="Store" value={storeId} options={STORE_OPTIONS} onChange={(v) => setStoreId(Number(v))} width={200} isWithSearch />
-          <FdSelect label="Department" value={dept} options={DEPT_OPTIONS} onChange={setDept} width={170} />
-        </Stack>
-      </Stack>
+      </Card>
 
       {/* ── Row 1: KPI strip — neutral cards; emphasis via typography only ─── */}
       <Grid min={150} gap={3}>
@@ -368,6 +364,7 @@ export default function Hindsight() {
       {/* ── Row 4: vs National benchmark table + signals ──────────────────── */}
       <Grid min={340} gap={4} align="start">
         <Table
+      defaultColDef={{ floatingFilter: true }}
           tableHeader="vs National"
           cardContainer
           rowHeight="compact"

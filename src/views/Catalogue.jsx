@@ -81,18 +81,18 @@ export default function Catalogue({ onNavigate }) {
 
   const columns = useMemo(
     () => [
-      { field: "name", headerName: "Description", minWidth: 240, flex: 1 },
-      { field: "sku", headerName: "SKU", width: 130, cellStyle: () => ({ fontFamily: "var(--font-mono)", color: color.textMuted }) },
-      { field: "dept", headerName: "Dept", width: 150 },
-      { field: "subDept", headerName: "Sub-Dept", minWidth: 160, flex: 1 },
-      { field: "price", headerName: "Price", width: 100, valueFormatter: (p) => `$${Number(p.value).toFixed(2)}` },
-      { field: "status", headerName: "Status", width: 110 },
+      { field: "name", headerName: "Description", minWidth: 240, flex: 1, filter: "agTextColumnFilter" },
+      { field: "sku", headerName: "SKU", width: 130, filter: "agTextColumnFilter", cellStyle: () => ({ fontFamily: "var(--font-mono)", color: color.textMuted }) },
+      { field: "dept", headerName: "Dept", width: 150, filter: "agSetColumnFilter" },
+      { field: "subDept", headerName: "Sub-Dept", minWidth: 160, flex: 1, filter: "agSetColumnFilter" },
+      { field: "price", headerName: "Price", width: 100, filter: "agNumberColumnFilter", valueFormatter: (p) => `$${Number(p.value).toFixed(2)}` },
+      { field: "status", headerName: "Status", width: 110, filter: "agSetColumnFilter" },
       {
         field: "tier",
         headerName: "Tier",
         width: 130,
-        valueFormatter: (p) => TIER_META[p.value].label,
-        cellStyle: (p) => ({ color: TIER_META[p.value].color, fontWeight: 700 }),
+        valueFormatter: (p) => (TIER_META[p.value] ?? TIER_META.store).label,
+        cellStyle: (p) => ({ color: (TIER_META[p.value] ?? TIER_META.store).color, fontWeight: 700 }),
       },
     ],
     []
@@ -151,7 +151,7 @@ export default function Catalogue({ onNavigate }) {
                   Store picks. You review and adjust in each downstream step.
                 </Text>
               </Stack>
-              <Grid columns={3} gap={3}>
+              <Grid min={200} gap={3}>
                 {AGENT_TIERS.map((t) => (
                   <Card key={t.tier} sx={softSx}>
                     <Stack direction="column" gap={1}>
@@ -174,7 +174,7 @@ export default function Catalogue({ onNavigate }) {
       ) : (
         <Stack direction="column" gap={4}>
           {/* Tier summary cards */}
-          <Grid columns={3} gap={3}>
+          <Grid min={200} gap={3}>
             {summaryCards.map((m) => (
               <Card
                 key={m.l}
@@ -194,7 +194,7 @@ export default function Catalogue({ onNavigate }) {
           {/* Tier cascade */}
           <Card sx={panelSx}>
             <Text variant="body-strong" tone="strong" style={{ marginBottom: "var(--sp-3)" }}>Assortment Tier Cascade</Text>
-            <Stack direction="row" gap={2} align="stretch">
+            <Stack direction="row" gap={3} align="stretch" wrap>
               {cascade.map((t) => (
                 <Stack
                   key={t.label}
@@ -216,9 +216,10 @@ export default function Catalogue({ onNavigate }) {
       )}
 
       {/* ── Catalogue SKU table (always shown) ─────────────────────────────── */}
-      <Stack direction="column" gap={2}>
+      <Stack direction="column" gap={3}>
         <Text variant="body-strong" tone="strong">All {CATALOGUE_SKUS.length} Catalogue SKUs</Text>
         <Table
+      defaultColDef={{ floatingFilter: true }}
           cardContainer
           rowHeight="compact"
           tableHeader="FW 2025 catalogue"

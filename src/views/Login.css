@@ -1,0 +1,333 @@
+/* ── Login shell ───────────────────────────────────────────────────────── */
+.login-shell {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+}
+
+/* ── Left brand panel ──────────────────────────────────────────────────── */
+.login-brand {
+  position: relative;
+  width: 52%;
+  flex-shrink: 0;
+  background: #0A2210;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 32px 36px 28px;
+  height: 100vh;
+}
+
+/* Subtle grid overlay (mirrors legacy .03 opacity gradient) */
+.login-brand-grid {
+  position: absolute;
+  inset: 0;
+  opacity: 0.03;
+  background-image:
+    linear-gradient(rgba(255,255,255,.6) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.6) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+}
+
+.login-brand-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+  z-index: 1;
+}
+
+.login-logo-mark {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  background: #2D6A2D;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+.login-logo-label {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.login-logo-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.2px;
+}
+
+.login-logo-sub {
+  font-size: 10px;
+  color: #4A7A4A;
+}
+
+.login-brand-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+}
+
+.login-brand-headline {
+  font-size: 36px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.8px;
+  line-height: 1.15;
+  margin-bottom: 10px;
+}
+
+.login-brand-sub {
+  font-size: 13px;
+  font-weight: 600;
+  color: #4A7A4A;
+  margin-bottom: 20px;
+}
+
+.login-brand-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.login-pill {
+  display: inline-block;
+  background: rgba(45, 106, 45, 0.25);
+  border: 1px solid rgba(45, 106, 45, 0.45);
+  color: #8FBA8F;
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: 20px;
+  padding: 4px 10px;
+}
+
+/* Workflow steps strip at the bottom of the brand panel */
+.login-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+  z-index: 1;
+}
+
+.login-step {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  opacity: 0.45;
+}
+.login-step.done { opacity: 0.7; }
+.login-step.active { opacity: 1; }
+
+.login-step-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1.5px solid #3A6A3A;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 8px;
+  font-weight: 700;
+  color: #4A7A4A;
+}
+
+.login-step.done .login-step-dot {
+  background: #2D6A2D;
+  border-color: #2D6A2D;
+}
+
+.login-step.active .login-step-dot {
+  background: #0B7A6C;
+  border-color: #0B7A6C;
+}
+
+.login-step-lbl {
+  font-size: 10.5px;
+  color: #6AAA6A;
+  font-weight: 500;
+}
+
+.login-step.active .login-step-lbl {
+  color: #fff;
+  font-weight: 600;
+}
+
+/* ── Right form panel ──────────────────────────────────────────────────── */
+.login-form-panel {
+  flex: 1;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  overflow-y: auto;
+}
+
+.login-form-wrap {
+  width: 100%;
+  max-width: 380px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.login-welcome {
+  margin-bottom: 4px;
+}
+
+.login-title {
+  font-size: 26px;
+  font-weight: 800;
+  color: #0A1A0A;
+  letter-spacing: -0.4px;
+  margin: 0 0 5px;
+}
+
+.login-subtitle {
+  font-size: 12px;
+  color: #64748B;
+  margin: 0;
+}
+
+.login-alert-wrap {
+  margin: -4px 0;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Make the Sign In button full-width */
+.login-form > button,
+.login-form [class*="button"],
+.login-form [class*="Button"] {
+  width: 100%;
+}
+
+/* ── Demo credentials block ────────────────────────────────────────────── */
+.login-demo {
+  border-top: 1px solid #F1F5F9;
+  padding-top: 16px;
+}
+
+.login-demo-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #94A3B8;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 9px;
+}
+
+.login-demo-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.login-demo-card {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 13px;
+  background: #fff;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 10px;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s, background 0.15s;
+  width: 100%;
+}
+
+.login-demo-card:hover:not(:disabled) {
+  border-color: var(--user-color);
+  background: color-mix(in srgb, var(--user-color) 4%, #fff);
+}
+
+.login-demo-card:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.login-demo-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.login-demo-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.login-demo-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: #0A1A0A;
+  margin-bottom: 1px;
+}
+
+.login-demo-role {
+  font-size: 10px;
+  color: #64748B;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Footer ─────────────────────────────────────────────────────────────── */
+.login-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 4px;
+}
+
+.login-tls {
+  font-size: 10px;
+  color: #94A3B8;
+}
+
+.login-version {
+  font-size: 10px;
+  color: #CBD5E1;
+}
+
+/* ── Responsive: stack vertically on narrow screens ─────────────────────── */
+@media (max-width: 680px) {
+  .login-shell { flex-direction: column; }
+  .login-brand {
+    width: 100%;
+    height: auto;
+    padding: 24px 20px 20px;
+  }
+  .login-brand-body { padding: 24px 0 20px; }
+  .login-steps { display: none; }
+  .login-form-panel { padding: 24px 20px; }
+}

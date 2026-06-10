@@ -76,7 +76,7 @@ export default function FeedbackLoop() {
 
       {/* ── How it works ───────────────────────────────────────────────────── */}
       <Card sx={{ ...panelSx, padding: 0, overflow: "hidden" }}>
-        <Grid columns={5} gap={0}>
+        <Grid min={140} gap={2}>
           {LOOP_STEPS.map((s) => (
             <Stack key={s.label} className="fb-step" direction="column" gap={1} paddingX={3} paddingY={3}>
               <Text variant="heading" as="div">{s.icon}</Text>

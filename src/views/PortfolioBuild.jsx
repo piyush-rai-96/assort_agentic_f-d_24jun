@@ -209,7 +209,7 @@ function PanelEmpty({ heading, description }) {
   );
 }
 
-export default function PortfolioBuild() {
+export default function PortfolioBuild({ onNavigate }) {
   const [gaps, setGaps] = useState(INITIAL_GAPS);
   const [wishlists, setWishlists] = useState(INITIAL_WISHLISTS);
   const [vendorSkus, setVendorSkus] = useState(() => buildVendorSkus());
@@ -305,45 +305,48 @@ export default function PortfolioBuild() {
         field: "priority",
         headerName: "Priority",
         width: 110,
+        filter: "agSetColumnFilter",
         valueFormatter: (p) => PRIORITY_LABEL[p.value] || p.value,
         cellStyle: (p) => ({ color: color[PRIORITY_BADGE[p.value]] || color.text, fontWeight: 700 }),
       },
-      { field: "type", headerName: "Type", width: 130 },
-      { field: "desc", headerName: "Description", minWidth: 260, flex: 1 },
-      { field: "addedBy", headerName: "Added by", width: 130 },
+      { field: "type", headerName: "Type", width: 130, filter: "agSetColumnFilter" },
+      { field: "desc", headerName: "Description", minWidth: 260, flex: 1, filter: "agTextColumnFilter" },
+      { field: "addedBy", headerName: "Added by", width: 130, filter: "agTextColumnFilter" },
       { field: "date", headerName: "Date", width: 100 },
     ],
     []
   );
   const wishColumns = useMemo(
     () => [
-      { field: "store", headerName: "Store", width: 150, cellStyle: () => ({ color: color.teal, fontWeight: 600 }) },
-      { field: "region", headerName: "Region", width: 120 },
-      { field: "item", headerName: "Request", minWidth: 240, flex: 1 },
-      { field: "evidence", headerName: "Evidence", minWidth: 180, flex: 1 },
+      { field: "store", headerName: "Store", width: 150, filter: "agTextColumnFilter", cellStyle: () => ({ color: color.teal, fontWeight: 600 }) },
+      { field: "region", headerName: "Region", width: 120, filter: "agSetColumnFilter" },
+      { field: "item", headerName: "Request", minWidth: 240, flex: 1, filter: "agTextColumnFilter" },
+      { field: "evidence", headerName: "Evidence", minWidth: 180, flex: 1, filter: "agTextColumnFilter" },
       { field: "date", headerName: "Date", width: 100 },
     ],
     []
   );
   const vendorColumns = useMemo(
     () => [
-      { field: "name", headerName: "SKU / Product", minWidth: 220, flex: 1 },
-      { field: "vendor", headerName: "Vendor", width: 110 },
-      { field: "show", headerName: "Source", width: 130 },
+      { field: "name", headerName: "SKU / Product", minWidth: 220, flex: 1, filter: "agTextColumnFilter" },
+      { field: "vendor", headerName: "Vendor", width: 110, filter: "agTextColumnFilter" },
+      { field: "show", headerName: "Source", width: 130, filter: "agSetColumnFilter" },
       {
         field: "status",
         headerName: "Status",
         width: 120,
+        filter: "agSetColumnFilter",
         cellStyle: (p) => ({ color: color[STATUS_BADGE[p.value]] || color.text, fontWeight: 700 }),
       },
       {
         field: "margin",
         headerName: "Margin",
         width: 100,
+        filter: "agNumberColumnFilter",
         valueFormatter: (p) => `${p.value}%`,
         cellStyle: (p) => ({ color: p.value >= 42 ? color.success : color.text, fontWeight: 600 }),
       },
-      { field: "landedCost", headerName: "Landed $", width: 110, valueFormatter: (p) => `$${Number(p.value).toFixed(2)}` },
+      { field: "landedCost", headerName: "Landed $", width: 110, filter: "agNumberColumnFilter", valueFormatter: (p) => `$${Number(p.value).toFixed(2)}` },
     ],
     []
   );
@@ -563,7 +566,7 @@ export default function PortfolioBuild() {
           </Text>
         </Card>
         {activeVendor.status === "Shortlisted" ? (
-          <Stack direction="row" gap={2}>
+          <Stack direction="row" gap={3} wrap>
             <Button variant="primary" size="medium" onClick={() => setVendorStatus(activeVendor.id, "Approved")} style={{ flex: 1 }}>✓ Approve for PLR</Button>
             <Button variant="secondary" size="medium" type="destructive" onClick={() => setVendorStatus(activeVendor.id, "Declined")} style={{ flex: 1 }}>✕ Decline</Button>
           </Stack>
@@ -602,8 +605,8 @@ export default function PortfolioBuild() {
   ];
 
   const SummarySection = ({ title, count, onViewAll, table, empty }) => (
-    <Stack direction="column" gap={2}>
-      <Stack direction="row" justify="space-between" align="center" gap={2}>
+    <Stack direction="column" gap={3}>
+      <Stack direction="row" justify="space-between" align="center" gap={3} wrap>
         <Stack direction="row" gap={2} align="center">
           <Text variant="body-strong" tone="strong">{title}</Text>
           <Badge variant="subtle" size="small" color="info" label={String(count)} />
@@ -622,6 +625,7 @@ export default function PortfolioBuild() {
     cardContainer: true,
     rowHeight: "compact",
     domLayout: "autoHeight",
+    defaultColDef: { floatingFilter: true },
     hideTableSetting: true,
     hideTableActions: true,
     pagination: false,
@@ -683,7 +687,7 @@ export default function PortfolioBuild() {
             <Text variant="caption" tone="primary">
               <strong>{approved} SKU{approved > 1 ? "s" : ""} approved</strong> and ready to advance to Like-Item Forecasting
             </Text>
-            <Button variant="primary" size="medium">Advance to Forecast →</Button>
+            <Button variant="primary" size="medium" onClick={() => onNavigate?.("forecast")}>Advance to Forecast →</Button>
           </Stack>
         </Card>
       ) : null}

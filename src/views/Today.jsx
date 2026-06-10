@@ -5,8 +5,8 @@ import Stack from "../components/Stack.jsx";
 import Grid from "../components/Grid.jsx";
 import { color } from "../styles/tokens.js";
 import { FD_STORES } from "../data/stores.js";
+import { useAuth } from "../context/AuthContext.jsx";
 import {
-  CURRENT_USER,
   TODAY_SEED,
   VELOCITY_NETWORK_PCT,
   PIPELINE_PHASES,
@@ -55,6 +55,7 @@ function greetingFor(hour) {
 
 export default function Today({ onNavigate }) {
   const go = (mod) => onNavigate?.(mod);
+  const { user } = useAuth();
 
   // ── All legacy renderToday() calculations, ported to a single memo ────────
   const model = useMemo(() => {
@@ -89,7 +90,7 @@ export default function Today({ onNavigate }) {
     });
 
     const greeting = greetingFor(new Date().getHours());
-    const firstName = CURRENT_USER.name.split(" ")[0];
+    const firstName = (user?.name || "there").split(" ")[0];
 
     const kpis = [
       { value: totalStores, label: "Total Stores", sub: `${totalStores} in network`, mod: "store-curation" },
@@ -107,7 +108,7 @@ export default function Today({ onNavigate }) {
     const quick = QUICK_ACTIONS.map((q) => ({ ...q, sub: fill(q.sub) }));
 
     return { greeting, firstName, pending, phases, overallPct, bands, kpis, attention, quick };
-  }, []);
+  }, [user]);
 
   return (
     <Stack direction="column" gap={5} className="today">
@@ -118,7 +119,7 @@ export default function Today({ onNavigate }) {
             {model.greeting}, {model.firstName} 👋
           </Text>
           <Text variant="caption" tone="muted">
-            Floor &amp; Decor · {CURRENT_USER.role} · FW 2025
+            Floor &amp; Decor · {user?.role || "Assortment Planning"} · FW 2025
           </Text>
         </Stack>
         <Stack direction="row" align="center" gap={2} wrap>
@@ -153,7 +154,7 @@ export default function Today({ onNavigate }) {
       </Card>
 
       {/* ── KPI row ─────────────────────────────────────────────────────── */}
-      <Grid min={150} gap={3}>
+      <Grid min={180} gap={3}>
         {model.kpis.map((k) => (
           <Card key={k.label} sx={clickableSx} onClick={() => go(k.mod)}>
             <Stack direction="column" gap={1}>
@@ -268,7 +269,7 @@ export default function Today({ onNavigate }) {
           <Text variant="subheading" as="h3" style={{ marginBottom: "var(--sp-3)" }}>Recent activity</Text>
           <Stack direction="column" gap={1}>
             {RECENT_ACTIVITY.map((a, i) => (
-              <Stack key={i} direction="row" align="center" gap={3} className="today-feed-row" paddingX={2} paddingY={2}>
+              <Stack key={i} direction="row" align="center" gap={3} className="today-feed-row" paddingX={3} paddingY={3}>
                 <span className="today-feed-icon">{a.icon}</span>
                 <Text variant="caption" tone="muted" flex="1" as="span" style={{ flex: 1 }}>{a.text}</Text>
                 <Text variant="micro" tone="subtle" style={{ whiteSpace: "nowrap" }}>{a.time}</Text>

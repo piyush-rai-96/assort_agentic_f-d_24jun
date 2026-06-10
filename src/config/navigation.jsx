@@ -93,6 +93,33 @@ export const actionRoutes = [
   },
 ];
 
+/**
+ * Filter the route tree down to only the modules the current user can access.
+ *
+ * @param {typeof routes} tree - full routes array
+ * @param {string[] | "ALL"} allowed - user.modules from users.js
+ * @returns a new routes array with unauthorized leaves removed and empty
+ *          parent groups dropped entirely.
+ */
+export function filterRoutesByAccess(tree, allowed) {
+  if (allowed === "ALL") return tree;
+  return tree.reduce((acc, route) => {
+    if (!route.children || route.children.length === 0) {
+      // Leaf (e.g. "today")
+      if (allowed.includes(route.value)) acc.push(route);
+    } else {
+      // Group parent — keep only accessible children
+      const visibleChildren = route.children.filter((c) =>
+        allowed.includes(c.value)
+      );
+      if (visibleChildren.length > 0) {
+        acc.push({ ...route, children: visibleChildren });
+      }
+    }
+    return acc;
+  }, []);
+}
+
 /* value -> human label, for breadcrumb + content placeholder titles */
 export const MODULE_LABELS = {
   today: "Today",

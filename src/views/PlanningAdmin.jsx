@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { Card, Button, Badge, Table, Tabs, Checkbox } from "impact-ui";
+import { Card, Button, Badge, Table, Tabs, Checkbox, Input } from "impact-ui";
 import Text from "../components/Text.jsx";
 import Stack from "../components/Stack.jsx";
 import { color, deptColor } from "../styles/tokens.js";
@@ -12,8 +12,6 @@ import {
   BAND_PCT,
   ATTR_GROUPS,
   PRODUCTS_BY_DEPT,
-  STATUS_BADGE,
-  VEL_BADGE,
 } from "../data/admin.js";
 import "./PlanningAdmin.css";
 
@@ -46,6 +44,7 @@ export default function PlanningAdmin() {
   const [tab, setTab] = useState(0);
   const [prodAttrs, setProdAttrs] = useState({});
   const [locAttrs, setLocAttrs] = useState({});
+  const [exSearch, setExSearch] = useState("");
 
   /* ════════════ PRODUCTS ════════════ */
   const productRows = useMemo(
@@ -70,31 +69,33 @@ export default function PlanningAdmin() {
 
   const productColumns = useMemo(
     () => [
-      { field: "sku", headerName: "SKU", width: 124, pinned: "left", cellStyle: (p) => ({ fontFamily: "var(--font-mono)", color: color.teal, fontWeight: 700, borderLeft: `3px solid ${p.data._ov ? color.teal : "transparent"}` }) },
-      { field: "vsn", headerName: "VSN", width: 120 },
-      { field: "dept", headerName: "Department", width: 140, cellStyle: (p) => ({ color: deptColor[p.value] || color.accent, fontWeight: 600 }) },
-      { field: "subDept", headerName: "Sub-Department", width: 170 },
-      { field: "cls", headerName: "Class", width: 130 },
-      { field: "subCls", headerName: "Sub-Class", width: 150 },
-      { field: "desc", headerName: "Description", minWidth: 220, flex: 1 },
-      { field: "color", headerName: "Color", width: 110 },
-      { field: "finish", headerName: "Finish", width: 120 },
-      { field: "size", headerName: "Size", width: 110 },
-      { field: "price", headerName: "Menu $/sqft", width: 110, valueFormatter: (p) => `$${Number(p.value).toFixed(2)}` },
+      { field: "sku", headerName: "SKU", width: 124, pinned: "left", filter: "agTextColumnFilter", cellStyle: (p) => ({ fontFamily: "var(--font-mono)", color: color.teal, fontWeight: 700, borderLeft: `3px solid ${p.data._ov ? color.teal : "transparent"}` }) },
+      { field: "vsn", headerName: "VSN", width: 120, filter: "agTextColumnFilter" },
+      { field: "dept", headerName: "Department", width: 140, filter: "agSetColumnFilter", cellStyle: (p) => ({ color: deptColor[p.value] || color.accent, fontWeight: 600 }) },
+      { field: "subDept", headerName: "Sub-Department", width: 170, filter: "agSetColumnFilter" },
+      { field: "cls", headerName: "Class", width: 130, filter: "agSetColumnFilter" },
+      { field: "subCls", headerName: "Sub-Class", width: 150, filter: "agSetColumnFilter" },
+      { field: "desc", headerName: "Description", minWidth: 220, flex: 1, filter: "agTextColumnFilter" },
+      { field: "color", headerName: "Color", width: 110, filter: "agSetColumnFilter" },
+      { field: "finish", headerName: "Finish", width: 120, filter: "agSetColumnFilter" },
+      { field: "size", headerName: "Size", width: 110, filter: "agSetColumnFilter" },
+      { field: "price", headerName: "Menu $/sqft", width: 110, filter: "agNumberColumnFilter", valueFormatter: (p) => `$${Number(p.value).toFixed(2)}` },
       {
         field: "coreBG", headerName: "Core / BG", width: 130,
+        filter: "agSetColumnFilter",
         editable: (p) => !isLocked(p.value),
         cellEditor: "agSelectCellEditor", cellEditorParams: { values: CORE_BG_OPTS },
         valueFormatter: (p) => (isLocked(p.value) ? `🔒 ${p.value}` : p.value || "—"),
         cellStyle: (p) => ({ color: isLocked(p.value) ? color.success : color.text, fontWeight: isLocked(p.value) ? 700 : 400 }),
       },
-      { field: "lead", headerName: "Lead (wk)", width: 100 },
+      { field: "lead", headerName: "Lead (wk)", width: 100, filter: "agNumberColumnFilter" },
       {
         field: "status", headerName: "Status", width: 130,
+        filter: "agSetColumnFilter",
         editable: true, cellEditor: "agSelectCellEditor", cellEditorParams: { values: STATUS_OPTS },
         cellStyle: (p) => ({ color: STATUS_COLOR[p.value] || color.text, fontWeight: 700 }),
       },
-      { field: "attrs", headerName: "Key Attributes", minWidth: 200, flex: 1 },
+      { field: "attrs", headerName: "Key Attributes", minWidth: 200, flex: 1, filter: "agTextColumnFilter" },
     ],
     []
   );
@@ -104,14 +105,13 @@ export default function PlanningAdmin() {
       <Stack direction="row" justify="space-between" align="center" gap={3} wrap>
         <Stack direction="column" gap={1} style={{ minWidth: 0 }}>
           <Text variant="body-strong" tone="strong">Product Attributes</Text>
-          <Text variant="micro" tone="subtle">{PRODUCTS.length} SKUs · sourced from FD_SKUS · Core/BG tag and Status are editable</Text>
         </Stack>
         <Stack direction="row" gap={2} align="center">
           {prodOvCount ? <Badge variant="subtle" size="small" color="success" label={`${prodOvCount} overridden`} /> : null}
           {prodOvCount ? <Button variant="secondary" size="small" onClick={() => setProdAttrs({})}>Reset</Button> : null}
         </Stack>
       </Stack>
-      <Table cardContainer rowHeight="compact" tableHeader="Product master" columnDefs={productColumns} rowData={productRows} domLayout="autoHeight" hideTableSetting hideTableActions pagination={false} onCellValueChanged={onProdCellChanged} stopEditingWhenCellsLoseFocus />
+      <Table defaultColDef={{ floatingFilter: true }} cardContainer rowHeight="compact" tableHeader="Product master" columnDefs={productColumns} rowData={productRows} domLayout="autoHeight" hideTableSetting hideTableActions pagination={false} onCellValueChanged={onProdCellChanged} stopEditingWhenCellsLoseFocus />
       <Text variant="micro" tone="subtle">{PRODUCTS.length} SKUs · {prodOvCount} attributes overridden · source: FD_SKUS catalogue data</Text>
     </Stack>
   );
@@ -142,16 +142,17 @@ export default function PlanningAdmin() {
 
   const locationColumns = useMemo(
     () => [
-      { field: "id", headerName: "Store #", width: 110, pinned: "left", cellStyle: (p) => ({ fontFamily: "var(--font-mono)", color: color.teal, fontWeight: 700, borderLeft: `3px solid ${p.data._ov ? color.teal : "transparent"}` }) },
-      { field: "name", headerName: "Store Name", minWidth: 170, flex: 1 },
-      { field: "region", headerName: "Region", width: 140 },
-      { field: "market", headerName: "Market", width: 130 },
-      { field: "state", headerName: "State", width: 80 },
-      { field: "dc", headerName: "DC", width: 80 },
-      { field: "velocity", headerName: "Velocity", width: 100, cellStyle: (p) => ({ color: VEL_COLOR[p.value] || color.text, fontWeight: 700 }) },
+      { field: "id", headerName: "Store #", width: 110, pinned: "left", filter: "agTextColumnFilter", cellStyle: (p) => ({ fontFamily: "var(--font-mono)", color: color.teal, fontWeight: 700, borderLeft: `3px solid ${p.data._ov ? color.teal : "transparent"}` }) },
+      { field: "name", headerName: "Store Name", minWidth: 170, flex: 1, filter: "agTextColumnFilter" },
+      { field: "region", headerName: "Region", width: 140, filter: "agSetColumnFilter" },
+      { field: "market", headerName: "Market", width: 130, filter: "agSetColumnFilter" },
+      { field: "state", headerName: "State", width: 80, filter: "agSetColumnFilter" },
+      { field: "dc", headerName: "DC", width: 80, filter: "agSetColumnFilter" },
+      { field: "velocity", headerName: "Velocity", width: 100, filter: "agSetColumnFilter", cellStyle: (p) => ({ color: VEL_COLOR[p.value] || color.text, fontWeight: 700 }) },
       { field: "bandPct", headerName: "Band %", width: 90 },
       ...LOC_ATTRS.map((a) => ({
         field: a.key, headerName: a.label, width: 150,
+        filter: "agSetColumnFilter",
         editable: true, cellEditor: "agSelectCellEditor", cellEditorParams: { values: a.opts },
         cellStyle: (p) => {
           const def = LOCATIONS.find((l) => l.id === p.data.id)?.defaults[a.key];
@@ -168,15 +169,13 @@ export default function PlanningAdmin() {
       <Stack direction="row" justify="space-between" align="center" gap={3} wrap>
         <Stack direction="column" gap={1} style={{ minWidth: 0 }}>
           <Text variant="body-strong" tone="strong">Location Attributes</Text>
-          <Text variant="micro" tone="subtle">{LOCATIONS.length} stores · defaults derived from cluster — edit any cell to override for this period</Text>
         </Stack>
         <Stack direction="row" gap={2} align="center">
           {locOvCount ? <Badge variant="subtle" size="small" color="success" label={`${locOvCount} overridden`} /> : null}
           {locOvCount ? <Button variant="secondary" size="small" onClick={() => setLocAttrs({})}>Reset all</Button> : null}
         </Stack>
       </Stack>
-      <Banner tone="teal">📍 <strong>Location Attributes</strong> — defaults from cluster and store format. Edit any cell to override. Used by the agent to weight recommendations by climate, customer type, and install mix.</Banner>
-      <Table cardContainer rowHeight="compact" tableHeader="Store master" columnDefs={locationColumns} rowData={locationRows} domLayout="autoHeight" hideTableSetting hideTableActions pagination={false} onCellValueChanged={onLocCellChanged} stopEditingWhenCellsLoseFocus />
+      <Table defaultColDef={{ floatingFilter: true }} cardContainer rowHeight="compact" tableHeader="Store master" columnDefs={locationColumns} rowData={locationRows} domLayout="autoHeight" hideTableSetting hideTableActions pagination={false} onCellValueChanged={onLocCellChanged} stopEditingWhenCellsLoseFocus />
       <Text variant="micro" tone="subtle">{LOCATIONS.length} stores shown · {locOvCount} edited · 🔁 ERP / Store Master</Text>
     </Stack>
   );
@@ -220,9 +219,17 @@ export default function PlanningAdmin() {
           <Text variant="body-strong" tone="strong">Global Exceptions</Text>
           <Text variant="micro" tone="subtle">Define exceptions by product attribute or by individual SKU, per store. Checked cells = exception active.</Text>
         </Stack>
-        <Stack direction="row" gap={2}>
-          <Button variant={exView === "attr-store" ? "primary" : "secondary"} size="small" onClick={() => setExView("attr-store")}>🏷 Attribute × Store</Button>
-          <Button variant={exView === "item-store" ? "primary" : "secondary"} size="small" onClick={() => setExView("item-store")}>📦 Item × Store</Button>
+        <Stack direction="row" gap={2} align="center" wrap>
+          <Input
+            id="ex-search"
+            name="ex-search"
+            placeholder={exView === "attr-store" ? "Search attribute values…" : "Search SKU or description…"}
+            value={exSearch}
+            onChange={(e) => setExSearch(e.target.value)}
+            size="medium"
+          />
+          <Button variant={exView === "attr-store" ? "primary" : "secondary"} size="small" onClick={() => { setExView("attr-store"); setExSearch(""); }}>🏷 Attribute × Store</Button>
+          <Button variant={exView === "item-store" ? "primary" : "secondary"} size="small" onClick={() => { setExView("item-store"); setExSearch(""); }}>📦 Item × Store</Button>
         </Stack>
       </Stack>
 
@@ -232,6 +239,10 @@ export default function PlanningAdmin() {
           {ATTR_GROUPS.map((g) => {
             const open = !collapsed[`ag_${g.key}`];
             const groupChecked = g.values.reduce((sum, v) => sum + LOCATIONS.filter((l) => attrStore[`${g.key}|${v}|${l.id}`]).length, 0);
+            const visibleValues = exSearch.trim()
+              ? g.values.filter((v) => v.toLowerCase().includes(exSearch.trim().toLowerCase()))
+              : g.values;
+            if (visibleValues.length === 0) return null;
             return (
               <Stack key={g.key} direction="column" gap={2}>
                 <Stack className="pa-group" direction="row" align="center" gap={2} onClick={() => toggleGroup(`ag_${g.key}`)}>
@@ -239,10 +250,10 @@ export default function PlanningAdmin() {
                   <Text variant="caption" tone="strong">{g.label}</Text>
                   {groupChecked > 0 ? <Badge variant="subtle" size="small" color="error" label={String(groupChecked)} /> : null}
                 </Stack>
-                {open ? (
+                {open || exSearch.trim() ? (
                   <div className="pa-matrix">
                     <StoreHead />
-                    {g.values.map((v) => (
+                    {visibleValues.map((v) => (
                       <div key={v} className="pa-matrix-row">
                         <div className="pa-cell-label"><Text variant="micro" tone="error">{v}</Text></div>
                         {LOCATIONS.map((l) => {
@@ -271,6 +282,13 @@ export default function PlanningAdmin() {
           {Object.keys(PRODUCTS_BY_DEPT).map((dept) => {
             const open = !collapsed[`dept_${dept}`];
             const prods = PRODUCTS_BY_DEPT[dept];
+            const visibleProds = exSearch.trim()
+              ? prods.filter((p) =>
+                  p.desc.toLowerCase().includes(exSearch.trim().toLowerCase()) ||
+                  String(p.sku).includes(exSearch.trim())
+                )
+              : prods;
+            if (visibleProds.length === 0) return null;
             const deptChecked = prods.reduce((sum, p) => sum + LOCATIONS.filter((l) => itemStore[`${p.sku}|${l.id}`]).length, 0);
             return (
               <Stack key={dept} direction="column" gap={2}>
@@ -279,10 +297,10 @@ export default function PlanningAdmin() {
                   <Text variant="caption" tone="strong">{dept}</Text>
                   {deptChecked > 0 ? <Badge variant="subtle" size="small" color="info" label={String(deptChecked)} /> : null}
                 </Stack>
-                {open ? (
+                {open || exSearch.trim() ? (
                   <div className="pa-matrix">
                     <StoreHead />
-                    {prods.map((p) => (
+                    {visibleProds.map((p) => (
                       <div key={p.sku} className="pa-matrix-row">
                         <div className="pa-cell-label">
                           <Stack direction="column" gap={0} style={{ minWidth: 0 }}>
@@ -326,7 +344,6 @@ export default function PlanningAdmin() {
         <Stack direction="row" justify="space-between" align="center" gap={4} wrap>
           <Stack direction="column" gap={1} flex="1 1 auto" style={{ minWidth: 0 }}>
             <Text variant="title">Planning Admin</Text>
-            <Text variant="caption" tone="muted">Source-system master data · merchants override product, location &amp; exception rules per period</Text>
           </Stack>
           <Badge variant="subtle" size="small" color="warning" label="● Source system data — read only" />
         </Stack>

@@ -58,6 +58,7 @@ export default function Mpi() {
   const [pushbackComments, setPushbackComments] = useState({});
   const [markdownOverrides, setMarkdownOverrides] = useState({});
   const [expandedSku, setExpandedSku] = useState(null);
+  const [exitPricesSaved, setExitPricesSaved] = useState(false);
 
   /* ── Summary metrics ──────────────────────────────────────────────────── */
   const totalNPI = MPI_STORE_STATS.reduce((s, x) => s + x.npiOH, 0);
@@ -89,19 +90,20 @@ export default function Mpi() {
   /* ════════════ TAB 1 — STORE NPI ════════════ */
   const storeColumns = useMemo(
     () => [
-      { field: "storeName", headerName: "Store", minWidth: 180, flex: 1 },
-      { field: "region", headerName: "Region", minWidth: 140, flex: 1 },
-      { field: "totalOH", headerName: "Total OH $", width: 120, valueFormatter: (p) => k$(p.value) },
-      { field: "npiOH", headerName: "NPI $", width: 110, valueFormatter: (p) => k$(p.value), cellStyle: () => ({ color: color.error }) },
+      { field: "storeName", headerName: "Store", minWidth: 180, flex: 1, filter: "agTextColumnFilter" },
+      { field: "region", headerName: "Region", minWidth: 140, flex: 1, filter: "agSetColumnFilter" },
+      { field: "totalOH", headerName: "Total OH $", width: 120, filter: "agNumberColumnFilter", valueFormatter: (p) => k$(p.value) },
+      { field: "npiOH", headerName: "NPI $", width: 110, filter: "agNumberColumnFilter", valueFormatter: (p) => k$(p.value), cellStyle: () => ({ color: color.error }) },
       {
         field: "npiPct",
         headerName: "NPI %",
         width: 110,
+        filter: "agNumberColumnFilter",
         valueFormatter: (p) => `${p.value}%`,
         cellStyle: (p) => ({ color: p.value >= NPI_THRESHOLD ? color.error : color.text, fontWeight: p.value >= NPI_THRESHOLD ? 700 : 400 }),
       },
-      { field: "drops", headerName: "Drops", width: 90 },
-      { field: "velocity", headerName: "Velocity", width: 100, cellStyle: (p) => ({ color: VEL_COLOR[p.value] || color.text, fontWeight: 700 }) },
+      { field: "drops", headerName: "Drops", width: 90, filter: "agNumberColumnFilter" },
+      { field: "velocity", headerName: "Velocity", width: 100, filter: "agSetColumnFilter", cellStyle: (p) => ({ color: VEL_COLOR[p.value] || color.text, fontWeight: 700 }) },
     ],
     []
   );
@@ -113,6 +115,7 @@ export default function Mpi() {
         that is no longer being replenished. Stores flagged in red need immediate merchant review.
       </Banner>
       <Table
+      defaultColDef={{ floatingFilter: true }}
         cardContainer
         rowHeight="compact"
         tableHeader={`Store NPI · ${filteredStores.length} stores`}
@@ -170,7 +173,7 @@ export default function Mpi() {
                   <Text variant="caption" tone="muted" mono style={{ width: 64, flexShrink: 0 }}>${s.menuPrice.toFixed(2)}</Text>
                   <Text variant="caption" tone="muted" style={{ width: 50, flexShrink: 0 }}>{s.gmPct}%</Text>
                   <Text variant="caption" tone={s.wos > 26 ? "error" : "muted"} style={{ width: 56, flexShrink: 0 }}>{s.wos}wk</Text>
-                  <Stack direction="row" gap={1} align="center" style={{ width: 150, flexShrink: 0 }}>
+                  <Stack direction="row" gap={2} align="center" style={{ width: 150, flexShrink: 0 }}>
                     {md && md.newRetail ? <Text variant="micro" tone="teal" mono>${Number(md.newRetail).toFixed(2)}/{md.newGmPct || s.gmPct}%</Text> : null}
                     <Button variant="secondary" size="small" onClick={() => setExpandedSku(open ? null : s.sku)}>{md ? "Edit" : "Set markdown"}</Button>
                   </Stack>
@@ -213,14 +216,14 @@ export default function Mpi() {
   });
   const droppedColumns = useMemo(
     () => [
-      { field: "desc", headerName: "SKU", minWidth: 200, flex: 1 },
-      { field: "sku", headerName: "SKU #", width: 120, cellStyle: () => ({ fontFamily: "var(--font-mono)", color: color.textMuted }) },
-      { field: "storeName", headerName: "Store", minWidth: 150, flex: 1 },
-      { field: "region", headerName: "Region", width: 130 },
-      { field: "r13", headerName: "R13 sqft/wk", width: 120, valueFormatter: (p) => p.value.toFixed(1), cellStyle: () => ({ color: color.error, fontWeight: 600 }) },
-      { field: "r13Rev", headerName: "R13 $/wk", width: 100, valueFormatter: (p) => `$${p.value}` },
-      { field: "oh", headerName: "On-Hand $", width: 110, valueFormatter: (p) => k$1(p.value) },
-      { field: "velocity", headerName: "Velocity", width: 100, cellStyle: (p) => ({ color: VEL_COLOR[p.value] || color.text, fontWeight: 700 }) },
+      { field: "desc", headerName: "SKU", minWidth: 200, flex: 1, filter: "agTextColumnFilter" },
+      { field: "sku", headerName: "SKU #", width: 120, filter: "agTextColumnFilter", cellStyle: () => ({ fontFamily: "var(--font-mono)", color: color.textMuted }) },
+      { field: "storeName", headerName: "Store", minWidth: 150, flex: 1, filter: "agTextColumnFilter" },
+      { field: "region", headerName: "Region", width: 130, filter: "agSetColumnFilter" },
+      { field: "r13", headerName: "R13 sqft/wk", width: 120, filter: "agNumberColumnFilter", valueFormatter: (p) => p.value.toFixed(1), cellStyle: () => ({ color: color.error, fontWeight: 600 }) },
+      { field: "r13Rev", headerName: "R13 $/wk", width: 100, filter: "agNumberColumnFilter", valueFormatter: (p) => `$${p.value}` },
+      { field: "oh", headerName: "On-Hand $", width: 110, filter: "agNumberColumnFilter", valueFormatter: (p) => k$1(p.value) },
+      { field: "velocity", headerName: "Velocity", width: 100, filter: "agSetColumnFilter", cellStyle: (p) => ({ color: VEL_COLOR[p.value] || color.text, fontWeight: 700 }) },
     ],
     []
   );
@@ -234,12 +237,12 @@ export default function Mpi() {
       {droppedAbove.length ? (
         <Stack direction="column" gap={2}>
           <Text variant="body-strong" tone="error">🚨 Above waterline — {droppedAbove.length} drops requiring review</Text>
-          <Table cardContainer rowHeight="compact" tableHeader="Above waterline" columnDefs={droppedColumns} rowData={droppedAbove.slice(0, 50).map(dropRow)} domLayout="autoHeight" hideTableSetting hideTableActions pagination={false} />
+          <Table defaultColDef={{ floatingFilter: true }} cardContainer rowHeight="compact" tableHeader="Above waterline" columnDefs={droppedColumns} rowData={droppedAbove.slice(0, 50).map(dropRow)} domLayout="autoHeight" hideTableSetting hideTableActions pagination={false} />
         </Stack>
       ) : null}
       <Stack direction="column" gap={2}>
         <Text variant="body-strong" tone="muted">Below waterline — {droppedBelow.length} drops (acceptable)</Text>
-        <Table cardContainer rowHeight="compact" tableHeader="Below waterline" columnDefs={droppedColumns} rowData={droppedBelow.slice(0, 40).map(dropRow)} domLayout="autoHeight" hideTableSetting hideTableActions pagination={false} />
+        <Table defaultColDef={{ floatingFilter: true }} cardContainer rowHeight="compact" tableHeader="Below waterline" columnDefs={droppedColumns} rowData={droppedBelow.slice(0, 40).map(dropRow)} domLayout="autoHeight" hideTableSetting hideTableActions pagination={false} />
       </Stack>
     </Stack>
   );
@@ -260,7 +263,7 @@ export default function Mpi() {
         </Stack>
       </Stack>
       {pushbackCandidates.length === 0 ? (
-        <Card sx={softSx}><EmptyState title="No drops above waterline" subText="No drops above the waterline with the current filters." /></Card>
+        <Card sx={softSx}><EmptyState heading="No drops above waterline" description="No drops above the waterline with the current filters." /></Card>
       ) : (
         pushbackCandidates.map((d) => {
           const key = `${d.sku}|${d.storeId}`;
@@ -371,7 +374,9 @@ export default function Mpi() {
         })}
       </Card>
       <Stack direction="row" justify="flex-end">
-        <Button variant="primary" size="medium">Save exit prices →</Button>
+        <Button variant="primary" size="medium" onClick={() => { setExitPricesSaved(true); setTimeout(() => setExitPricesSaved(false), 2500); }}>
+          {exitPricesSaved ? "✓ Prices saved" : "Save exit prices →"}
+        </Button>
       </Stack>
     </Stack>
   );
@@ -412,7 +417,7 @@ export default function Mpi() {
             <Text variant="caption" tone="success">🔒 <strong>Core &amp; BG items excluded</strong> from all drop analysis — mandatory in all stores, cannot be dropped.</Text>
           </Stack>
 
-          <Grid columns={5} gap={3}>
+          <Grid min={140} gap={3}>
             {metrics.map((m) => (
               <Card key={m.l} sx={softSx}>
                 <Stack direction="column" gap={1} align="center">
@@ -424,10 +429,10 @@ export default function Mpi() {
             ))}
           </Grid>
 
-          <Stack direction="row" gap={3} wrap align="flex-end">
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--sp-3)", width: "clamp(260px, 34vw, 460px)" }}>
             <FdSelect label="Region" value={regionFilter} options={REGION_OPTIONS} onChange={setRegionFilter} width={220} />
             <FdSelect label="Department" value={deptFilter} options={DEPT_OPTIONS} onChange={setDeptFilter} width={220} />
-          </Stack>
+          </div>
         </Stack>
       </Card>
 

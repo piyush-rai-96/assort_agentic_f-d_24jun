@@ -1,5 +1,8 @@
 import React from "react";
+import { EmptyState } from "impact-ui";
+import { useAuth } from "./context/AuthContext.jsx";
 import MainLayout from "./layouts/MainLayout.jsx";
+import Login from "./views/Login.jsx";
 import ModulePlaceholder from "./views/ModulePlaceholder.jsx";
 import Today from "./views/Today.jsx";
 import Hindsight from "./views/Hindsight.jsx";
@@ -21,12 +24,14 @@ import LeadTime from "./views/LeadTime.jsx";
 import PeerIntelligence from "./views/PeerIntelligence.jsx";
 
 /*
- * App root — wires MainLayout as the master wrapper for all views.
+ * App root — renders the Login screen when no user is authenticated,
+ * and the full MainLayout shell when a valid session exists.
  *
- * MainLayout owns the navigation state and exposes the active module via a
- * render-prop child. Each migrated screen registers here by module value;
- * anything not yet built falls back to the placeholder. This map is the
- * single seam to swap in a real router later.
+ * The VIEWS map wires module values to view components exactly as before.
+ * The render-prop adds a `hasAccess` check so any view that somehow receives
+ * an unauthorised module value (e.g. via a stale URL or programmatic jump)
+ * falls back to a clear "Access denied" EmptyState rather than silently
+ * rendering nothing.
  */
 const VIEWS = {
   today: ({ navigate }) => <Today onNavigate={navigate} />,
@@ -49,13 +54,32 @@ const VIEWS = {
   "peer-intel": () => <PeerIntelligence />,
 };
 
-export default function App() {
+function AccessDenied() {
   return (
-    <MainLayout
-      user={{ name: "Karen M.", role: "VP Merchandising · Corporate" }}
-      onLogout={() => console.log("logout")}
-    >
-      {({ activeModule, moduleLabel, groupLabel, navigate }) => {
+    <div style={{ padding: "48px 32px" }}>
+      <EmptyState
+        heading="Access restricted"
+        description="You don't have permission to view this module. Contact your administrator if you think this is a mistake."
+      />
+    </div>
+  );
+}
+
+export default function App() {
+  const { user } = useAuth();
+
+  // No authenticated user → show the login screen.
+  if (!user) {
+    return <Login />;
+  }
+
+  return (
+    <MainLayout>
+      {({ activeModule, moduleLabel, groupLabel, navigate, hasAccess }) => {
+        // Defense-in-depth: block access even if navigation state drifts.
+        if (!hasAccess(activeModule)) {
+          return <AccessDenied />;
+        }
         const View = VIEWS[activeModule];
         return View ? (
           View({ navigate })

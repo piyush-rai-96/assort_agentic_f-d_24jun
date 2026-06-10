@@ -100,7 +100,7 @@ function StepCard({ step, title, state, children }) {
   );
 }
 
-export default function LikeItemForecast() {
+export default function LikeItemForecast({ onNavigate }) {
   const [skuState, setSkuState] = useState({});
   const [activeSku, setActiveSku] = useState(null);
 
@@ -164,18 +164,20 @@ export default function LikeItemForecast() {
   // ── Step 3 results table ────────────────────────────────────────────────────
   const projColumns = useMemo(
     () => [
-      { field: "storeName", headerName: "Store", minWidth: 200, flex: 1 },
-      { field: "region", headerName: "Region", width: 130 },
+      { field: "storeName", headerName: "Store", minWidth: 200, flex: 1, filter: "agTextColumnFilter" },
+      { field: "region", headerName: "Region", width: 130, filter: "agSetColumnFilter" },
       {
         field: "velocity",
         headerName: "Vel.",
         width: 90,
+        filter: "agSetColumnFilter",
         cellStyle: (p) => ({ color: VELOCITY_COLOR[p.value] || color.text, fontWeight: 700 }),
       },
       {
         field: "projSqft",
         headerName: "Proj sqft",
         width: 120,
+        filter: "agNumberColumnFilter",
         cellStyle: () => ({ color: color.success, fontWeight: 700, fontFamily: "var(--font-mono)" }),
       },
     ],
@@ -310,6 +312,7 @@ export default function LikeItemForecast() {
           </Grid>
 
           <Table
+      defaultColDef={{ floatingFilter: true }}
             cardContainer
             rowHeight="compact"
             tableHeader="Projected demand by store"
@@ -329,8 +332,8 @@ export default function LikeItemForecast() {
           </Card>
 
           <Stack direction="row" gap={2} wrap>
-            <Button variant="primary" size="medium">View in Assortment Intelligence →</Button>
-            <Button variant="secondary" size="medium">Advance to Store Curation →</Button>
+            <Button variant="primary" size="medium" onClick={() => onNavigate?.("peer-intel")}>View in Assortment Intelligence →</Button>
+            <Button variant="secondary" size="medium" onClick={() => onNavigate?.("store-curation")}>Advance to Store Curation →</Button>
           </Stack>
         </Stack>
       );
@@ -390,7 +393,7 @@ export default function LikeItemForecast() {
                 value=""
                 options={likeOptions}
                 onChange={(v) => setLike(active.sku, v)}
-                width={600}
+                width="100%"
                 isWithSearch
               />
             </Stack>
@@ -424,7 +427,7 @@ export default function LikeItemForecast() {
   }
 
   return (
-    <Grid columns="260px minmax(0, 1fr)" gap={4} align="start">
+    <Grid columns="260px minmax(0, 1fr)" gap={4} align="start" style={{ flexWrap: "wrap" }}>
       {leftPanel}
       {rightPanel}
     </Grid>

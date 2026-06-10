@@ -136,13 +136,13 @@ export default function MarketIntel() {
       <Stack direction="column" style={{ height: "100%" }}>
         <Stack direction="column" gap={2} paddingX={3} paddingY={3} style={{ borderBottom: "1px solid var(--color-border)" }}>
           <Text variant="overline" tone="muted">Filters</Text>
-          <Stack direction="row" gap={1} wrap>
+          <Stack direction="row" gap={2} wrap>
             <Chip active={statusTab === "all" && !dirFilter && !typeFilter} onClick={() => setStatus("all")}>All {total}</Chip>
             <Chip active={statusTab === "new"} onClick={() => setStatus("new")}>New {newCount}</Chip>
             <Chip active={statusTab === "reviewed"} onClick={() => setStatus("reviewed")}>Reviewed {countBy((i) => i.status === "reviewed")}</Chip>
             <Chip active={statusTab === "actioned"} onClick={() => setStatus("actioned")}>Actioned {countBy((i) => i.status === "actioned")}</Chip>
           </Stack>
-          <Stack direction="row" gap={1} wrap>
+          <Stack direction="row" gap={2} wrap>
             <Chip active={dirFilter === "threat"} onClick={() => toggleDir("threat")}>Threats {threats}</Chip>
             <Chip active={dirFilter === "opportunity"} onClick={() => toggleDir("opportunity")}>Opps {opps}</Chip>
           </Stack>
@@ -234,7 +234,7 @@ export default function MarketIntel() {
   /* ═══════════════ INBOX ═══════════════ */
   const inbox = (
     <Stack direction="column" gap={3}>
-      <Grid columns={5} gap={3}>
+      <Grid min={140} gap={3}>
         {metrics.map((m) => (
           <Card key={m.l} sx={softSx}>
             <Stack direction="column" gap={1} align="center">
@@ -254,7 +254,7 @@ export default function MarketIntel() {
       </Stack>
 
       {filtered.length === 0 ? (
-        <Card sx={softSx}><EmptyState title="No signals" subText="No signals match the current filters." /></Card>
+        <Card sx={softSx}><EmptyState heading="No signals" description="No signals match the current filters." /></Card>
       ) : (
         <Grid columns={2} gap={3}>{filtered.map(intelCard)}</Grid>
       )}
@@ -515,14 +515,14 @@ export default function MarketIntel() {
             <Text variant="title">Market Intelligence</Text>
             <Text variant="caption" tone="muted">Field-logged market, competitor &amp; customer signals · structured tags feed the recommendation agent</Text>
           </Stack>
-          <Stack direction="row" gap={2}>
+          <Stack direction="row" gap={3} wrap>
             <Button variant={view === "inbox" ? "primary" : "secondary"} size="medium" onClick={() => setView("inbox")}>Inbox</Button>
             <Button variant={view === "map" ? "primary" : "secondary"} size="medium" onClick={() => setView("map")}>Signal map</Button>
           </Stack>
         </Stack>
       </Card>
 
-      <Stack direction="row" gap={3} align="flex-start">
+      <Stack direction="row" gap={3} align="flex-start" wrap>
         {sidebar}
         <div style={{ flex: 1, minWidth: 0 }}>
           {view === "inbox" ? inbox : view === "log" ? logForm : mapView}

@@ -145,14 +145,15 @@ export default function StoreHub() {
   // ── Table column definitions ─────────────────────────────────────────────
   const oppColumns = useMemo(
     () => [
-      { field: "desc", headerName: "Description", minWidth: 220, flex: 1 },
-      { field: "sku", headerName: "SKU", width: 130 },
-      { field: "dept", headerName: "Dept", width: 150 },
-      { field: "price", headerName: "Price", width: 100, valueFormatter: (p) => `$${Number(p.value).toFixed(2)}` },
+      { field: "desc", headerName: "Description", minWidth: 220, flex: 1, filter: "agTextColumnFilter" },
+      { field: "sku", headerName: "SKU", width: 130, filter: "agTextColumnFilter" },
+      { field: "dept", headerName: "Dept", width: 150, filter: "agSetColumnFilter" },
+      { field: "price", headerName: "Price", width: 100, filter: "agNumberColumnFilter", valueFormatter: (p) => `$${Number(p.value).toFixed(2)}` },
       {
         field: "compR13",
         headerName: "Comp R13",
         width: 120,
+        filter: "agNumberColumnFilter",
         valueFormatter: (p) => `${p.value} sqft`,
         cellStyle: (p) => ({ color: p.value > 100 ? color.success : color.text, fontWeight: 600 }),
       },
@@ -167,25 +168,27 @@ export default function StoreHub() {
         headerName: "Store",
         minWidth: 170,
         flex: 1,
+        filter: "agTextColumnFilter",
         cellStyle: (p) => ({
           fontWeight: p.data.isMe ? 700 : 500,
           color: p.data.isMe ? color.primary : color.text,
         }),
       },
-      { field: "velocity", headerName: "Vel.", width: 80 },
-      { field: "skuCount", headerName: "SKUs", width: 90 },
+      { field: "velocity", headerName: "Vel.", width: 80, filter: "agSetColumnFilter" },
+      { field: "skuCount", headerName: "SKUs", width: 90, filter: "agNumberColumnFilter" },
       {
         field: "vsCluster",
         headerName: "vs Cluster",
         width: 110,
+        filter: "agNumberColumnFilter",
         valueFormatter: (p) => `${p.value > 0 ? "+" : ""}${p.value}`,
         cellStyle: (p) => ({
           color: p.value >= 0 ? color.success : color.error,
           fontWeight: 700,
         }),
       },
-      { field: "r13", headerName: "R13 sqft", width: 110 },
-      { field: "avgR13", headerName: "Avg R13/SKU", width: 130 },
+      { field: "r13", headerName: "R13 sqft", width: 110, filter: "agNumberColumnFilter" },
+      { field: "avgR13", headerName: "Avg R13/SKU", width: 130, filter: "agNumberColumnFilter" },
     ],
     []
   );
@@ -199,8 +202,7 @@ export default function StoreHub() {
       <Stack direction="row" align="center" gap={3} paddingX={3} paddingY={2} className="sh-row">
         <Stack direction="column" gap={1} flex="1 1 auto" style={{ minWidth: 0 }}>
           <Text variant="caption" tone="default" truncate>{r.desc}</Text>
-          <Stack direction="row" gap={2} align="center">
-            <Badge variant="subtle" size="small" color={DEPT_BADGE[r.dept] || "info"} label={r.dept} />
+          <Stack direction="row" gap={2} align="center" wrap>
             {kind === "comp" && !both && (
               <Badge variant="subtle" size="small" color="warning" label="Not in my store" />
             )}
@@ -269,6 +271,7 @@ export default function StoreHub() {
       </Card>
       {model.oppRows.length ? (
         <Table
+      defaultColDef={{ floatingFilter: true }}
           tableHeader={`Opportunities · ${compStore.name}`}
           cardContainer
           rowHeight="compact"
@@ -315,11 +318,12 @@ export default function StoreHub() {
         </Grid>
       </Card>
 
-      <Stack direction="column" gap={2}>
+      <Stack direction="column" gap={3}>
         <Text variant="subheading" tone="strong">
           {model.clusterLabel} · {model.clusterCount} stores
         </Text>
         <Table
+      defaultColDef={{ floatingFilter: true }}
           tableHeader="Cluster peers"
           cardContainer
           rowHeight="compact"
@@ -346,11 +350,11 @@ export default function StoreHub() {
               Compare SKU assortment, sister-store performance &amp; cluster benchmarks
             </Text>
           </Stack>
-          <Stack direction="row" gap={3} align="flex-end" wrap justify="flex-end" flex="0 1 620px" style={{ minWidth: 0 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "var(--sp-3)", flex: "0 0 auto", width: "clamp(300px, 46vw, 620px)" }}>
             <FdSelect label="My store" value={storeId} options={STORE_OPTIONS} onChange={(v) => setStoreId(Number(v))} width={210} isWithSearch />
             <FdSelect label="Sister / comp store" value={effCompId} options={compOptions} onChange={(v) => setCompStoreId(Number(v))} width={210} isWithSearch />
             <FdSelect label="Department" value={dept} options={DEPT_OPTIONS} onChange={setDept} width={160} />
-          </Stack>
+          </div>
         </Stack>
       </Card>
 

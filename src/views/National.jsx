@@ -79,12 +79,12 @@ export default function National({ onNavigate }) {
 
   const lockedColumns = useMemo(
     () => [
-      { field: "name", headerName: "Description", minWidth: 240, flex: 1 },
-      { field: "sku", headerName: "SKU", width: 120, cellStyle: () => ({ fontFamily: "var(--font-mono)", color: color.textMuted }) },
-      { field: "dept", headerName: "Dept", width: 150 },
-      { field: "subDept", headerName: "Sub-Dept", minWidth: 150, flex: 1 },
-      { field: "price", headerName: "Price", width: 100, valueFormatter: (p) => `$${Number(p.value).toFixed(2)}` },
-      { field: "carry", headerName: "Carry", width: 100, valueFormatter: (p) => `${p.value}%` },
+      { field: "name", headerName: "Description", minWidth: 240, flex: 1, filter: "agTextColumnFilter" },
+      { field: "sku", headerName: "SKU", width: 120, filter: "agTextColumnFilter", cellStyle: () => ({ fontFamily: "var(--font-mono)", color: color.textMuted }) },
+      { field: "dept", headerName: "Dept", width: 150, filter: "agSetColumnFilter" },
+      { field: "subDept", headerName: "Sub-Dept", minWidth: 150, flex: 1, filter: "agSetColumnFilter" },
+      { field: "price", headerName: "Price", width: 100, filter: "agNumberColumnFilter", valueFormatter: (p) => `$${Number(p.value).toFixed(2)}` },
+      { field: "carry", headerName: "Carry", width: 100, filter: "agNumberColumnFilter", valueFormatter: (p) => `${p.value}%` },
       {
         field: "avg",
         headerName: "Avg R13/Store",
@@ -162,13 +162,14 @@ export default function National({ onNavigate }) {
       </Grid>
 
       {/* ── Section 1: Hard-locked Core / BG ───────────────────────────────── */}
-      <Stack direction="column" gap={2}>
+      <Stack direction="column" gap={3}>
         <Stack direction="row" align="center" gap={2} wrap>
           <Text variant="body-strong" tone="success">🔒 Always Mandatory — Core / BG</Text>
           <Badge variant="subtle" size="small" color="success" label={`${HARD_LOCKED.length}`} />
           <Text variant="caption" tone="muted">From the product catalogue — cannot be removed under any circumstance</Text>
         </Stack>
         <Table
+      defaultColDef={{ floatingFilter: true }}
           cardContainer
           rowHeight="compact"
           tableHeader="Locked national core"
@@ -183,7 +184,7 @@ export default function National({ onNavigate }) {
 
       {/* ── Section 2: Agent recommendations (post-run) ────────────────────── */}
       {agentRun ? (
-        <Stack direction="column" gap={2}>
+        <Stack direction="column" gap={3}>
           <Stack direction="row" align="center" gap={2} wrap>
             <Text variant="body-strong" tone="teal">🤖 Agent Recommended for National Core</Text>
             <Badge variant="subtle" size="small" color="info" label={`${agentRecs.length}`} />
@@ -257,8 +258,8 @@ export default function National({ onNavigate }) {
           ) : (
             <Card sx={softSx}>
               <EmptyState
-                title="No additional promotions"
-                subText="The agent found no non-core SKUs meeting the ≥80% carry and high-sqft national threshold. Only the hard-locked Core / BG items will be national."
+                heading="No additional promotions"
+                description="The agent found no non-core SKUs meeting the ≥80% carry and high-sqft national threshold. Only the hard-locked Core / BG items will be national."
               />
             </Card>
           )}

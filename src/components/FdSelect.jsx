@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Select } from "impact-ui";
+import "./FdSelect.css";
 
 /*
  * FdSelect — thin controlled wrapper around Impact UI's <Select>.
@@ -47,10 +48,11 @@ export default function FdSelect({
 
   return (
     <div
+      className="fd-select-wrap"
       style={{
         flex: `1 1 ${Math.min(width, 160)}px`,
         maxWidth: width,
-        minWidth: 0,
+        minWidth: 120,
       }}
     >
       <Select
@@ -63,6 +65,7 @@ export default function FdSelect({
         isOpen={isOpen}
         setIsOpen={setIsOpen}
         withPortal
+        width="100%"
         initialOptions={options}
         currentOptions={currentOptions}
         setCurrentOptions={setCurrentOptions}

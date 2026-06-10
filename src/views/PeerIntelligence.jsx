@@ -56,6 +56,8 @@ export default function PeerIntelligence() {
   const [reviewList, setReviewList] = useState(() => new Set());
   const [exitFlags, setExitFlags] = useState(() => new Set());
   const [selectedSku, setSelectedSku] = useState(null);
+  const [exportDone, setExportDone] = useState(false);
+  const [filterOpen, setFilterOpen] = useState(false);
 
   const catName = category === "all" ? null : CATEGORIES.find((c) => c.id === category)?.name;
   const inCategory = (s) => !catName || s.cat === catName;
@@ -97,9 +99,13 @@ export default function PeerIntelligence() {
                 <strong style={{ color: "var(--color-primary)" }}>{PEER_CONTEXT.cluster}</strong> cluster ({PEER_CONTEXT.clusterStores} stores)
               </Text>
             </Stack>
-            <Stack direction="row" gap={2} wrap>
-              <Button variant="secondary" size="small">Export</Button>
-              <Button variant="secondary" size="small">Filters</Button>
+            <Stack direction="row" gap={3} wrap>
+              <Button variant="secondary" size="small" onClick={() => { setExportDone(true); setTimeout(() => setExportDone(false), 2500); }}>
+                {exportDone ? "✓ Exported" : "Export"}
+              </Button>
+              <Button variant={filterOpen ? "primary" : "secondary"} size="small" onClick={() => setFilterOpen((v) => !v)}>
+                {filterOpen ? "Close Filters" : "Filters"}
+              </Button>
               <Button variant="primary" size="small" onClick={addAllWinners}>
                 Add to Review List ({reviewList.size})
               </Button>
@@ -107,7 +113,7 @@ export default function PeerIntelligence() {
           </Stack>
 
           {/* Category chips */}
-          <Stack direction="row" align="center" gap={2} wrap>
+          <Stack direction="row" align="center" gap={2} wrap style={{ paddingTop: "var(--sp-2)", borderTop: "1px solid var(--color-border)" }}>
             <Text variant="overline" tone="subtle">Category</Text>
             {chips.map((c) => (
               <Button
@@ -126,7 +132,7 @@ export default function PeerIntelligence() {
 
       {/* My Store vs Cluster comparison */}
       <div className="pi-card">
-        <Stack className="pi-card-head" direction="row" gap={2}>
+        <Stack className="pi-card-head" direction="row" gap={3} wrap>
           <IconBadge tone="primary" glyph="≋" />
           <Stack direction="column" gap={0} flex="1 1 auto" style={{ minWidth: 0 }}>
             <Text variant="body-strong" tone="strong">My Store vs Cluster</Text>
@@ -151,7 +157,7 @@ export default function PeerIntelligence() {
             className={`pi-cmp-row${r.highlight ? ` ${r.highlight}` : ""}`}
           >
             <Text variant="caption" tone="strong">{r.metric}</Text>
-            <Stack direction="row" align="center" justify="flex-end" gap={1}>
+            <Stack direction="row" align="center" justify="flex-end" gap={2}>
               {r.highlight === "win" ? <Text variant="micro" tone="success">▲</Text> : null}
               {r.highlight === "loser" ? <Text variant="micro" tone="error">▼</Text> : null}
               <Text variant="caption" tone="strong" mono>{r.a}</Text>
@@ -163,10 +169,10 @@ export default function PeerIntelligence() {
       </div>
 
       {/* SKU drill-downs */}
-      <Grid columns="1fr 1fr" gap={4} min={360}>
+      <Grid min={360} gap={4}>
         {/* Network Winners — Not Carried */}
         <div className="pi-card">
-          <Stack className="pi-card-head" direction="row" gap={2}>
+          <Stack className="pi-card-head" direction="row" gap={3} wrap>
             <IconBadge tone="success" glyph="↑" />
             <Stack direction="column" gap={0} flex="1 1 auto" style={{ minWidth: 0 }}>
               <Text variant="body-strong" tone="strong">Network Winners — Not Carried</Text>
@@ -219,7 +225,7 @@ export default function PeerIntelligence() {
 
         {/* Losers — Still Carried */}
         <div className="pi-card">
-          <Stack className="pi-card-head" direction="row" gap={2}>
+          <Stack className="pi-card-head" direction="row" gap={3} wrap>
             <IconBadge tone="error" glyph="↓" />
             <Stack direction="column" gap={0} flex="1 1 auto" style={{ minWidth: 0 }}>
               <Text variant="body-strong" tone="strong">Losers — Still Carried</Text>
@@ -234,7 +240,7 @@ export default function PeerIntelligence() {
             losers.map((s) => {
               const flagged = exitFlags.has(s.id);
               return (
-                <Stack key={s.id} className="pi-sku" direction="row" gap={3} onClick={() => setSelectedSku(s)}>
+                <Stack key={s.id} className="pi-sku" direction="row" gap={3} wrap onClick={() => setSelectedSku(s)}>
                   <Stack direction="column" gap={1} flex="1 1 auto" style={{ minWidth: 0 }}>
                     <Stack direction="row" align="center" gap={2} wrap>
                       <Text variant="micro" tone="muted" mono>{s.id}</Text>
@@ -274,7 +280,7 @@ export default function PeerIntelligence() {
 
       {/* Cross-store variance heatmap */}
       <div className="pi-card">
-        <Stack className="pi-card-head" direction="row" gap={2}>
+        <Stack className="pi-card-head" direction="row" gap={3} wrap>
           <IconBadge tone="accent" glyph="▦" />
           <Stack direction="column" gap={0} flex="1 1 auto" style={{ minWidth: 0 }}>
             <Text variant="body-strong" tone="strong">Cross-Store Sell-Through Variance</Text>
@@ -374,7 +380,7 @@ function SkuDetail({ sku, inReview, flagged, onReview, onFlag }) {
         <Sparkline data={sku.trend} width={500} height={64} color={sparkColor} fill={sparkColor} strokeWidth={2} />
       </Stack>
 
-      <Grid columns="1fr 1fr" gap={2} min={200}>
+      <Grid min={200} gap={2}>
         {stats.map((s) => (
           <div key={s.l} className="pi-detail">
             <Text variant="micro" tone="subtle">{s.l}</Text>

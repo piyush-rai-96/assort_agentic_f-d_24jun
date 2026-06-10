@@ -1,0 +1,21 @@
+/*
+ * FdSelect — forces the Impact UI Select trigger button to respect its container.
+ *
+ * Impact UI Select's button has these inline styles when no minWidth prop is passed:
+ *   width: width ?? "240px"       → we pass width="100%" so button gets width:100%
+ *   min-width: minWidth ?? "240px" → minWidth prop is NOT passed (passing it sets the
+ *                                    CONTAINER width to "0" which collapses everything)
+ *
+ * The CSS below overrides the button's min-width:240px inline style with !important.
+ * This is intentional — author !important beats inline styles per CSS spec.
+ */
+.fd-select-wrap .ia-select-styled-dropdown-main-button {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box;
+}
+
+/* Let portal popups escape — do not clip */
+.fd-select-wrap {
+  overflow: visible;
+}

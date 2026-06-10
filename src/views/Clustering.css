@@ -1,6 +1,6 @@
-/* Location Clustering — scenario tabs, two-panel layout, store rows. */
+/* Location Clustering — scenario explorer + Cluster Run management */
 
-/* Scenario selector cards. */
+/* ── Scenario selector ─────────────────────────────────────────────────── */
 .cl-scenario {
   cursor: pointer;
   border: 2px solid var(--color-border);
@@ -9,15 +9,13 @@
   padding: 8px 12px;
   transition: border-color 0.12s ease, background 0.12s ease;
 }
-.cl-scenario:hover {
-  border-color: var(--color-border-strong);
-}
+.cl-scenario:hover  { border-color: var(--color-border-strong); }
 .cl-scenario.is-active {
   border-color: var(--color-primary);
   background: var(--color-primary-soft);
 }
 
-/* Score chips in the header. */
+/* ── Score chips ─────────────────────────────────────────────────────── */
 .cl-score {
   border: 1px solid var(--color-border);
   border-radius: var(--r2);
@@ -27,20 +25,17 @@
   min-width: 88px;
 }
 
-/* Two-panel body. */
-.cl-body {
-  align-items: stretch;
-}
+/* ── Two-panel body ─────────────────────────────────────────────────── */
+.cl-body { align-items: stretch; }
 .cl-sidebar {
-  width: 264px;
-  min-width: 264px;
+  width: 264px; min-width: 264px;
   flex-shrink: 0;
   align-self: flex-start;
   max-height: 70vh;
   overflow-y: auto;
 }
 
-/* Cluster list rows. */
+/* ── Cluster list rows ─────────────────────────────────────────────── */
 .cl-clusterrow {
   cursor: pointer;
   padding: 10px 12px;
@@ -48,16 +43,11 @@
   border-left: 3px solid transparent;
   transition: background 0.1s ease;
 }
-.cl-clusterrow:hover {
-  background: var(--color-surface-alt);
-}
-.cl-clusterrow.is-active {
-  background: var(--color-surface-alt);
-}
+.cl-clusterrow:hover    { background: var(--color-surface-alt); }
+.cl-clusterrow.is-active { background: var(--color-surface-alt); }
 
 .cl-dot {
-  width: 10px;
-  height: 10px;
+  width: 10px; height: 10px;
   border-radius: 50%;
   flex-shrink: 0;
 }
@@ -69,15 +59,886 @@
   background: var(--color-surface-alt);
 }
 
-/* Store preview rows in overview cards. */
-.cl-storehead,
-.cl-storerow {
-  padding: 6px 12px;
+/* ── Store preview rows ───────────────────────────────────────────── */
+.cl-storehead, .cl-storerow { padding: 6px 12px; align-items: center; }
+.cl-storerow               { border-top: 1px solid var(--color-border); }
+.cl-storerow.alt           { background: var(--color-surface-alt); }
+
+/* ════════════════════════════════════════════════════════════════════
+   CLUSTER RUN MANAGEMENT DASHBOARD
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ── View tabs ──────────────────────────────────────────────────────── */
+.cr-tabs {
+  display: flex;
+  gap: 2px;
+  background: var(--color-surface-sunken);
+  border-radius: var(--r2);
+  padding: 3px;
+}
+.cr-tab {
+  flex: 1;
+  padding: 6px 16px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: var(--fs-caption);
+  font-weight: 600;
+  color: var(--color-text-muted);
+  transition: background 0.12s, color 0.12s;
+  white-space: nowrap;
+}
+.cr-tab:hover { background: var(--color-surface); color: var(--color-text); }
+.cr-tab.is-active {
+  background: var(--color-surface);
+  color: var(--color-primary);
+  box-shadow: var(--sh);
+}
+
+/* ── KPI strip ──────────────────────────────────────────────────────── */
+.cr-kpi-card {
+  flex: 1 1 160px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--r);
+  box-shadow: var(--sh);
+  padding: var(--sp-4) var(--sp-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+.cr-kpi-value {
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.5px;
+  color: var(--color-text-strong);
+}
+.cr-kpi-label {
+  font-size: var(--fs-caption);
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+}
+.cr-kpi-sub {
+  font-size: var(--fs-micro);
+  color: var(--color-text-subtle);
+  margin-top: 2px;
+}
+
+/* ── Cohesion bar ─────────────────────────────────────────────────── */
+.cr-cohesion-wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+.cr-cohesion-track {
+  flex: 1;
+  height: 6px;
+  background: var(--ice2);
+  border-radius: 10px;
+  overflow: hidden;
+  min-width: 40px;
+}
+.cr-cohesion-fill {
+  height: 100%;
+  border-radius: 10px;
+  transition: width 0.4s ease;
+}
+.cr-cohesion-val {
+  font-size: var(--fs-micro);
+  font-weight: 700;
+  min-width: 28px;
+  text-align: right;
+}
+
+/* ── Distribution bar (cluster proportions) ───────────────────────── */
+.cr-dist-bar {
+  display: flex;
+  height: 10px;
+  border-radius: 6px;
+  overflow: hidden;
+  gap: 2px;
+  background: var(--color-surface-sunken);
+}
+.cr-dist-seg {
+  border-radius: 4px;
+  transition: flex 0.3s ease;
+  min-width: 4px;
+}
+
+/* ── Active cluster set card ──────────────────────────────────────── */
+.cr-active-set {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--r);
+  box-shadow: var(--sh);
+  overflow: hidden;
+}
+.cr-active-set-header {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: var(--sp-4) var(--sp-5);
+  background: var(--color-surface-alt);
+  border-bottom: 1px solid var(--color-border);
+  flex-wrap: wrap;
+}
+
+/* ── Category pill ───────────────────────────────────────────────── */
+.cr-cat-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: var(--fs-micro);
+  font-weight: 600;
+  background: var(--color-surface-sunken);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+
+/* ── Table rows for cluster/run tables ────────────────────────────── */
+.cr-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.cr-table th {
+  padding: 8px 12px;
+  text-align: left;
+  font-size: var(--fs-micro);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-text-subtle);
+  background: var(--color-surface-alt);
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+.cr-table td {
+  padding: 10px 12px;
+  font-size: var(--fs-caption);
+  color: var(--color-text);
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: middle;
+}
+.cr-table tbody tr:last-child td { border-bottom: none; }
+.cr-table tbody tr:hover td { background: var(--color-surface-alt); }
+
+.cr-run-id {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-teal);
+}
+.cr-status-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: var(--fs-micro);
+  font-weight: 700;
+  background: var(--color-success-soft);
+  color: var(--color-success);
+}
+.cr-status-live::before {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--color-success);
+  flex-shrink: 0;
+}
+.cr-status-archived {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: var(--fs-micro);
+  font-weight: 600;
+  background: var(--color-surface-sunken);
+  color: var(--color-text-subtle);
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   CLUSTER RUN WIZARD OVERLAY
+   ════════════════════════════════════════════════════════════════════ */
+.cr-wizard-overlay {
+  position: fixed;
+  top: var(--header-h);
+  left: var(--rail-w);
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  background: var(--color-bg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: cr-slide-in 0.2s ease;
+}
+@keyframes cr-slide-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
+
+/* ── Wizard header ───────────────────────────────────────────────── */
+.cr-wizard-header {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-6);
+  padding: var(--sp-4) var(--sp-6);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+/* ── Step indicators ─────────────────────────────────────────────── */
+.cr-steps {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex: 1;
+  justify-content: center;
+}
+.cr-step-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 80px;
+}
+.cr-step-circle {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--color-surface-sunken);
+  color: var(--color-text-subtle);
+  border: 2px solid var(--color-border);
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+.cr-step-item.is-active .cr-step-circle {
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 4px var(--color-primary-soft);
+}
+.cr-step-item.is-done .cr-step-circle {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+.cr-step-label {
+  font-size: var(--fs-micro);
+  font-weight: 600;
+  color: var(--color-text-subtle);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+}
+.cr-step-item.is-active .cr-step-label { color: var(--color-primary); }
+.cr-step-item.is-done .cr-step-label   { color: var(--color-text-muted); }
+.cr-step-connector {
+  width: 56px;
+  height: 2px;
+  background: var(--color-border);
+  margin-top: -14px; /* align with circle centre */
+  flex-shrink: 0;
+  transition: background 0.2s ease;
+}
+.cr-step-connector.is-done { background: var(--color-primary); }
+
+/* ── Wizard body ─────────────────────────────────────────────────── */
+.cr-wizard-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--sp-6) var(--sp-8);
+}
+
+/* ── Wizard footer ───────────────────────────────────────────────── */
+.cr-wizard-footer {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-4) var(--sp-6);
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+/* ── Two-column step layout ──────────────────────────────────────── */
+.cr-step-grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: var(--sp-6);
+  max-width: 1100px;
+  margin: 0 auto;
+}
+@media (max-width: 900px) {
+  .cr-step-grid { grid-template-columns: 1fr; }
+}
+
+/* ── Form section cards ──────────────────────────────────────────── */
+.cr-form-section {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--r);
+  box-shadow: var(--sh);
+  overflow: hidden;
+}
+.cr-form-section-header {
+  padding: var(--sp-4) var(--sp-5);
+  background: var(--color-surface-alt);
+  border-bottom: 1px solid var(--color-border);
+}
+.cr-form-section-body { padding: var(--sp-5); }
+
+/* ── Scope / method radio cards ───────────────────────────────────── */
+.cr-radio-card {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border: 2px solid var(--color-border);
+  border-radius: var(--r2);
+  cursor: pointer;
+  background: var(--color-surface);
+  transition: border-color 0.12s, background 0.12s;
+}
+.cr-radio-card:hover { border-color: var(--color-border-strong); }
+.cr-radio-card.is-selected {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+}
+.cr-radio-card.is-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+.cr-radio-dot {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--color-border);
+  flex-shrink: 0;
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.12s;
+}
+.cr-radio-card.is-selected .cr-radio-dot {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+}
+.cr-radio-card.is-selected .cr-radio-dot::after {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: white;
+}
+
+/* ── k slider ─────────────────────────────────────────────────────── */
+.cr-k-slider {
+  width: 100%;
+  accent-color: var(--color-primary);
+  height: 4px;
+}
+
+/* ── Info rail (right side of Step 0) ───────────────────────────── */
+.cr-info-rail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+.cr-info-box {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--r);
+  box-shadow: var(--sh);
+  padding: var(--sp-4) var(--sp-5);
+}
+.cr-info-step {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  padding: var(--sp-2) 0;
+}
+.cr-info-step-num {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.cr-last-run-box {
+  background: var(--color-surface-sunken);
+  border: 1px solid var(--color-border);
+  border-radius: var(--r2);
+  padding: var(--sp-3) var(--sp-4);
+}
+
+/* ── Attribute groups (Step 1) ───────────────────────────────────── */
+.cr-attr-group { display: flex; flex-direction: column; gap: var(--sp-2); }
+.cr-attr-group-label {
+  font-size: var(--fs-micro);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-text-subtle);
+  padding-bottom: var(--sp-1);
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: var(--sp-1);
+}
+.cr-attr-check {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r2);
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background 0.1s, border-color 0.1s;
+}
+.cr-attr-check:hover { background: var(--color-surface-alt); }
+.cr-attr-check.is-selected {
+  background: var(--color-primary-soft);
+  border-color: var(--color-primary);
+}
+.cr-attr-checkbox {
+  width: 16px; height: 16px;
+  border-radius: 4px;
+  border: 2px solid var(--color-border);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+  transition: all 0.1s;
+  background: white;
+}
+.cr-attr-check.is-selected .cr-attr-checkbox {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+.cr-attr-check.is-selected .cr-attr-checkbox::after {
+  content: '✓';
+  color: white;
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1;
+}
+.cr-recommended-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  border-radius: 6px;
+  font-size: 9px;
+  font-weight: 700;
+  background: var(--color-teal-soft);
+  color: var(--color-teal);
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+/* ── Live preview panel (Step 1 right) ───────────────────────────── */
+.cr-preview-panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--r);
+  box-shadow: var(--sh);
+  overflow: hidden;
+}
+.cr-preview-cluster {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--color-border);
+}
+.cr-preview-cluster:last-child { border-bottom: none; }
+.cr-preview-cluster-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+}
+
+/* ── Progress bar (Step 2) ───────────────────────────────────────── */
+.cr-progress-track {
+  height: 8px;
+  background: var(--ice2);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.cr-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-teal));
+  border-radius: 10px;
+  transition: width 0.3s ease;
+}
+
+/* ── Warning banner ─────────────────────────────────────────────── */
+.cr-warning-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--color-warning-soft);
+  border: 1px solid var(--amber-pale);
+  border-left: 3px solid var(--color-warning);
+  border-radius: var(--r2);
+}
+
+/* ── Results delta badge ─────────────────────────────────────────── */
+.cr-delta-pos {
+  font-size: var(--fs-micro);
+  font-weight: 700;
+  color: var(--color-success);
+  background: var(--color-success-soft);
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+.cr-delta-neg {
+  font-size: var(--fs-micro);
+  font-weight: 700;
+  color: var(--color-error);
+  background: var(--color-error-soft);
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+.cr-delta-neutral {
+  font-size: var(--fs-micro);
+  font-weight: 600;
+  color: var(--color-text-subtle);
+}
+
+/* ── Promoted toast banner ────────────────────────────────────────── */
+.cr-promote-success {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-4) var(--sp-5);
+  background: var(--color-success-soft);
+  border: 1px solid var(--color-success);
+  border-radius: var(--r);
+  animation: cr-slide-in 0.3s ease;
+}
+
+/* ── Input field override ────────────────────────────────────────── */
+.cr-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--r2);
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  color: var(--color-text);
+  background: var(--color-surface);
+  transition: border-color 0.12s;
+}
+.cr-input:focus {
+  border-color: var(--color-primary);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--color-primary-soft);
+}
+.cr-input::placeholder { color: var(--color-text-subtle); }
+
+/* ════════════════════════════════════════════════════════════════════
+   CLUSTER ANALYTICS PANEL
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ── Analytics section outer container ──────────────────────────── */
+.cr-analytics-outer {
+  border-top: 2px solid var(--color-border);
+  padding-top: var(--sp-6);
+}
+
+/* ── Analytics tabs (Overview / Fingerprint / Manage Stores) ──────── */
+.cr-analytics-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid var(--color-border);
+  margin-bottom: var(--sp-5);
+}
+.cr-analytics-tab {
+  padding: var(--sp-2) var(--sp-5);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: var(--fs-caption);
+  font-weight: 600;
+  color: var(--color-text-muted);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: color 0.12s, border-color 0.12s;
+  white-space: nowrap;
+}
+.cr-analytics-tab:hover    { color: var(--color-text); }
+.cr-analytics-tab.is-active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+
+/* ── Cross-cluster metric comparison grid ─────────────────────────── */
+.cr-compare-grid {
+  display: grid;
+  grid-template-columns: 140px repeat(5, 1fr);
+  gap: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--r);
+  overflow: hidden;
+  background: var(--color-surface);
+  box-shadow: var(--sh);
+}
+.cr-compare-grid-header {
+  display: contents;
+}
+.cr-compare-cell {
+  padding: 10px 12px;
+  border-right: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
   align-items: center;
 }
-.cl-storerow {
-  border-top: 1px solid var(--color-border);
+.cr-compare-cell:last-child { border-right: none; }
+.cr-compare-row:last-child .cr-compare-cell { border-bottom: none; }
+
+/* Metric row bar fill */
+.cr-metric-bar-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 100%;
 }
-.cl-storerow.alt {
+.cr-metric-bar-track {
+  height: 6px;
+  background: var(--ice2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.cr-metric-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+
+/* ── Radar chart container ───────────────────────────────────────── */
+.cr-radar-wrap {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-6);
+  flex-wrap: wrap;
+}
+.cr-radar-legend {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  min-width: 160px;
+}
+.cr-radar-legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--fs-micro);
+}
+.cr-radar-legend-dot {
+  width: 10px; height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+/* ── Attribute deviation bars (store vs cluster avg) ─────────────── */
+.cr-attr-deviation {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+.cr-deviation-track {
+  position: relative;
+  flex: 1;
+  height: 8px;
+  background: var(--ice2);
+  border-radius: 4px;
+  overflow: visible;
+  min-width: 60px;
+}
+.cr-deviation-fill {
+  position: absolute;
+  top: 0; bottom: 0;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+.cr-deviation-midline {
+  position: absolute;
+  top: -2px; bottom: -2px;
+  width: 2px;
+  background: var(--color-text-subtle);
+  border-radius: 2px;
+}
+.cr-deviation-label {
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 42px;
+  text-align: right;
+}
+
+/* ── Store manager cluster selector tabs ─────────────────────────── */
+.cr-cluster-tabs {
+  display: flex;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
+.cr-cluster-tab {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  border: 2px solid var(--color-border);
+  border-radius: var(--r2);
+  cursor: pointer;
+  background: var(--color-surface);
+  transition: border-color 0.12s, background 0.12s;
+  font-family: var(--font-sans);
+  font-size: var(--fs-caption);
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+.cr-cluster-tab:hover {
+  border-color: var(--color-border-strong);
   background: var(--color-surface-alt);
 }
+.cr-cluster-tab.is-active {
+  background: var(--color-primary-soft);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+/* ── Store table within manager ─────────────────────────────────── */
+.cr-store-row {
+  border-bottom: 1px solid var(--color-border);
+  transition: background 0.1s;
+}
+.cr-store-row:last-child    { border-bottom: none; }
+.cr-store-row:hover         { background: var(--color-surface-alt); }
+.cr-store-row-main {
+  display: grid;
+  grid-template-columns: 1fr 72px 64px 60px 80px 80px 36px;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 10px 12px;
+  cursor: pointer;
+}
+.cr-store-row-detail {
+  padding: var(--sp-4);
+  background: var(--color-surface-sunken);
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+/* ── Fit score badge ─────────────────────────────────────────────── */
+.cr-fit-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: var(--fs-micro);
+  font-weight: 700;
+}
+.cr-fit-high   { background: var(--color-success-soft);  color: var(--color-success); }
+.cr-fit-medium { background: var(--color-warning-soft);  color: var(--color-warning); }
+.cr-fit-low    { background: var(--color-error-soft);    color: var(--color-error);   }
+
+/* ── Impact panel ────────────────────────────────────────────────── */
+.cr-impact-panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--r);
+  box-shadow: var(--sh);
+  padding: var(--sp-4) var(--sp-5);
+}
+.cr-impact-metric {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+.cr-impact-metric:last-child { border-bottom: none; }
+.cr-impact-arrow {
+  font-size: 12px;
+  font-weight: 700;
+  min-width: 16px;
+  text-align: center;
+}
+
+/* ── Add store section ───────────────────────────────────────────── */
+.cr-add-store-panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--r);
+  box-shadow: var(--sh);
+  overflow: hidden;
+}
+.cr-available-store-row {
+  display: grid;
+  grid-template-columns: 1fr 64px 56px 60px auto;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--color-border);
+}
+.cr-available-store-row:last-child { border-bottom: none; }
+.cr-available-store-row:hover { background: var(--color-surface-alt); }
+
+/* ── Change notification banner ──────────────────────────────────── */
+.cr-change-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--color-info-soft);
+  border: 1px solid var(--color-info);
+  border-radius: var(--r2);
+  animation: cr-slide-in 0.2s ease;
+}
+
+/* ── Analytics layout ────────────────────────────────────────────── */
+.cr-analytics-two-col {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: var(--sp-5);
+}
+@media (max-width: 960px) {
+  .cr-analytics-two-col { grid-template-columns: 1fr; }
+}
+
+.cr-manager-layout {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: var(--sp-5);
+  align-items: flex-start;
+}
+@media (max-width: 960px) {
+  .cr-manager-layout { grid-template-columns: 1fr; }
+}
+

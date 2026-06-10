@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Card, Button, Badge, Checkbox, Input } from "impact-ui";
 import Text from "../components/Text.jsx";
 import Stack from "../components/Stack.jsx";
@@ -27,7 +27,6 @@ const panelSx = {
 };
 
 const GRID_COLS = "2.4fr 1.2fr 90px 130px 130px 110px 56px";
-const FORM_COLS = "2fr 130px 150px 150px auto";
 const DEPT_FILTERS = ["All", ...PLR_DEPTS];
 const emptyDraft = { dept: "", month: "", year: 2026, startWk: 0, endWk: undefined, status: "Open" };
 const emptyFlow = { name: "", type: "phase", start: "", end: "" };
@@ -141,7 +140,7 @@ export default function PlrCalendar() {
               {showForm ? "✕ Close" : "+ Create new PLR"}
             </Button>
           </Stack>
-          <Stack direction="row" gap={2} wrap>
+          <Stack direction="row" gap={3} wrap style={{ paddingTop: "var(--sp-2)", borderTop: "1px solid var(--color-border)" }}>
             {DEPT_FILTERS.map((d) => {
               const cnt = d === "All" ? allItems.length : allItems.filter((p) => p.dept === d).length;
               return (
@@ -159,18 +158,18 @@ export default function PlrCalendar() {
         <Card sx={{ ...panelSx, background: "var(--color-surface-alt)" }}>
           <Stack direction="column" gap={3}>
             <Text variant="overline" tone="primary">Define new PLR</Text>
-            <Grid columns="1.8fr 1.4fr 0.9fr 0.9fr" gap={3} align="end">
-              <FdSelect label="Department" value={draft.dept} options={PLR_DEPTS.map((d) => ({ value: d, label: d }))} onChange={(v) => setDraft((p) => ({ ...p, dept: v }))} width={260} />
-              <FdSelect label="Month" value={draft.month} options={MONTHS.map((m) => ({ value: m, label: m }))} onChange={(v) => setDraft((p) => ({ ...p, month: v, startWk: 0, endWk: undefined }))} width={200} />
-              <FdSelect label="Year" value={draft.year} options={YEARS.map((y) => ({ value: y, label: String(y) }))} onChange={(v) => setDraft((p) => ({ ...p, year: v, startWk: 0, endWk: undefined }))} width={140} />
-              <FdSelect label="Status" value={draft.status} options={["Open", "Closed"].map((s) => ({ value: s, label: s }))} onChange={(v) => setDraft((p) => ({ ...p, status: v }))} width={140} />
+            <Grid columns="repeat(auto-fit, minmax(180px, 1fr))" gap={3} align="end">
+              <FdSelect label="Department" value={draft.dept} options={PLR_DEPTS.map((d) => ({ value: d, label: d }))} onChange={(v) => setDraft((p) => ({ ...p, dept: v }))} />
+              <FdSelect label="Month" value={draft.month} options={MONTHS.map((m) => ({ value: m, label: m }))} onChange={(v) => setDraft((p) => ({ ...p, month: v, startWk: 0, endWk: undefined }))} />
+              <FdSelect label="Year" value={draft.year} options={YEARS.map((y) => ({ value: y, label: String(y) }))} onChange={(v) => setDraft((p) => ({ ...p, year: v, startWk: 0, endWk: undefined }))} />
+              <FdSelect label="Status" value={draft.status} options={["Open", "Closed"].map((s) => ({ value: s, label: s }))} onChange={(v) => setDraft((p) => ({ ...p, status: v }))} />
             </Grid>
 
-            <Grid columns="1fr 1fr 1fr" gap={3} align="end">
+            <Grid columns="repeat(auto-fit, minmax(240px, 1fr))" gap={3} align="end">
               <Stack direction="column" gap={1}>
                 <Text variant="micro" tone="subtle" style={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em" }}>Start week</Text>
                 {calWeeks.length ? (
-                  <FdSelect value={draft.startWk} options={weekOptions} onChange={(v) => setDraft((p) => ({ ...p, startWk: v, endWk: p.endWk === undefined || p.endWk < v ? v : p.endWk }))} width={340} />
+                  <FdSelect value={draft.startWk} options={weekOptions} onChange={(v) => setDraft((p) => ({ ...p, startWk: v, endWk: p.endWk === undefined || p.endWk < v ? v : p.endWk }))} />
                 ) : (
                   <div className="plr-summary"><Text variant="caption" tone="subtle">Select month &amp; year first</Text></div>
                 )}
@@ -178,7 +177,7 @@ export default function PlrCalendar() {
               <Stack direction="column" gap={1}>
                 <Text variant="micro" tone="subtle" style={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em" }}>End week</Text>
                 {calWeeks.length ? (
-                  <FdSelect value={draft.endWk} options={weekOptions} onChange={(v) => setDraft((p) => ({ ...p, endWk: v, startWk: v < p.startWk ? v : p.startWk }))} width={340} />
+                  <FdSelect value={draft.endWk} options={weekOptions} onChange={(v) => setDraft((p) => ({ ...p, endWk: v, startWk: v < p.startWk ? v : p.startWk }))} />
                 ) : (
                   <div className="plr-summary"><Text variant="caption" tone="subtle">Select month &amp; year first</Text></div>
                 )}
@@ -197,25 +196,27 @@ export default function PlrCalendar() {
             </Grid>
 
             {calWeeks.length ? (
-              <Grid columns={`repeat(${calWeeks.length}, minmax(0, 1fr))`} gap={2}>
-                {calWeeks.map((w, i) => {
-                  const inRange = draft.startWk !== undefined && draft.endWk !== undefined && i >= draft.startWk && i <= draft.endWk;
-                  const isStart = i === draft.startWk;
-                  const isEnd = i === draft.endWk;
-                  return (
-                    <Stack key={w.start} direction="column" gap={0} className={`plr-week${inRange ? " in-range" : ""}`}>
-                      <Text variant="micro" tone={inRange ? "strong" : "subtle"} style={{ fontWeight: 800 }}>{w.label}</Text>
-                      <Text variant="micro" tone={inRange ? "muted" : "subtle"} mono>{w.clampStart}</Text>
-                      <Text variant="micro" tone={inRange ? "muted" : "subtle"} mono>{w.clampEnd}</Text>
-                      {isStart ? <Text variant="micro" tone="primary" style={{ fontWeight: 700 }}>START</Text> : null}
-                      {isEnd && !isStart ? <Text variant="micro" tone="primary" style={{ fontWeight: 700 }}>END</Text> : null}
-                    </Stack>
-                  );
-                })}
-              </Grid>
+              <div style={{ overflowX: "auto" }}>
+                <Grid columns={`repeat(${calWeeks.length}, minmax(72px, 1fr))`} gap={2} style={{ minWidth: calWeeks.length * 76 }}>
+                  {calWeeks.map((w, i) => {
+                    const inRange = draft.startWk !== undefined && draft.endWk !== undefined && i >= draft.startWk && i <= draft.endWk;
+                    const isStart = i === draft.startWk;
+                    const isEnd = i === draft.endWk;
+                    return (
+                      <Stack key={w.start} direction="column" gap={1} className={`plr-week${inRange ? " in-range" : ""}`}>
+                        <Text variant="micro" tone={inRange ? "strong" : "subtle"} style={{ fontWeight: 800 }}>{w.label}</Text>
+                        <Text variant="micro" tone={inRange ? "muted" : "subtle"} mono>{w.clampStart}</Text>
+                        <Text variant="micro" tone={inRange ? "muted" : "subtle"} mono>{w.clampEnd}</Text>
+                        {isStart ? <Text variant="micro" tone="primary" style={{ fontWeight: 700 }}>START</Text> : null}
+                        {isEnd && !isStart ? <Text variant="micro" tone="primary" style={{ fontWeight: 700 }}>END</Text> : null}
+                      </Stack>
+                    );
+                  })}
+                </Grid>
+              </div>
             ) : null}
 
-            <Stack direction="row" gap={2} align="center">
+            <Stack direction="row" gap={3} align="center" wrap>
               <Button variant="primary" size="medium" onClick={saveNew}>Save PLR</Button>
               <Button variant="secondary" size="medium" onClick={() => { setShowForm(false); setDraft(emptyDraft); }}>✕ Cancel</Button>
               <Text variant="micro" tone="subtle">One PLR = one row · phases are optional and added after saving</Text>
@@ -275,17 +276,19 @@ export default function PlrCalendar() {
                       const editing = editKey === `${p.id}|${f.id}`;
                       if (editing) {
                         return (
-                          <div key={f.id} className="plr-form" onClick={(e) => e.stopPropagation()}>
-                            <Grid columns={FORM_COLS} gap={2} align="end">
+                          <div className="plr-form" onClick={(e) => e.stopPropagation()}>
+                            <Stack direction="column" gap={2}>
                               <Input label="Phase name" value={editDraft.name} onChange={(e) => setEditDraft((d) => ({ ...d, name: e.target.value }))} size="small" />
-                              <FdSelect label="Type" value={editDraft.type} options={[{ value: "phase", label: "Phase" }, { value: "milestone", label: "Milestone" }]} onChange={(v) => setEditDraft((d) => ({ ...d, type: v }))} width={130} />
-                              <Input label="Start" type="date" value={editDraft.start} onChange={(e) => setEditDraft((d) => ({ ...d, start: e.target.value }))} size="small" />
-                              <Input label="End" type="date" value={editDraft.end} onChange={(e) => setEditDraft((d) => ({ ...d, end: e.target.value }))} size="small" />
-                              <Stack direction="row" gap={1}>
-                                <Button variant="primary" size="small" onClick={() => saveEditFlow(p.id, f.id)}>Save</Button>
-                                <Button variant="secondary" size="small" onClick={() => setEditKey(null)}>✕</Button>
-                              </Stack>
-                            </Grid>
+                              <div style={{ display: "grid", gridTemplateColumns: "160px 1fr 1fr auto", gap: "var(--sp-3)", alignItems: "end" }}>
+                                <FdSelect label="Type" value={editDraft.type} options={[{ value: "phase", label: "Phase" }, { value: "milestone", label: "Milestone" }]} onChange={(v) => setEditDraft((d) => ({ ...d, type: v }))} width={160} />
+                                <Input label="Start" type="date" value={editDraft.start} onChange={(e) => setEditDraft((d) => ({ ...d, start: e.target.value }))} size="small" fullWidth />
+                                <Input label="End" type="date" value={editDraft.end} onChange={(e) => setEditDraft((d) => ({ ...d, end: e.target.value }))} size="small" fullWidth />
+                                <Stack direction="row" gap={2} align="flex-end" style={{ paddingBottom: 2 }}>
+                                  <Button variant="primary" size="small" onClick={() => saveEditFlow(p.id, f.id)}>Save</Button>
+                                  <Button variant="secondary" size="small" onClick={() => setEditKey(null)}>✕</Button>
+                                </Stack>
+                              </div>
+                            </Stack>
                           </div>
                         );
                       }
@@ -305,7 +308,7 @@ export default function PlrCalendar() {
                             <Checkbox withoutFormLabel checked={!!f.done} onChange={() => toggleFlowDone(p.id, f.id)} />
                             <Text variant="micro" tone={f.done ? "success" : "subtle"} style={{ fontWeight: f.done ? 700 : 400 }}>{f.done ? "Done" : "Pending"}</Text>
                           </Stack>
-                          <Stack direction="row" gap={1}>
+                          <Stack direction="row" gap={2}>
                             <Button variant="text" size="small" onClick={() => startEditFlow(p.id, f)}>✎</Button>
                             <Button variant="text" size="small" onClick={() => deleteFlow(p.id, f.id)}>✕</Button>
                           </Stack>
@@ -315,16 +318,18 @@ export default function PlrCalendar() {
 
                     {addFor === p.id ? (
                       <div className="plr-form" onClick={(e) => e.stopPropagation()}>
-                        <Grid columns={FORM_COLS} gap={2} align="end">
+                        <Stack direction="column" gap={2}>
                           <Input label="Phase / milestone name *" placeholder="e.g. Store curation window" value={addDraft.name} onChange={(e) => setAddDraft((d) => ({ ...d, name: e.target.value }))} size="small" />
-                          <FdSelect label="Type" value={addDraft.type} options={[{ value: "phase", label: "Phase" }, { value: "milestone", label: "Milestone" }]} onChange={(v) => setAddDraft((d) => ({ ...d, type: v }))} width={130} />
-                          <Input label="Start date" type="date" value={addDraft.start} onChange={(e) => setAddDraft((d) => ({ ...d, start: e.target.value }))} size="small" />
-                          <Input label="End date" type="date" value={addDraft.end} onChange={(e) => setAddDraft((d) => ({ ...d, end: e.target.value }))} size="small" />
-                          <Stack direction="row" gap={1}>
-                            <Button variant="primary" size="small" onClick={() => saveAddFlow(p.id)}>+ Add</Button>
-                            <Button variant="secondary" size="small" onClick={() => setAddFor(null)}>✕</Button>
-                          </Stack>
-                        </Grid>
+          <div style={{ display: "grid", gridTemplateColumns: "160px 1fr 1fr auto", gap: "var(--sp-3)", alignItems: "end" }}>
+            <FdSelect label="Type" value={addDraft.type} options={[{ value: "phase", label: "Phase" }, { value: "milestone", label: "Milestone" }]} onChange={(v) => setAddDraft((d) => ({ ...d, type: v }))} width={160} />
+            <Input label="Start date" type="date" value={addDraft.start} onChange={(e) => setAddDraft((d) => ({ ...d, start: e.target.value }))} size="small" fullWidth />
+                            <Input label="End date" type="date" value={addDraft.end} onChange={(e) => setAddDraft((d) => ({ ...d, end: e.target.value }))} size="small" fullWidth />
+                            <Stack direction="row" gap={2} align="flex-end" style={{ paddingBottom: 2 }}>
+                              <Button variant="primary" size="small" onClick={() => saveAddFlow(p.id)}>+ Add</Button>
+                              <Button variant="secondary" size="small" onClick={() => setAddFor(null)}>✕</Button>
+                            </Stack>
+                          </div>
+                        </Stack>
                       </div>
                     ) : (
                       <div className="plr-addrow" onClick={(e) => e.stopPropagation()}>
