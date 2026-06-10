@@ -124,7 +124,6 @@
   /* ── Impact UI shell metrics (Sidebar rail + Header height) ────────────── */
   --rail-w: 64px;
   --header-h: 56px;
-  --agent-rail-w: 300px;
 
   /* ── Spacing gap (fills the jump from --sp-6 to --sp-8) ────────────────── */
   --sp-7: 28px;
