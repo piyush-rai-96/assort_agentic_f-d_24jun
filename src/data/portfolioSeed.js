@@ -15,12 +15,51 @@ export const INITIAL_GAPS = [
   { id: "g5", type: "Depth", desc: "Marble-look mosaic at sub-$8/sqft price point", priority: "low", addedBy: "Blake M.", date: "May 25" },
 ];
 
+/* Static intel-backed wishlists — kept separate so PortfolioBuild.jsx
+   can merge them directly into the intelWishlists useMemo.  That way
+   React Fast Refresh always picks up fresh data without needing a manual
+   hard-reload (useState lazy-initializer only runs once per mount). */
+export const STATIC_INTEL_WISHLISTS = [
+  {
+    id: "w1", store: "107 Almeda", region: "Gulf",
+    item: "Rectified large-format porcelain 32×32",
+    evidence: "3 contractor projects confirmed",
+    note: "Marcus Tile & Stone (regular pro contractor, ~$80K annual spend) asked specifically — confirmed 3 active projects.",
+    source: "intel", author: "Lisa T.",
+    date: "May 19",
+  },
+  {
+    id: "w2", store: "184 Farmingdale", region: "Northeast",
+    item: "Wide white oak plank — farmhouse design trend strong",
+    evidence: "Customer requests + Instagram saves",
+    note: "12 customer requests in 6 weeks; Pinterest & Instagram saves spiked 3× on wide-plank oak content from the store account.",
+    source: "intel", author: "Jason R.",
+    date: "May 21",
+  },
+  {
+    id: "w4", store: "358 N. Seattle", region: "Pacific NW",
+    item: "Slate-look outdoor-rated porcelain",
+    evidence: "Patio/outdoor renovation demand",
+    note: "Outdoor living up 28% YoY in Pacific NW. Slate-look IP-rated tiles are the top ask from landscape designers.",
+    source: "intel", author: "Mia C.",
+    date: "May 24",
+  },
+];
+
+/* Plain field wishlists — no intel source, no chip */
 export const INITIAL_WISHLISTS = [
-  { id: "w1", store: "107 Almeda", region: "Gulf", item: "Rectified large-format porcelain 32×32", evidence: "3 contractor projects confirmed", date: "May 19" },
-  { id: "w2", store: "184 Farmingdale", region: "Northeast", item: "Wide white oak plank — farmhouse design trend strong", evidence: "Customer requests + Instagram saves", date: "May 21" },
-  { id: "w3", store: "101 I-85", region: "Mid-Atlantic", item: "Terracotta floor tile authentic look", evidence: "High-end reno market, designer spec", date: "May 22" },
-  { id: "w4", store: "358 N. Seattle", region: "Pacific NW", item: "Slate-look outdoor-rated porcelain", evidence: "Patio/outdoor renovation demand", date: "May 24" },
-  { id: "w5", store: "205 Denver", region: "Rockies", item: "Wide-plank hickory engineered — rustic look", evidence: "Mountain home segment growing", date: "May 25" },
+  {
+    id: "w3", store: "101 I-85", region: "Mid-Atlantic",
+    item: "Terracotta floor tile authentic look",
+    evidence: "High-end reno market, designer spec",
+    date: "May 22",
+  },
+  {
+    id: "w5", store: "205 Denver", region: "Rockies",
+    item: "Wide-plank hickory engineered — rustic look",
+    evidence: "Mountain home segment growing",
+    date: "May 25",
+  },
 ];
 
 /* Build the vendor SKU shortlist from the catalogue (legacy PORTFOLIO_STATE.vendor_skus getter). */

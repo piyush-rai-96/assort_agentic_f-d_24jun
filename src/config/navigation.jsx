@@ -99,7 +99,7 @@ export const routes = [
     children: [
       { value: "intel",      label: "Market Intelligence", icon: <MarketIntelIcon />, link: "/intel"      },
       { value: "hindsight",  label: "Hindsight",           icon: <HindsightIcon />,   link: "/hindsight"  },
-      { value: "store-hub",  label: "Store Hub",           icon: <StoreHubIcon />,    link: "/store-hub"  },
+      { value: "peer-intel", label: "Peer Intelligence",   icon: <PeerIntelIcon />,   link: "/peer-intel" },
       { value: "approval",   label: "PLR Status",          icon: <ApprovalIcon />,    link: "/approval"   },
     ],
   },
@@ -127,7 +127,7 @@ export const routes = [
       { value: "assortment-intelligence", label: "Assortment Intelligence", icon: <AssortIntelIcon />, link: "/assortment-intelligence", badge: "Signals" },
       { value: "feedback",                label: "Feedback Loop",           icon: <FeedbackIcon />,    link: "/feedback"                },
       { value: "lead-time",               label: "Lead Time & Oracle",      icon: <LeadTimeIcon />,    link: "/lead-time"               },
-      { value: "peer-intel",              label: "Peer Intelligence",       icon: <PeerIntelIcon />,   link: "/peer-intel"              },
+      { value: "store-hub",               label: "Store Hub",               icon: <StoreHubIcon />,    link: "/store-hub"               },
     ],
   },
 ];

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { Card, Button, Badge, Tabs, Table, ProgressBar, EmptyState, Input, TextArea } from "impact-ui";
 import FdSelect from "../components/FdSelect.jsx";
 import Text from "../components/Text.jsx";
@@ -11,6 +11,7 @@ import { CURRENT_USER } from "../data/todaySeed.js";
 import {
   INITIAL_GAPS,
   INITIAL_WISHLISTS,
+  STATIC_INTEL_WISHLISTS,
   buildVendorSkus,
   GAP_TYPE_OPTIONS,
   PRIORITY_OPTIONS,
@@ -229,9 +230,12 @@ export default function PortfolioBuild({ onNavigate }) {
       }));
   }, []);
 
-  /* ── Intel-sourced wishlists (with enriched intelTitle + author) ────────── */
+  /* ── Intel-sourced wishlists ─────────────────────────────────────────────
+     Combines INTEL_SEED-derived signals with STATIC_INTEL_WISHLISTS so that
+     both sets always pick up fresh module data on React Fast Refresh
+     (avoids stale useState lazy-initializer caching). */
   const intelWishlists = useMemo(() => {
-    return INTEL_SEED
+    const fromSeed = INTEL_SEED
       .filter((sig) => sig.type === "market" && sig.direction === "opportunity" && sig.status === "actioned")
       .map((sig) => {
         const store = FD_STORES.find((s) => sig.store && s.id.toString().includes("01"));
@@ -245,10 +249,11 @@ export default function PortfolioBuild({ onNavigate }) {
           note: sig.body?.slice(0, 120) + "...",
           date: sig.date,
           source: "intel",
-          intelTitle: sig.title,   // for callout box
-          author: sig.author,      // for callout box
+          intelTitle: sig.title,
+          author: sig.author,
         };
       });
+    return [...STATIC_INTEL_WISHLISTS, ...fromSeed];
   }, []);
 
   const [gaps, setGaps] = useState(() => {
@@ -259,13 +264,18 @@ export default function PortfolioBuild({ onNavigate }) {
   const [wishlists, setWishlists] = useState(() => {
     const existing = INITIAL_WISHLISTS;
     const existingIds = new Set(existing.map((w) => w.id));
-    return [...intelWishlists.filter((w) => !existingIds.has(w.id)), ...existing];
+    const merged = [...intelWishlists.filter((w) => !existingIds.has(w.id)), ...existing];
+    // #region agent log
+    fetch('http://127.0.0.1:7846/ingest/7cf0a5c5-3a45-4382-a252-b2e9ea3942d7',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'1a5386'},body:JSON.stringify({sessionId:'1a5386',location:'PortfolioBuild.jsx:wishlists-init',message:'wishlists state init',data:{mergedCount:merged.length,intelWishlistCount:intelWishlists.length,staticIntelCount:STATIC_INTEL_WISHLISTS.length,initialWishlistCount:existing.length,sources:merged.map(w=>({id:w.id,store:w.store,source:w.source}))},timestamp:Date.now(),hypothesisId:'H-A',runId:'debug-run-2'})}).catch(()=>{});
+    // #endregion
+    return merged;
   });
   const [vendorSkus, setVendorSkus] = useState(() => buildVendorSkus());
 
   const [tab, setTab] = useState(0);
   const [showAdd, setShowAdd] = useState(false);
   const [activeGapId, setActiveGapId] = useState(null);
+
   const [activeWishId, setActiveWishId] = useState(null);
   const [activeVendorId, setActiveVendorId] = useState(null);
   const [vendorFilter, setVendorFilter] = useState("All");
@@ -354,69 +364,95 @@ export default function PortfolioBuild({ onNavigate }) {
       width: 110,
       filter: "agSetColumnFilter",
       cellRenderer: (p) => (
-        <div style={{ display: "flex", alignItems: "center", height: "100%" }}>
-          <Badge variant="subtle" size="small" color={PRIORITY_BADGE[p.value]} label={PRIORITY_LABEL[p.value] || p.value} />
-        </div>
+        <Badge variant="subtle" size="small" color={PRIORITY_BADGE[p.value]} label={PRIORITY_LABEL[p.value] || p.value} />
       ),
     },
     { field: "type", headerName: "Type", width: 130, filter: "agSetColumnFilter" },
     {
-      field: "desc", headerName: "Description", minWidth: 260, flex: 1, filter: "agTextColumnFilter",
+      field: "desc",
+      headerName: "Description",
+      minWidth: 260,
+      flex: 1,
+      filter: "agTextColumnFilter",
       tooltipField: "desc",
       cellStyle: () => ({ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }),
     },
     {
-      /* Combined "Added by · Date" — two visible lines + optional inline Intel tag */
-      headerName: "Added by · Date",
-      width: 200,
+      /* "Added By" — author name + Impact UI Badge for intel-sourced rows */
+      headerName: "Added By",
       field: "addedBy",
-      cellRenderer: (p) => {
-        const isIntel = p.data.source === "intel" || p.data.source === "market-intel";
-        return (
-          <div className="pf-two-line-cell">
-            <div className="pf-two-line-top">
-              <span className="pf-two-line-main pf-two-line-main--strong">{p.data.addedBy}</span>
-              {isIntel && (
-                <span className="pf-intel-tag pf-intel-tag--amber">💡 Intel</span>
-              )}
-            </div>
-            <span className="pf-two-line-sub">{p.data.date}</span>
-          </div>
-        );
-      },
-    },
-  ], []);
-
-  const wishColumns = useMemo(() => [
-    { field: "store",  headerName: "Store",   width: 150, filter: "agTextColumnFilter",
-      cellStyle: () => ({ color: color.teal, fontWeight: 600 }) },
-    { field: "region", headerName: "Region",  width: 120, filter: "agSetColumnFilter" },
-    {
-      field: "item", headerName: "Request", minWidth: 240, flex: 1, filter: "agTextColumnFilter",
-      tooltipField: "item",
-      cellStyle: () => ({ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }),
-    },
-    {
-      /* Evidence + date + optional "from Intel" inline tag — fits in one row */
-      field: "evidence",
-      headerName: "Evidence · Date",
-      minWidth: 200,
-      flex: 1,
+      width: 190,
       filter: "agTextColumnFilter",
       cellRenderer: (p) => {
         const isIntel = p.data.source === "intel" || p.data.source === "market-intel";
         return (
-          <div className="pf-two-line-cell">
-            <div className="pf-two-line-top">
-              <span className="pf-two-line-main" title={p.value}>{p.value}</span>
-              {isIntel && (
-                <span className="pf-intel-tag pf-intel-tag--teal">📡 Intel</span>
-              )}
-            </div>
-            <span className="pf-two-line-sub">{p.data.date}</span>
+          <div className="pf-inline-cell">
+            <span className="pf-inline-cell__name">{p.data.addedBy}</span>
+            {isIntel && (
+              <span className="pf-intel-chip pf-intel-chip--amber">⚡ Intel</span>
+            )}
           </div>
         );
       },
+    },
+    {
+      /* "Date" — standalone date column */
+      headerName: "Date",
+      field: "date",
+      width: 110,
+      filter: "agTextColumnFilter",
+      cellStyle: () => ({ fontSize: "var(--fs-micro)", color: "var(--color-text-subtle)" }),
+    },
+  ], []);
+
+  const wishColumns = useMemo(() => [
+    {
+      field: "store",
+      headerName: "Store",
+      width: 150,
+      filter: "agTextColumnFilter",
+      cellStyle: () => ({ color: color.teal, fontWeight: 600 }),
+    },
+    { field: "region", headerName: "Region", width: 120, filter: "agSetColumnFilter" },
+    {
+      field: "item",
+      headerName: "Request",
+      minWidth: 240,
+      flex: 1,
+      filter: "agTextColumnFilter",
+      tooltipField: "item",
+      cellStyle: () => ({ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }),
+    },
+    {
+      /* "Evidence" — text + Impact UI Badge for intel-sourced rows */
+      headerName: "Evidence",
+      field: "evidence",
+      minWidth: 220,
+      flex: 1,
+      filter: "agTextColumnFilter",
+      cellRenderer: (p) => {
+        const isIntel = p.data.source === "intel" || p.data.source === "market-intel";
+        const displayText = p.value || "—";
+        const tooltip = p.data.note || displayText;
+        return (
+          <div className="pf-inline-cell" title={tooltip}>
+            <span className="pf-inline-cell__name pf-inline-cell__name--light">
+              {displayText}
+            </span>
+            {isIntel && (
+              <span className="pf-intel-chip pf-intel-chip--teal">📡 Intel</span>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      /* "Date" — standalone date column */
+      headerName: "Date",
+      field: "date",
+      width: 110,
+      filter: "agTextColumnFilter",
+      cellStyle: () => ({ fontSize: "var(--fs-micro)", color: "var(--color-text-subtle)" }),
     },
   ], []);
 
@@ -428,13 +464,13 @@ export default function PortfolioBuild({ onNavigate }) {
       flex: 1,
       filter: "agTextColumnFilter",
       cellRenderer: (p) => (
-        <div style={{ display: "flex", alignItems: "center", gap: 8, height: "100%" }}>
-          <div style={{ flexShrink: 0 }}>
-            <SkuSwatch sku={{ desc: p.data.name, dept: p.data.dept, cls: p.data.cls, subDept: p.data.subDept }} size={28} />
+        <div className="pf-sku-cell">
+          <div className="pf-sku-cell__swatch">
+            <SkuSwatch sku={{ desc: p.data.name, dept: p.data.dept, cls: p.data.cls, subDept: p.data.subDept }} size={30} />
           </div>
-          <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", minWidth: 0 }}>
-            <span style={{ fontSize: "var(--fs-micro)", fontWeight: "var(--fw-semibold)", color: "var(--color-text)", lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.value}</span>
-            <span style={{ fontSize: "var(--fs-xs)", color: "var(--color-text-subtle)", marginTop: 1 }}>{p.data.vendor}</span>
+          <div className="pf-sku-cell__text">
+            <span className="pf-sku-cell__name" title={p.value}>{p.value}</span>
+            <span className="pf-sku-cell__vendor">{p.data.vendor}</span>
           </div>
         </div>
       ),
@@ -447,9 +483,7 @@ export default function PortfolioBuild({ onNavigate }) {
       width: 130,
       filter: "agSetColumnFilter",
       cellRenderer: (p) => (
-        <div style={{ display: "flex", alignItems: "center", height: "100%" }}>
-          <Badge variant="subtle" size="small" color={STATUS_BADGE[p.value]} label={p.value} />
-        </div>
+        <Badge variant="subtle" size="small" color={STATUS_BADGE[p.value]} label={p.value} />
       ),
     },
     {
@@ -457,119 +491,68 @@ export default function PortfolioBuild({ onNavigate }) {
       headerName: "Margin",
       width: 90,
       filter: "agNumberColumnFilter",
-      cellRenderer: (p) => (
-        <div style={{ display: "flex", alignItems: "center", height: "100%" }}>
-          <span style={{
-            fontFamily: "var(--font-mono, monospace)",
-            fontSize: "var(--fs-micro)",
-            fontWeight: "var(--fw-bold)",
-            color: p.value >= 42 ? "var(--color-success)" : "var(--color-text)",
-          }}>
-            {p.value}%
-          </span>
-        </div>
-      ),
+      cellStyle: (p) => ({
+        fontFamily: "var(--font-mono, monospace)",
+        fontSize: "var(--fs-micro)",
+        fontWeight: "var(--fw-bold)",
+        color: p.value >= 42 ? "var(--color-success)" : "var(--color-text)",
+      }),
+      valueFormatter: (p) => `${p.value}%`,
     },
     {
       field: "landedCost",
       headerName: "Landed $",
       width: 100,
       filter: "agNumberColumnFilter",
-      cellRenderer: (p) => (
-        <div style={{ display: "flex", alignItems: "center", height: "100%" }}>
-          <span style={{ fontFamily: "var(--font-mono, monospace)", fontSize: "var(--fs-micro)", color: "var(--color-text-muted)" }}>
-            ${Number(p.value).toFixed(2)}
-          </span>
-        </div>
-      ),
+      cellStyle: () => ({
+        fontFamily: "var(--font-mono, monospace)",
+        fontSize: "var(--fs-micro)",
+        color: "var(--color-text-muted)",
+      }),
+      valueFormatter: (p) => `$${Number(p.value).toFixed(2)}`,
     },
     {
       headerName: "Action",
-      width: 130,
+      width: 160,
       sortable: false,
       filter: false,
+      cellStyle: () => ({ display: "flex", alignItems: "center" }),
       cellRenderer: (p) => {
-        const h = "100%";
-        /* Mandatory / Core / BG items are always approved */
+        /* Mandatory / Core / BG — locked, not editable */
         if (p.data.tag === "Core" || p.data.tag === "BG") {
-          return (
-            <div style={{ display: "flex", alignItems: "center", gap: 4, height: h }}>
-              <span style={{ fontSize: 11 }}>🔒</span>
-              <span style={{ fontSize: "var(--fs-xs)", fontWeight: "var(--fw-bold)", color: "var(--color-success)" }}>Mandatory</span>
-            </div>
-          );
+          return <span className="pf-action-chip pf-action-chip--mandatory">🔒 Mandatory</span>;
         }
-        /* Shortlisted — show approve / decline buttons */
+        /* Shortlisted — Approve + Decline pill buttons */
         if (p.data.status === "Shortlisted") {
           return (
-            <div style={{ display: "flex", alignItems: "center", gap: 5, height: h }}>
+            <div className="pf-action-btns">
               <button
-                className="pf-action-approve"
+                className="pf-action-btn pf-action-btn--approve"
                 title="Approve for PLR"
                 onClick={(e) => { e.stopPropagation(); setVendorStatus(p.data.id, "Approved"); }}
-              >✓</button>
+              >✓ Approve</button>
               <button
-                className="pf-action-decline"
+                className="pf-action-btn pf-action-btn--decline"
                 title="Decline"
                 onClick={(e) => { e.stopPropagation(); setVendorStatus(p.data.id, "Declined"); }}
               >✕</button>
             </div>
           );
         }
-        /* Approved — green badge */
+        /* Approved */
         if (p.data.status === "Approved") {
-          return (
-            <div style={{ display: "flex", alignItems: "center", height: h }}>
-              <span style={{
-                background: "var(--color-success-soft)",
-                color: "var(--color-success)",
-                border: "1px solid var(--color-success)",
-                borderRadius: 10,
-                padding: "2px 9px",
-                fontSize: 9,
-                fontWeight: 700,
-              }}>✓ Approved</span>
-            </div>
-          );
+          return <span className="pf-action-chip pf-action-chip--approved">✓ Approved</span>;
         }
-        /* Declined — red badge */
+        /* Declined */
         if (p.data.status === "Declined") {
-          return (
-            <div style={{ display: "flex", alignItems: "center", height: h }}>
-              <span style={{
-                background: "var(--color-error-soft)",
-                color: "var(--color-error)",
-                border: "1px solid var(--color-error)",
-                borderRadius: 10,
-                padding: "2px 9px",
-                fontSize: 9,
-                fontWeight: 700,
-              }}>✕ Declined</span>
-            </div>
-          );
+          return <span className="pf-action-chip pf-action-chip--declined">✕ Declined</span>;
         }
-        /* Under review — amber badge */
+        /* Under review */
         if (p.data.status === "Under review") {
-          return (
-            <div style={{ display: "flex", alignItems: "center", height: h }}>
-              <span style={{
-                background: "var(--color-warning-soft)",
-                color: "var(--color-warning)",
-                border: "1px solid var(--color-warning)",
-                borderRadius: 10,
-                padding: "2px 9px",
-                fontSize: 9,
-                fontWeight: 700,
-              }}>⏳ In review</span>
-            </div>
-          );
+          return <span className="pf-action-chip pf-action-chip--review">⏳ In Review</span>;
         }
         /* Fallback */
-        return (
-          <div style={{ display: "flex", alignItems: "center", height: h }}>
-            <span style={{ fontSize: "var(--fs-xs)", color: "var(--color-text-subtle)" }}>{p.data.status}</span>
-          </div>
-        );
+        return <span style={{ fontSize: "var(--fs-xs)", color: "var(--color-text-subtle)" }}>{p.data.status}</span>;
       },
     },
   ], []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -598,14 +581,11 @@ export default function PortfolioBuild({ onNavigate }) {
               <Stack direction="row" gap={2} align="center" wrap>
                 <Badge variant="subtle" size="small" color={PRIORITY_BADGE[g.priority]} label={PRIORITY_LABEL[g.priority] || g.priority} />
                 <Text variant="micro" tone="muted">{g.type}</Text>
+                {(g.source === "intel" || g.source === "market-intel") && (
+                  <span className="pf-intel-chip pf-intel-chip--amber">⚡ Intel</span>
+                )}
               </Stack>
               <Text variant="caption" tone="default">{g.desc}</Text>
-              {/* From Market Intel badge — shown when the gap was raised via Intel */}
-              {(g.source === "intel" || g.source === "market-intel") && (
-                <span style={{ marginTop: 2 }}>
-                  <Badge variant="subtle" size="small" color="warning" label="💡 From Market Intel" />
-                </span>
-              )}
               <Text variant="micro" tone="subtle">{g.addedBy} · {g.date}</Text>
             </Stack>
           ))
@@ -635,16 +615,15 @@ export default function PortfolioBuild({ onNavigate }) {
               onClick={() => { setActiveWishId(activeWishId === w.id ? null : w.id); setShowAdd(false); }}
             >
               <Stack direction="row" gap={2} align="center" justify="space-between" wrap>
-                <Text variant="caption" tone="teal">{w.store}</Text>
+                <Stack direction="row" gap={1} align="center">
+                  <Text variant="caption" tone="teal">{w.store}</Text>
+                  {(w.source === "intel" || w.source === "market-intel") && (
+                    <span className="pf-intel-chip pf-intel-chip--teal">📡 Intel</span>
+                  )}
+                </Stack>
                 {w.region ? <Badge variant="subtle" size="small" color="info" label={w.region} /> : null}
               </Stack>
               <Text variant="caption" tone="default">{w.item}</Text>
-              {/* From Market Intel badge */}
-              {(w.source === "intel" || w.source === "market-intel") && (
-                <span style={{ marginTop: 2 }}>
-                  <Badge variant="subtle" size="small" color="info" label="📡 From Market Intel" />
-                </span>
-              )}
               <Text variant="micro" tone="subtle">{w.evidence}</Text>
             </Stack>
           ))
@@ -1080,10 +1059,10 @@ export default function PortfolioBuild({ onNavigate }) {
     </Stack>
   );
 
-  /* rowHeight: 48px — enough for 2 lines of text + icon/badge in cellRenderers */
+  /* rowHeight: 54px — name + "From Market Intel" badge need ~54px */
   const tableProps = {
     cardContainer: true,
-    rowHeight: 48,
+    rowHeight: 60,
     domLayout: "autoHeight",
     defaultColDef: { floatingFilter: true },
     hideTableSetting: true,
@@ -1093,7 +1072,7 @@ export default function PortfolioBuild({ onNavigate }) {
   /* Vendor table needs slightly more height for thumbnail + 2-line SKU text */
   const vendorTableProps = {
     ...tableProps,
-    rowHeight: 52,
+    rowHeight: 60,
   };
 
   const panelSummary = (

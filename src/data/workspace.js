@@ -13,6 +13,7 @@ export const PIPE_STAGES = [
   { id: "regional",        label: "Regional Review",  mod: "regional" },
   { id: "curation",        label: "Store Curation",   mod: "store-curation" },
   { id: "mpi",             label: "MPI / NPI",        mod: "mpi" },
+  { id: "oracle",          label: "Oracle",           mod: "oracle" },
   { id: "approval",        label: "Final Approval",   mod: "approval" },
 ];
 
@@ -41,6 +42,8 @@ export const PLANS = [
     confidenceThreshold: 75,
     activeStage: "catalogue",
     stagesCompleted: ["hindsight", "forecast"],
+    clustIds: ["B1", "B2", "B3", "B4"],
+    plrId: "plr-ss26-q2",
     kpis: { stores: 70, skus: 22, coreCount: 8, submittedPct: 26 },
     notes: "Focus on large-format porcelain and zellige expansion. Block POR-TRAVERT pending lead time resolution.",
     createdBy: "Karen M.",
@@ -57,6 +60,8 @@ export const PLANS = [
     confidenceThreshold: 80,
     activeStage: "hindsight",
     stagesCompleted: [],
+    clustIds: ["B1", "B2"],
+    plrId: "plr-ss26-q2",
     kpis: { stores: 70, skus: 13, coreCount: 3, submittedPct: 0 },
     notes: "Draft — pending Barnwood Oak QA resolution before running agent.",
     createdBy: "Karen M.",
@@ -73,12 +78,20 @@ export const PLANS = [
     confidenceThreshold: 70,
     activeStage: "regional",
     stagesCompleted: ["hindsight", "forecast", "catalogue", "national"],
+    clustIds: ["B1", "B2", "B3"],
+    plrId: "plr-ss26-q3",
     kpis: { stores: 70, skus: 18, coreCount: 5, submittedPct: 64 },
     notes: "In regional review — 6 of 8 clusters submitted. Awaiting Mid-Atlantic and Pacific South.",
     createdBy: "Jason R.",
     createdAt: "Feb 14, 2026",
     updatedAt: "Jun 10, 2026",
   },
+];
+
+export const PLR_PERIODS = [
+  { id: "plr-ss26-q2", dept: "All",  season: "SS 2026 – Q2", weeks: "Wk 14–26", due: "Jun 27 2026", status: "active" },
+  { id: "plr-ss26-q3", dept: "All",  season: "SS 2026 – Q3", weeks: "Wk 27–39", due: "Sep 12 2026", status: "draft"  },
+  { id: "plr-fw25-q4", dept: "Tile", season: "FW 2025 – Q4", weeks: "Wk 40–52", due: "Oct 3 2025",  status: "active" },
 ];
 
 export const DEPT_OPTIONS = [

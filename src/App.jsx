@@ -50,7 +50,7 @@ const VIEWS = {
   mpi: () => <Mpi />,
   intel: () => <MarketIntel />,
   feedback: () => <FeedbackLoop />,
-  approval: () => <Approval />,
+  approval: ({ navigate }) => <Approval onNavigate={navigate} />,
   "admin-planning": () => <PlanningAdmin />,
   periods: () => <PlrCalendar />,
   clustering: ({ navigate }) => <Clustering onNavigate={navigate} />,

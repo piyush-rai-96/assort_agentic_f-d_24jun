@@ -1,19 +1,346 @@
-/* MPI / NPI — list-row accents for the interactive tabs.
-   Neutral backgrounds; left border encodes severity (retire/leakage). */
+/* ════════════════════════════════════════════════════════════════════════
+   NPI Reconciliation screen — Mpi.css
+   Full-bleed dark navy header + scrollable content. Mirrors PLR Status
+   layout but uses a green-navy accent (brand colour for NPI).
+════════════════════════════════════════════════════════════════════════ */
+
+/* ── Root layout ──────────────────────────────────────────────────────── */
+.mpi-root {
+  display: flex;
+  flex-direction: column;
+  margin: -24px -28px -40px;
+  min-height: calc(100vh - var(--header-h, 56px));
+  background: #F1F5F9;
+  overflow: hidden;
+}
+
+/* ── Dark navy page header ────────────────────────────────────────────── */
+.mpi-page-header {
+  background: #1A2B1A;
+  flex-shrink: 0;
+}
+
+.mpi-page-header-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 20px 8px;
+  flex-wrap: wrap;
+}
+
+.mpi-page-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.01em;
+}
+
+.mpi-page-subtitle {
+  font-size: 11px;
+  color: #4A7A4A;
+  margin-top: 2px;
+}
+
+.mpi-alert-pills {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.mpi-alert-pill {
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.mpi-alert-pill--red {
+  background: rgba(220, 38, 38, .15);
+  border: 1px solid rgba(220, 38, 38, .3);
+  color: #FCA5A5;
+}
+
+.mpi-alert-pill--amber {
+  background: rgba(217, 119, 6, .15);
+  border: 1px solid rgba(217, 119, 6, .3);
+  color: #FCD34D;
+}
+
+/* Core / BG exclusion banner */
+.mpi-core-banner {
+  background: rgba(5, 150, 105, .08);
+  border-top: 1px solid rgba(5, 150, 105, .2);
+  border-bottom: 1px solid rgba(5, 150, 105, .2);
+  color: #6EEDB8;
+  font-size: 11px;
+  padding: 7px 20px;
+}
+
+/* 5 KPI tiles */
+.mpi-kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  padding: 10px 20px 14px;
+}
+
+.mpi-kpi-tile {
+  background: rgba(255, 255, 255, .05);
+  border: 1px solid rgba(255, 255, 255, .08);
+  border-radius: 8px;
+  padding: 10px 12px;
+  text-align: center;
+}
+
+.mpi-kpi-value {
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.mpi-kpi-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #fff;
+  margin-top: 4px;
+}
+
+.mpi-kpi-sub {
+  font-size: 9px;
+  color: rgba(255, 255, 255, .35);
+  margin-top: 2px;
+}
+
+/* ── Filter + Tab bar ─────────────────────────────────────────────────── */
+.mpi-filter-tab-bar {
+  background: #fff;
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+  padding: 0 20px;
+}
+
+.mpi-filters {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0 6px;
+}
+
+.mpi-filter-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-subtle);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.mpi-tab-bar {
+  display: flex;
+  gap: 2px;
+  border-top: 1px solid var(--color-border);
+}
+
+.mpi-tab-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-subtle);
+  padding: 10px 14px;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.mpi-tab-btn:hover {
+  color: var(--color-text);
+}
+
+.mpi-tab-btn--active {
+  color: var(--color-primary, #16a34a);
+  border-bottom-color: var(--color-primary, #16a34a);
+}
+
+/* ── Scrollable content ───────────────────────────────────────────────── */
+.mpi-content {
+  flex: 1 1 0;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   TAB 1 — Regional grouping table
+════════════════════════════════════════════════════════════════════════ */
+.mpi-store-table {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--r, 8px);
+  overflow: hidden;
+}
+
+/* 6-column grid: Store / Total OH / NPI $ / NPI % / Drops / Velocity */
+.mpi-table-header,
+.mpi-region-row,
+.mpi-store-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1.2fr 80px 80px;
+  align-items: center;
+  gap: 0;
+}
+
+.mpi-table-header {
+  padding: 8px 14px;
+  background: #1A2B1A;
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, .55);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Region summary row */
+.mpi-region-row {
+  padding: 9px 14px;
+  background: #F0F4F0;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.mpi-region-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #1A2B1A;
+  letter-spacing: 0.01em;
+}
+
+/* NPI% rounded badges in region row */
+.mpi-pct-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.mpi-pct-badge--red {
+  background: #FEE2E2;
+  color: #DC2626;
+}
+
+.mpi-pct-badge--green {
+  background: #DCFCE7;
+  color: #16A34A;
+}
+
+/* Store rows */
+.mpi-store-row {
+  padding: 7px 14px 7px 28px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.mpi-store-row:last-child {
+  border-bottom: none;
+}
+
+.mpi-store-row:hover {
+  background: var(--color-surface-alt);
+}
+
+.mpi-store-row--flagged {
+  background: #FFF8F8;
+  border-left: 3px solid var(--color-error, #DC2626);
+}
+
+.mpi-store-row--flagged:hover {
+  background: #FFF2F2;
+}
+
+.mpi-store-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-strong);
+}
+
+.mpi-store-id {
+  font-size: 9px;
+  font-family: var(--font-mono, monospace);
+  color: var(--color-text-subtle);
+  margin-top: 1px;
+}
+
+/* NPI % + flag badge grouped cell */
+.mpi-npi-cell-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+}
+
+.mpi-npi-pct {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.mpi-npi-pct--red {
+  color: var(--color-error, #DC2626);
+  font-weight: 700;
+}
+
+.mpi-flag-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  background: #FEE2E2;
+  color: #DC2626;
+  white-space: nowrap;
+}
+
+.mpi-cell-num {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+}
+
+.mpi-cell-red {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--color-error, #DC2626);
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   Shared row styles (Tab 2, 5)
+════════════════════════════════════════════════════════════════════════ */
 .mpi-row {
   border-bottom: 1px solid var(--color-border);
   border-left: 3px solid transparent;
   background: var(--color-surface);
 }
+
 .mpi-row:nth-child(even) {
   background: var(--color-surface-alt);
 }
+
 .mpi-row:last-child {
   border-bottom: none;
 }
+
 .mpi-row.is-retire {
   border-left-color: var(--color-error);
 }
+
 .mpi-row.is-warn {
   border-left-color: var(--color-warning);
 }
@@ -24,67 +351,23 @@
   overflow-y: auto;
 }
 
-/* Override Impact UI's hardcoded min-width:240px on native inputs so they
-   respect their fixed-width column containers in the exit-pricing table.
-   Need !important to beat Impact UI's (0,3,1) specificity rule:
-   .impact_inputbox_container .MuiInputBase-root input.MuiInputBase-input */
+/* Input min-width override for Impact UI */
 .mpi-row .MuiInputBase-input {
   min-width: 0 !important;
 }
 
-/* Inline markdown / exit-pricing editor strip. */
+/* Inline markdown/exit-pricing editor strip */
 .mpi-edit {
   background: var(--color-warning-soft);
   border-top: 1px solid var(--color-border);
 }
 
-/* ── Store NPI table — "wow" cell visuals ─────────────────────────────────── */
-.mpi-store-name {
-  font-weight: var(--fw-semibold);
-  color: var(--color-text-strong);
-}
-
-/* NPI% — inline progress bar + value, scaled to the network's worst store. */
-.mpi-npi-cell {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-2);
-  height: 100%;
-  width: 100%;
-}
-.mpi-npi-track {
-  flex: 1 1 auto;
-  min-width: 36px;
-  height: 6px;
-  border-radius: var(--r-pill);
-  background: var(--color-surface-sunken);
-  overflow: hidden;
-}
-.mpi-npi-fill {
-  display: block;
-  height: 100%;
-  border-radius: var(--r-pill);
-  transition: width 0.35s ease;
-}
-.mpi-npi-val {
-  flex: 0 0 auto;
-  min-width: 46px;
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-  font-size: var(--fs-caption);
-  color: var(--color-text);
-}
-.mpi-npi-cell.is-flagged .mpi-npi-val {
-  color: var(--color-error);
-  font-weight: var(--fw-bold);
-}
-
-/* Center-aligned header (AG Grid ships right-aligned only). */
+/* ── AG Grid header alignment helpers ─────────────────────────────────── */
 .ag-center-aligned-header .ag-header-cell-label {
   justify-content: center;
 }
 
-/* Velocity — soft pill badge. */
+/* ── Velocity pill ────────────────────────────────────────────────────── */
 .mpi-vel-pill {
   display: inline-flex;
   align-items: center;
@@ -96,4 +379,43 @@
   font-size: var(--fs-micro);
   font-weight: var(--fw-extrabold);
   letter-spacing: 0.02em;
+}
+
+/* ── NPI % bar (kept for AG Grid columns if reintroduced) ─────────────── */
+.mpi-npi-cell {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  height: 100%;
+  width: 100%;
+}
+
+.mpi-npi-track {
+  flex: 1 1 auto;
+  min-width: 36px;
+  height: 6px;
+  border-radius: var(--r-pill);
+  background: var(--color-surface-sunken);
+  overflow: hidden;
+}
+
+.mpi-npi-fill {
+  display: block;
+  height: 100%;
+  border-radius: var(--r-pill);
+  transition: width 0.35s ease;
+}
+
+.mpi-npi-val {
+  flex: 0 0 auto;
+  min-width: 46px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-caption);
+  color: var(--color-text);
+}
+
+.mpi-npi-cell.is-flagged .mpi-npi-val {
+  color: var(--color-error);
+  font-weight: var(--fw-bold);
 }

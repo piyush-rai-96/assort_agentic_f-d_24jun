@@ -29,82 +29,209 @@
   border-left-color: var(--pf-accent, var(--color-primary));
 }
 
-/* ── Inline approve / decline buttons — summary vendor SKUs table ────────── */
-.pf-action-approve,
-.pf-action-decline {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  font-size: 12px;
-  font-weight: var(--fw-bold);
-  font-family: inherit;
-  cursor: pointer;
-  transition: transform 0.1s, box-shadow 0.12s;
-  line-height: 1;
-}
-.pf-action-approve:hover,
-.pf-action-decline:hover {
-  transform: scale(1.12);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.16);
-}
-.pf-action-approve:active,
-.pf-action-decline:active {
-  transform: scale(0.95);
-}
-
-.pf-action-approve {
-  background: var(--color-success);
-  border: none;
-  color: #fff;
-}
-
-.pf-action-decline {
-  background: transparent;
-  border: 1.5px solid var(--color-error);
-  color: var(--color-error);
-}
-.pf-action-decline:hover {
-  background: var(--color-error);
-  color: #fff;
-}
-
-/* AG-Grid: cells that hold custom cellRenderers — let the renderer control its own layout */
-.ag-cell .ag-react-container {
-  height: 100%;
-  width: 100%;
-  display: flex;
-  align-items: stretch;
-}
-
-/* ── Two-line cell pattern (Added by · Date  /  Evidence · Date) ─────────── */
-.pf-two-line-cell {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  height: 100%;
-  gap: 2px;
-  overflow: hidden;
-}
-.pf-two-line-top {
+/* ── Action column — approve/decline circle buttons (Shortlisted rows) ───── */
+/* ── Action column — Shortlisted: Approve + Decline buttons ─────────────── */
+.pf-action-btns {
   display: flex;
   align-items: center;
   gap: 5px;
-  overflow: hidden;
+  align-self: center;
 }
-.pf-two-line-main {
+
+.pf-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  transition: transform 0.12s, box-shadow 0.15s, opacity 0.12s;
+  flex-shrink: 0;
+}
+.pf-action-btn:hover  { transform: translateY(-1px); box-shadow: 0 3px 10px rgba(0,0,0,0.14); }
+.pf-action-btn:active { transform: scale(0.95); box-shadow: none; }
+
+/* ✓ Approve — green pill with text */
+.pf-action-btn--approve {
+  padding: 4px 10px;
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  border: none;
+  color: #fff;
+  box-shadow: 0 1px 4px rgba(34,197,94,0.35), inset 0 1px 0 rgba(255,255,255,0.2);
+}
+.pf-action-btn--approve:hover { box-shadow: 0 4px 12px rgba(34,197,94,0.4); }
+
+/* ✕ Decline — red icon-only circle */
+.pf-action-btn--decline {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  background: #fff;
+  border: 1.5px solid #fca5a5;
+  color: #ef4444;
+  font-size: 12px;
+}
+.pf-action-btn--decline:hover {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(239,68,68,0.35);
+}
+
+/* ── Action column — status chips (post-decision) ────────────────────────── */
+.pf-action-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  flex-shrink: 0;
+  align-self: center;        /* don't stretch vertically in flex parent */
+  height: fit-content;       /* prevent AG Grid from inflating the height */
+  width: fit-content;
+  transition: opacity 0.15s;
+}
+
+/* ✓ Approved — rich green gradient */
+.pf-action-chip--approved {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  color: #166534;
+  border: 1.5px solid #86efac;
+  box-shadow: 0 1px 4px rgba(34,197,94,0.18), inset 0 1px 0 rgba(255,255,255,0.7);
+}
+
+/* ✕ Declined — rich red gradient */
+.pf-action-chip--declined {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  color: #991b1b;
+  border: 1.5px solid #fca5a5;
+  box-shadow: 0 1px 4px rgba(239,68,68,0.18), inset 0 1px 0 rgba(255,255,255,0.7);
+}
+
+/* 🔒 Mandatory — slate chip */
+.pf-action-chip--mandatory {
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  color: #475569;
+  border: 1.5px solid #cbd5e1;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.8);
+}
+
+/* ⏳ In Review — amber chip */
+.pf-action-chip--review {
+  background: linear-gradient(135deg, #fffbeb 0%, #fde68a 100%);
+  color: #92400e;
+  border: 1.5px solid #fbbf24;
+  box-shadow: 0 1px 4px rgba(245,158,11,0.18), inset 0 1px 0 rgba(255,255,255,0.7);
+}
+
+/* AG-Grid: force .ag-react-container to fill the full row height so
+   height:"100%" inside React cellRenderers resolves correctly.
+   align-items: flex-start prevents pill/chip children from stretching
+   to full row height and becoming blobs. */
+.ag-cell .ag-react-container {
+  height: 100% !important;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+
+/* ── Inline cell — name + chip side-by-side ──────────────────────────────── */
+.pf-inline-cell {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  max-height: 40px;
+  overflow: hidden;
+  align-self: center;
+}
+.pf-inline-cell__name {
   font-size: var(--fs-micro);
+  font-weight: var(--fw-semibold);
   color: var(--color-text);
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
-  flex: 1 1 auto;
+  flex: 1;
   min-width: 0;
 }
-.pf-two-line-main--strong { font-weight: var(--fw-semibold); }
-.pf-two-line-sub {
+.pf-inline-cell__name--light {
+  font-weight: var(--fw-regular, 400);
+  color: var(--color-text-muted);
+}
+
+/* ── Premium intel source chip ───────────────────────────────────────────── */
+.pf-intel-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  flex-shrink: 0;
+  line-height: 1.6;
+  transition: opacity 0.15s;
+}
+.pf-intel-chip:hover { opacity: 0.8; }
+
+/* amber — Line Gaps "Added By" */
+.pf-intel-chip--amber {
+  background: linear-gradient(135deg, #fff8e7 0%, #fde68a 100%);
+  color: #92400e;
+  border: 1px solid #fbbf24;
+  box-shadow: 0 1px 4px rgba(245, 158, 11, 0.22), inset 0 1px 0 rgba(255,255,255,0.6);
+}
+/* teal — Field Wishlists "Evidence" */
+.pf-intel-chip--teal {
+  background: linear-gradient(135deg, #ecfeff 0%, #a5f3fc 100%);
+  color: #0e7490;
+  border: 1px solid #67e8f9;
+  box-shadow: 0 1px 4px rgba(34, 211, 238, 0.22), inset 0 1px 0 rgba(255,255,255,0.6);
+}
+
+/* ── Vendor SKU cell ─────────────────────────────────────────────────────── */
+.pf-sku-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  overflow: hidden;
+}
+.pf-sku-cell__swatch { flex-shrink: 0; }
+.pf-sku-cell__text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
+  overflow: hidden;
+}
+.pf-sku-cell__name {
+  font-size: var(--fs-micro);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
+}
+.pf-sku-cell__vendor {
   font-size: var(--fs-xs);
   color: var(--color-text-subtle);
   white-space: nowrap;

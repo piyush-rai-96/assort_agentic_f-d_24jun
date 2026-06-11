@@ -6,7 +6,7 @@ import Grid from "../components/Grid.jsx";
 import StepIndicator from "../components/StepIndicator.jsx";
 import {
   PLANS, PIPE_STAGES, PLAN_STATUS, PLAN_MODE,
-  DEPT_OPTIONS, CLUSTERING_SCENARIOS, CONTEXT_CHIPS,
+  DEPT_OPTIONS, CLUSTERING_SCENARIOS, CONTEXT_CHIPS, PLR_PERIODS,
 } from "../data/workspace.js";
 import {
   CATALOGUE_SKUS, HARD_LOCKED_COUNT, STORE_PICK_COUNT,
@@ -14,6 +14,7 @@ import {
 } from "../data/catalogue.js";
 import { FD_STORES } from "../data/stores.js";
 import { FD_CLUST_SCENARIOS } from "../data/clusters.js";
+import { CLUSTER_ACCEPTANCE } from "../data/clustering.js";
 import { FD_ASSORTMENT } from "../data/assortment.js";
 import { INTEL_SEED } from "../data/intel.js";
 import { setAgentPlan, getAgentPlan, resetAgentPlan } from "../data/agentStore.js";
@@ -377,6 +378,13 @@ function PlanCard({ plan, onOpen, selected, onToggleCompare }) {
           <ModePill mode={plan.mode} />
           <span className="ws-plan-dept">{plan.dept}</span>
           <span className="ws-plan-season">{plan.season}</span>
+          {plan.clustIds?.length > 0 && (
+            <span className="ws-cluster-pills">
+              {plan.clustIds.map((id) => (
+                <span key={id} className="ws-cluster-pill">{id}</span>
+              ))}
+            </span>
+          )}
         </div>
       </div>
 
@@ -434,8 +442,23 @@ function CompareTray({ planIds, plans, onClose }) {
               <StatusPill status={p.status} />
             </div>
           ))}
+          {Array.from({ length: 3 - planIds.length }).map((_, i) => (
+            <div key={`empty-${i}`} className="ws-compare-slot ws-compare-slot--empty">
+              + add a plan
+            </div>
+          ))}
         </div>
-        <button type="button" className="ws-compare-close" onClick={onClose}>✕ Clear</button>
+        <div className="ws-compare-tray-actions">
+          <button
+            type="button"
+            className="ws-btn-primary"
+            disabled={planIds.length < 2}
+            onClick={() => {/* View comparison logic */}}
+          >
+            View Comparison →
+          </button>
+          <button type="button" className="ws-compare-close" onClick={onClose}>✕ Clear</button>
+        </div>
       </div>
     </div>
   );
@@ -519,52 +542,153 @@ function PlanDetail({ plan, onBack, onNavigate }) {
   );
 }
 
-/* ─── Create Wizard ─────────────────────────────────────────────────────── */
-const WIZARD_STEPS = ["Details", "Mode", "Clustering", "Context", "Review"];
+/* ─── Active Cluster Model Banner ───────────────────────────────────────── */
+const TIER_COLOR = { high: "success", mid: "warning", low: "error" };
+
+function ClusterBanner({ onNavigate }) {
+  const { acceptedScenario, acceptedScope } = CLUSTER_ACCEPTANCE;
+
+  if (!acceptedScenario) {
+    return (
+      <div className="ws-cluster-banner ws-cluster-banner--warn">
+        <Stack direction="row" align="center" gap={3} wrap>
+          <span style={{ fontSize: 20 }}>⚠️</span>
+          <Stack direction="column" gap={0} flex="1">
+            <Text variant="body-strong" tone="warning">No cluster model accepted yet</Text>
+            <Text variant="caption" tone="muted">Build and accept a cluster model before creating a plan.</Text>
+          </Stack>
+          <button type="button" className="ws-btn-ghost" onClick={() => onNavigate?.("clustering")}>
+            Location Clustering →
+          </button>
+        </Stack>
+      </div>
+    );
+  }
+
+  const scenario = FD_CLUST_SCENARIOS[acceptedScenario];
+  const SCENARIO_ICON = { A: "🗺", B: "🧠", C: "📦" };
+
+  return (
+    <div className="ws-cluster-banner">
+      <Stack direction="row" align="center" gap={3} wrap style={{ marginBottom: "var(--sp-3)" }}>
+        <span style={{ fontSize: 22 }}>{SCENARIO_ICON[acceptedScenario] || "🧩"}</span>
+        <Text variant="body-strong" tone="strong" style={{ flex: 1 }}>Active Cluster Model</Text>
+        <Badge variant="subtle" color="success" label={scenario.name.split("—")[0].trim()} />
+        <Text variant="caption" tone="muted">
+          {acceptedScope.dept} · {acceptedScope.channel} · {acceptedScope.season}
+        </Text>
+        <button type="button" className="ws-btn-ghost ws-btn-ghost--sm" onClick={() => onNavigate?.("clustering")}>
+          View / Edit →
+        </button>
+      </Stack>
+      <div className="ws-cluster-grid">
+        {scenario.clusters.map((cl) => (
+          <div key={cl.id} className="ws-cluster-col">
+            <div className="ws-cluster-col-header">
+              <span className="ws-cluster-dot" style={{ background: cl.color }} />
+              <span className="ws-cluster-col-label">{cl.label}</span>
+            </div>
+            <div className="ws-cluster-col-stats">
+              {cl.stores?.length ?? "—"} stores · ${cl.revSqft ?? "—"}/sqft
+            </div>
+            <Badge variant="subtle" color={TIER_COLOR[cl.tier] || "neutral"} size="small" label={cl.tier} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Summary Stat Tiles ────────────────────────────────────────────────── */
+function StatTiles({ plans }) {
+  const tiles = [
+    { label: "Total Plans",   value: plans.length,                                          accent: "var(--color-primary)"  },
+    { label: "In Progress",   value: plans.filter((p) => p.status === "in-progress").length, accent: "#2563eb"              },
+    { label: "Under Review",  value: plans.filter((p) => p.status === "review").length,      accent: "#d97706"              },
+    { label: "Approved",      value: plans.filter((p) => p.status === "approved").length,    accent: "#059669"              },
+  ];
+  return (
+    <div className="ws-stat-tiles">
+      {tiles.map((t) => (
+        <div key={t.label} className="ws-stat-tile" style={{ "--ws-tile-accent": t.accent }}>
+          <span className="ws-stat-tile-value">{t.value}</span>
+          <span className="ws-stat-tile-label">{t.label}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ─── Create Wizard — 3-step HTML v6 flow ───────────────────────────────── */
+const WIZARD_STEPS = ["Plan Details", "Clusters", "Review & Submit"];
 
 function CreateWizard({ onClose, onCreate }) {
   const [step, setStep] = useState(0);
   const [draft, setDraft] = useState({
     name: "",
     dept: "Tile",
-    season: "SS 2026",
-    mode: "gated",
-    confidenceThreshold: 75,
-    clusteringScenario: "cr-018",
-    context: "",
+    plrId: "",
+    clustScenario: CLUSTER_ACCEPTANCE.acceptedScenario || "B",
+    clustIds: [],
   });
 
   const set = (key, val) => setDraft((d) => ({ ...d, [key]: val }));
+
+  /* Derived cluster data for selected scenario tab */
+  const scenarioClusters = FD_CLUST_SCENARIOS[draft.clustScenario]?.clusters || [];
+  const totalStores = scenarioClusters
+    .filter((cl) => draft.clustIds.includes(cl.id))
+    .reduce((n, cl) => n + (cl.stores?.length ?? 0), 0);
+
+  const selectedPlr = PLR_PERIODS.find((p) => p.id === draft.plrId);
+  const missingFields = !draft.name.trim() || !draft.plrId || !draft.clustIds.length;
+
   const canNext = () => {
-    if (step === 0) return draft.name.trim().length >= 3;
+    if (step === 0) return draft.name.trim().length >= 3 && !!draft.plrId;
+    if (step === 1) return draft.clustIds.length > 0;
     return true;
   };
 
   const handleCreate = () => {
+    if (missingFields) return;
+    const now = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
     onCreate({
       ...draft,
+      season: selectedPlr?.season || "SS 2026",
       id: `p${Date.now()}`,
       status: "draft",
+      mode: "gated",
+      confidenceThreshold: 75,
       activeStage: "hindsight",
       stagesCompleted: [],
-      kpis: { stores: 70, skus: 0, coreCount: 0, submittedPct: 0 },
+      kpis: { stores: totalStores || 70, skus: 0, coreCount: 0, submittedPct: 0 },
       createdBy: "Karen M.",
-      createdAt: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
-      updatedAt: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+      createdAt: now,
+      updatedAt: now,
     });
   };
 
+  const useActiveModel = () => {
+    const key = CLUSTER_ACCEPTANCE.acceptedScenario;
+    if (!key) return;
+    const allIds = (FD_CLUST_SCENARIOS[key]?.clusters || []).map((c) => c.id);
+    set("clustScenario", key);
+    setDraft((d) => ({ ...d, clustScenario: key, clustIds: allIds }));
+  };
+
   return (
-    <div className="ws-wizard-overlay" role="dialog" aria-modal="true" aria-labelledby="ws-wizard-title" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+    <div className="ws-wizard-overlay" role="dialog" aria-modal="true" aria-labelledby="ws-wizard-title"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="ws-wizard">
         <div className="ws-wizard-header">
-          <h3 id="ws-wizard-title">Create New Plan</h3>
-          <button type="button" className="ws-wizard-close" onClick={onClose} aria-label="Close create plan wizard">✕</button>
+          <h3 id="ws-wizard-title">Create Assortment Plan</h3>
+          <button type="button" className="ws-wizard-close" onClick={onClose} aria-label="Close">✕</button>
         </div>
 
         <StepIndicator step={step} labels={WIZARD_STEPS} className="ws-wizard-steps" />
 
         <div className="ws-wizard-body">
+          {/* ── Step 0: Plan Details ─────────────────────────────────────── */}
           {step === 0 && (
             <div className="ws-wizard-section">
               <label className="ws-form-label">Plan name *</label>
@@ -574,100 +698,108 @@ function CreateWizard({ onClose, onCreate }) {
                 value={draft.name}
                 onChange={(e) => set("name", e.target.value)}
               />
-              <label className="ws-form-label" style={{ marginTop: 16 }}>Department</label>
+
+              <label className="ws-form-label" style={{ marginTop: 16 }}>Department *</label>
               <div className="ws-radio-group">
-                {DEPT_OPTIONS.filter((d) => d !== "All").map((d) => (
+                {["Tile", "Wood / LVP", "Laminate & Vinyl", "All Departments"].map((d) => (
                   <label key={d} className={`ws-radio-card ${draft.dept === d ? "selected" : ""}`}>
                     <input type="radio" value={d} checked={draft.dept === d} onChange={() => set("dept", d)} />
                     {d}
                   </label>
                 ))}
               </div>
-              <label className="ws-form-label" style={{ marginTop: 16 }}>Season</label>
-              <input className="ws-form-input" value={draft.season} onChange={(e) => set("season", e.target.value)} />
+
+              <label className="ws-form-label" style={{ marginTop: 20 }}>Assortment Period *</label>
+              <div className="ws-plr-list">
+                {PLR_PERIODS.map((p) => (
+                  <label key={p.id} className={`ws-plr-row ${draft.plrId === p.id ? "selected" : ""}`}>
+                    <input type="radio" name="plr" value={p.id} checked={draft.plrId === p.id}
+                      onChange={() => set("plrId", p.id)} />
+                    <div className="ws-plr-row-body">
+                      <div className="ws-plr-row-top">
+                        <span className="ws-plr-dept">{p.dept}</span>
+                        <span className="ws-plr-season">{p.season}</span>
+                        <span className="ws-plr-weeks">{p.weeks}</span>
+                        <Badge variant="subtle" size="small"
+                          color={p.status === "active" ? "success" : "neutral"} label={p.status === "active" ? "Active" : "Draft"} />
+                      </div>
+                      <div className="ws-plr-row-sub">Due {p.due}</div>
+                    </div>
+                  </label>
+                ))}
+              </div>
             </div>
           )}
 
+          {/* ── Step 1: Clusters ─────────────────────────────────────────── */}
           {step === 1 && (
             <div className="ws-wizard-section">
-              <label className="ws-form-label">Pipeline mode</label>
-              <div className="ws-mode-cards">
-                {[
-                  { id: "gated", label: "Gated", desc: "Merchant reviews and approves each stage before the agent proceeds. Full control, requires active participation.", badge: "Recommended" },
-                  { id: "autonomous", label: "Autonomous", desc: "Agent chains stages automatically using configured confidence threshold. Ideal for speed — review at the end.", badge: "Fast" },
-                ].map((m) => (
-                  <label key={m.id} className={`ws-mode-card ${draft.mode === m.id ? "selected" : ""}`}>
-                    <input type="radio" value={m.id} checked={draft.mode === m.id} onChange={() => set("mode", m.id)} />
-                    <div style={{ display: "flex", alignItems: "center", gap: "var(--sp-2)", marginBottom: "var(--sp-1)" }}>
-                      <strong>{m.label}</strong>
-                      <span className="ws-mode-badge">{m.badge}</span>
-                    </div>
-                    <p>{m.desc}</p>
-                  </label>
-                ))}
-              </div>
-              <label className="ws-form-label" style={{ marginTop: 20 }}>
-                Confidence threshold — {draft.confidenceThreshold}%
-              </label>
-              <input
-                type="range" min={50} max={95} step={5}
-                value={draft.confidenceThreshold}
-                onChange={(e) => set("confidenceThreshold", Number(e.target.value))}
-                className="ws-slider"
-              />
-              <div className="ws-slider-labels"><span>50%</span><span>95%</span></div>
-            </div>
-          )}
+              {CLUSTER_ACCEPTANCE.acceptedScenario && (
+                <div className="ws-active-model-hint">
+                  <span>🧠 Active model: <strong>{FD_CLUST_SCENARIOS[CLUSTER_ACCEPTANCE.acceptedScenario]?.name.split("—")[0].trim()}</strong></span>
+                  <button type="button" className="ws-btn-ghost ws-btn-ghost--sm" onClick={useActiveModel}>
+                    {draft.clustScenario === CLUSTER_ACCEPTANCE.acceptedScenario &&
+                     draft.clustIds.length === scenarioClusters.length ? "✓ Selected" : "Use active model"}
+                  </button>
+                </div>
+              )}
 
-          {step === 2 && (
-            <div className="ws-wizard-section">
-              <label className="ws-form-label">Clustering scenario</label>
-              <div className="ws-radio-group ws-radio-group--vertical">
-                {CLUSTERING_SCENARIOS.map((s) => (
-                  <label key={s.id} className={`ws-radio-card ws-radio-card--full ${draft.clusteringScenario === s.id ? "selected" : ""}`}>
-                    <input type="radio" value={s.id} checked={draft.clusteringScenario === s.id} onChange={() => set("clusteringScenario", s.id)} />
-                    {s.label}
-                    {s.default && <span className="ws-rec-badge">Recommended</span>}
-                  </label>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {step === 3 && (
-            <div className="ws-wizard-section">
-              <label className="ws-form-label">Additional context for the agent (optional)</label>
-              <textarea
-                className="ws-form-textarea"
-                placeholder="Describe any focus areas, constraints, or goals for this plan..."
-                value={draft.context}
-                onChange={(e) => set("context", e.target.value)}
-                rows={5}
-              />
-              <div className="ws-context-chips">
-                {CONTEXT_CHIPS.map((c) => (
-                  <button
-                    key={c}
-                    className="ws-context-chip"
-                    onClick={() => set("context", draft.context ? `${draft.context}\n${c}` : c)}
-                  >
-                    + {c}
+              <div className="ws-scenario-tabs">
+                {Object.values(FD_CLUST_SCENARIOS).map((sc) => (
+                  <button key={sc.id} type="button"
+                    className={`ws-scenario-tab ${draft.clustScenario === sc.id ? "active" : ""}`}
+                    onClick={() => setDraft((d) => ({ ...d, clustScenario: sc.id, clustIds: [] }))}>
+                    {sc.id === "A" ? "Geographic" : sc.id === "B" ? "Behavioral ★" : "DC-based"}
                   </button>
                 ))}
               </div>
+
+              <div className="ws-clust-actions">
+                <button type="button" className="ws-btn-ghost ws-btn-ghost--sm"
+                  onClick={() => set("clustIds", scenarioClusters.map((c) => c.id))}>All</button>
+                <button type="button" className="ws-btn-ghost ws-btn-ghost--sm"
+                  onClick={() => set("clustIds", [])}>None</button>
+              </div>
+
+              <div className="ws-clust-list">
+                {scenarioClusters.map((cl) => {
+                  const checked = draft.clustIds.includes(cl.id);
+                  return (
+                    <label key={cl.id} className={`ws-clust-row ${checked ? "selected" : ""}`}>
+                      <input type="checkbox" checked={checked} onChange={() =>
+                        setDraft((d) => ({
+                          ...d,
+                          clustIds: checked ? d.clustIds.filter((x) => x !== cl.id) : [...d.clustIds, cl.id],
+                        }))
+                      } />
+                      <span className="ws-clust-dot" style={{ background: cl.color }} />
+                      <span className="ws-clust-name">{cl.label}</span>
+                      <Badge variant="subtle" size="small" color={TIER_COLOR[cl.tier] || "neutral"} label={cl.tier} />
+                      <span className="ws-clust-meta">{cl.stores?.length ?? "—"} stores · ${cl.revSqft ?? "—"}/sqft · ST {cl.st ?? "—"}%</span>
+                    </label>
+                  );
+                })}
+              </div>
+
+              {draft.clustIds.length > 0 && (
+                <div className="ws-clust-summary">
+                  ✓ {draft.clustIds.length} cluster{draft.clustIds.length > 1 ? "s" : ""} selected — {totalStores} stores in scope
+                </div>
+              )}
             </div>
           )}
 
-          {step === 4 && (
+          {/* ── Step 2: Review & Submit ──────────────────────────────────── */}
+          {step === 2 && (
             <div className="ws-wizard-section">
               <div className="ws-review-grid">
                 {[
-                  { label: "Plan name",    val: draft.name },
-                  { label: "Department",   val: draft.dept },
-                  { label: "Season",       val: draft.season },
-                  { label: "Mode",         val: draft.mode.charAt(0).toUpperCase() + draft.mode.slice(1) },
-                  { label: "Confidence",   val: `${draft.confidenceThreshold}%` },
-                  { label: "Clustering",   val: CLUSTERING_SCENARIOS.find((s) => s.id === draft.clusteringScenario)?.label || draft.clusteringScenario },
+                  { label: "Plan Name",       val: draft.name || "—" },
+                  { label: "Department",      val: draft.dept },
+                  { label: "PLR Period",      val: selectedPlr ? `${selectedPlr.season} (${selectedPlr.weeks})` : "—" },
+                  { label: "Cluster Model",   val: FD_CLUST_SCENARIOS[draft.clustScenario]?.name.split("—")[0].trim() || "—" },
+                  { label: "Clusters",        val: draft.clustIds.length ? draft.clustIds.join(", ") : "—" },
+                  { label: "Stores in scope", val: totalStores || "—" },
                 ].map((r) => (
                   <div key={r.label} className="ws-review-row">
                     <span className="ws-review-key">{r.label}</span>
@@ -675,10 +807,25 @@ function CreateWizard({ onClose, onCreate }) {
                   </div>
                 ))}
               </div>
-              {draft.context && (
-                <div className="ws-review-notes">
-                  <span className="ws-form-label">Context</span>
-                  <p>{draft.context}</p>
+
+              <div className="ws-what-happens">
+                <Text variant="body-strong" tone="muted" style={{ marginBottom: 8 }}>What happens when you submit</Text>
+                {[
+                  "Catalogue filters to your dept + clusters",
+                  "National Core SKUs locked for all stores",
+                  "Regional review sent to cluster leads",
+                  "Store curation opens for individual picks",
+                ].map((step, i) => (
+                  <div key={i} className="ws-what-step">
+                    <span className="ws-what-num">{i + 1}</span>
+                    <span>{step}</span>
+                  </div>
+                ))}
+              </div>
+
+              {missingFields && (
+                <div className="ws-missing-warn">
+                  ⚠ Complete all required fields before submitting.
                 </div>
               )}
             </div>
@@ -686,16 +833,19 @@ function CreateWizard({ onClose, onCreate }) {
         </div>
 
         <div className="ws-wizard-footer">
-          <button type="button" className="ws-btn-ghost" onClick={step === 0 ? onClose : () => setStep(step - 1)}>
+          <button type="button" className="ws-btn-ghost"
+            onClick={step === 0 ? onClose : () => setStep(step - 1)}>
             {step === 0 ? "Cancel" : "← Back"}
           </button>
           {step < WIZARD_STEPS.length - 1 ? (
-            <button type="button" className="ws-btn-primary" disabled={!canNext()} onClick={() => setStep(step + 1)}>
+            <button type="button" className="ws-btn-primary" disabled={!canNext()}
+              onClick={() => setStep(step + 1)}>
               Next →
             </button>
           ) : (
-            <button type="button" className="ws-btn-primary" onClick={handleCreate}>
-              Create Plan
+            <button type="button" className="ws-btn-primary" disabled={missingFields}
+              onClick={handleCreate}>
+              🚀 Submit for PLR Review
             </button>
           )}
         </div>
@@ -761,6 +911,12 @@ export default function Workspace({ onNavigate, user }) { // eslint-disable-line
       {/* ── Agent Recommendation Section ─────────────────────────────────── */}
       <AgentSection onNavigateCatalogue={() => onNavigate?.("catalogue")} />
 
+      {/* ── Active Cluster Model Banner ───────────────────────────────────── */}
+      <ClusterBanner onNavigate={onNavigate} />
+
+      {/* ── Summary Stat Tiles ────────────────────────────────────────────── */}
+      <StatTiles plans={plans} />
+
       <div className="ws-filters">
         <div className="ws-status-tabs">
           {STATUS_FILTERS.map((s) => (
@@ -787,6 +943,12 @@ export default function Workspace({ onNavigate, user }) { // eslint-disable-line
             </button>
           ))}
         </div>
+      </div>
+
+      <div className="ws-section-header">
+        <span className="ws-section-label">
+          {filtered.length} {filtered.length === 1 ? "Plan" : "Plans"}
+        </span>
       </div>
 
       {filtered.length === 0 ? (
