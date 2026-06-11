@@ -266,9 +266,6 @@ export default function PortfolioBuild({ onNavigate }) {
     const existing = INITIAL_WISHLISTS;
     const existingIds = new Set(existing.map((w) => w.id));
     const merged = [...intelWishlists.filter((w) => !existingIds.has(w.id)), ...existing];
-    // #region agent log
-    fetch('http://127.0.0.1:7846/ingest/7cf0a5c5-3a45-4382-a252-b2e9ea3942d7',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'1a5386'},body:JSON.stringify({sessionId:'1a5386',location:'PortfolioBuild.jsx:wishlists-init',message:'wishlists state init',data:{mergedCount:merged.length,intelWishlistCount:intelWishlists.length,staticIntelCount:STATIC_INTEL_WISHLISTS.length,initialWishlistCount:existing.length,sources:merged.map(w=>({id:w.id,store:w.store,source:w.source}))},timestamp:Date.now(),hypothesisId:'H-A',runId:'debug-run-2'})}).catch(()=>{});
-    // #endregion
     return merged;
   });
   const [vendorSkus, setVendorSkus] = useState(() => buildVendorSkus());
@@ -1122,7 +1119,13 @@ export default function PortfolioBuild({ onNavigate }) {
         count={gaps.length}
         onViewAll={() => goTab(1)}
         empty="No gaps logged yet."
-        table={<Table {...tableProps} tableHeader="Line gaps" columnDefs={gapColumns} rowData={gaps} onRowClicked={(e) => openSummaryGap(e.data.id)} />}
+        table={<Table {...tableProps} tableHeader="Line gaps" columnDefs={gapColumns} rowData={gaps} onRowClicked={(e) => {
+          /* AG Grid fires onRowClicked even when a child element handles the click.
+             We use the native DOM event to check if the click came from the Intel
+             chip — if so, let handleIntelClick() in the cell renderer take over. */
+          if (e.event?.target?.closest?.(".pf-intel-chip")) return;
+          openSummaryGap(e.data.id);
+        }} />}
       />
       <SummarySection
         title="📬 Field Wishlists"

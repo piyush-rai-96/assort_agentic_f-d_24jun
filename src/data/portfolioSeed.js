@@ -12,27 +12,9 @@ export const INITIAL_GAPS = [
   { id: "g2", type: "Material", desc: 'No wide-plank white oak 9"+ in engineered', priority: "high", addedBy: "Barbara S.", date: "May 18" },
   { id: "g3", type: "Color", desc: "Warm greige wood-look tile — gap vs competitors", priority: "med", addedBy: "Chris G.", date: "May 20" },
   { id: "g5", type: "Depth", desc: "Marble-look mosaic at sub-$8/sqft price point", priority: "low", addedBy: "Blake M.", date: "May 25" },
-  /* ── Intel-sourced gaps — pulled from Market Intelligence signals ─────── */
-  {
-    id: "g-intel-1",
-    type: "White Space",
-    desc: "24×48 rectified porcelain, light grey. 3 contractor projects confirmed.",
-    priority: "high",
-    addedBy: "Lisa T.",
-    date: "Jun 1, 2025",
-    source: "intel",
-    intelId: "I-003",
-  },
-  {
-    id: "g-intel-2",
-    type: "White Space",
-    desc: "Limewash ceramic wall tile — textured surface, neutral tones. High-end renovation market.",
-    priority: "low",
-    addedBy: "Jason R.",
-    date: "May 25, 2025",
-    source: "intel",
-    intelId: "I-005",
-  },
+  /* Note: intel-sourced gaps (Lisa / I-003, Jason / I-005) are auto-generated
+     by the intelGaps useMemo in PortfolioBuild.jsx from INTEL_SEED entries
+     that have catalogueGap:true. No manual duplicates needed here. */
 ];
 
 /* Static intel-backed wishlists — kept separate so PortfolioBuild.jsx
