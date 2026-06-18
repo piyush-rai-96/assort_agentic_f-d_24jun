@@ -1,10 +1,10 @@
 import React, { useMemo, useState } from "react";
 import { Card, Button, Badge, Table, EmptyState } from "impact-ui";
+import { Check } from "lucide-react";
 import FdSelect from "../components/FdSelect.jsx";
 import Text from "../components/Text.jsx";
 import Stack from "../components/Stack.jsx";
 import Grid from "../components/Grid.jsx";
-import { color } from "../styles/tokens.js";
 import SkuSwatch from "../components/SkuSwatch.jsx";
 import { FD_STORES } from "../data/stores.js";
 import { FD_SKUS } from "../data/skus.js";
@@ -24,7 +24,7 @@ const STATUS_META = {
 };
 const DEPT_BADGE = { Wood: "warning", Tile: "success", "Laminate & Vinyl": "info" };
 const VELOCITY_BADGE = { A: "success", B: "info", C: "warning", D: "error" };
-const VELOCITY_COLOR = { A: color.success, B: color.teal, C: color.warning, D: color.error };
+const VELOCITY_COLOR = { A: "var(--color-success)", B: "var(--color-teal)", C: "var(--color-warning)", D: "var(--color-error)" };
 
 /* New PLR SKUs = catalogue items with no assortment history anywhere. */
 const NEW_SKUS = FD_SKUS.filter((s) => {
@@ -68,20 +68,25 @@ function buildProjections(likeSkuId) {
 /* ── Numbered workflow step card ───────────────────────────────────────────── */
 function StepCard({ step, title, state, children }) {
   // state: "done" | "active" | "locked"
-  const dotBg = state === "done" ? "var(--color-primary)" : state === "active" ? color.info : "var(--color-surface-alt)";
+  const dotBg = state === "done" ? "var(--color-primary)" : state === "active" ? "var(--color-info)" : "var(--color-surface-alt)";
   const dotTone = state === "locked" ? "muted" : "inherit";
   const titleTone = state === "done" ? "primary" : state === "active" ? "info" : state === "locked" ? "muted" : "strong";
   return (
-    <Card sx={{ ...panelSx, opacity: state === "locked" ? 0.55 : 1 }}>
+    <Card
+      size="small"
+      sx={{ ...panelSx, opacity: state === "locked" ? 0.55 : 1 }}
+      aria-label={`Step ${step}: ${title}`}
+      aria-disabled={state === "locked" ? "true" : undefined}
+    >
       <Stack direction="row" gap={2} align="center" style={{ marginBottom: "var(--sp-3)" }}>
         <Stack
           className="lif-step-dot"
           align="center"
           justify="center"
-          style={{ background: dotBg, color: state === "done" || state === "active" ? "#fff" : undefined }}
+          style={{ background: dotBg, color: state === "done" || state === "active" ? "var(--color-surface)" : undefined }}
         >
-          <Text variant="caption" tone={state === "done" || state === "active" ? "inherit" : dotTone} style={{ fontWeight: 700 }}>
-            {state === "done" ? "✓" : step}
+          <Text variant="caption" tone={state === "done" || state === "active" ? "inherit" : dotTone} style={{ fontWeight: "var(--fw-bold)" }}>
+            {state === "done" ? <Check size={12} aria-hidden="true" /> : step}
           </Text>
         </Stack>
         <Text variant="body-strong" tone={titleTone}>{title}</Text>
@@ -162,14 +167,14 @@ export default function LikeItemForecast({ onNavigate }) {
         headerName: "Vel.",
         width: 90,
         filter: "agSetColumnFilter",
-        cellStyle: (p) => ({ color: VELOCITY_COLOR[p.value] || color.text, fontWeight: 700 }),
+        cellStyle: (p) => ({ color: VELOCITY_COLOR[p.value] || "var(--color-text)", fontWeight: "var(--fw-bold)" }),
       },
       {
         field: "projSqft",
         headerName: "Proj sqft",
         width: 120,
         filter: "agNumberColumnFilter",
-        cellStyle: () => ({ color: color.success, fontWeight: 700, fontFamily: "var(--font-mono)" }),
+        cellStyle: () => ({ color: "var(--color-success)", fontWeight: "var(--fw-bold)", fontFamily: "var(--font-mono)" }),
       },
     ],
     []
@@ -177,16 +182,15 @@ export default function LikeItemForecast({ onNavigate }) {
 
   // ── Left SKU list ─────────────────────────────────────────────────────────
   const leftPanel = (
-    <Card sx={paneSx}>
+    <Card size="small" sx={paneSx}>
       <Stack direction="column" gap={1} paddingX={3} paddingY={3} style={{ borderBottom: "1px solid var(--color-border)" }}>
         <Text variant="body-strong" tone="strong">Like-Item Forecast</Text>
-        <Text variant="micro" tone="muted">Assign proxy · request external forecast · receive results</Text>
       </Stack>
       <Grid columns={2} gap={2} style={{ padding: "var(--sp-2)", borderBottom: "1px solid var(--color-border)" }}>
         {countCards.map((c) => (
-          <Card key={c.key} sx={{ ...softSx, padding: "var(--sp-2)" }}>
+          <Card size="small" key={c.key} sx={{ ...softSx, padding: "var(--sp-2)" }}>
             <Stack direction="column" gap={0} align="center">
-              <Text variant="heading" tone={c.tone}>{counts[c.key]}</Text>
+              <Text variant="kpi" tone={c.tone}>{counts[c.key]}</Text>
               <Text variant="micro" tone="muted">{c.label}</Text>
             </Stack>
           </Card>
@@ -205,10 +209,13 @@ export default function LikeItemForecast({ onNavigate }) {
                 gap={2}
                 paddingX={3}
                 paddingY={2}
+                role="button"
+                tabIndex={0}
                 onClick={() => setActiveSku(sku.sku)}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setActiveSku(sku.sku); } }}
               >
                 <Stack direction="row" align="center" gap={2}>
-                  <SkuSwatch sku={sku} size={26} />
+                  <SkuSwatch sku={sku} size={26} aria-hidden="true" />
                   <Text variant="caption" tone="default" style={{ minWidth: 0 }}>{sku.desc}</Text>
                 </Stack>
                 <Stack direction="row" justify="space-between" align="center" gap={2} wrap>
@@ -227,26 +234,9 @@ export default function LikeItemForecast({ onNavigate }) {
   let rightPanel;
   if (!active) {
     rightPanel = (
-      <Card sx={panelSx}>
+      <Card size="small" sx={panelSx}>
         <Stack direction="column" gap={4} align="center" justify="center" style={{ minHeight: 360, textAlign: "center" }}>
-          <EmptyState
-            heading="Select a new PLR SKU to assign a like-item"
-            description="Assign a proxy SKU, submit the forecast request to the external system, then receive the result to unlock downstream steps."
-          />
-          <Grid columns={3} gap={3} style={{ width: "100%", maxWidth: 460 }}>
-            {[
-              { step: "1", l: "Assign like-item" },
-              { step: "2", l: "Submit request" },
-              { step: "3", l: "Receive forecast" },
-            ].map((s) => (
-              <Card key={s.step} sx={softSx}>
-                <Stack direction="column" gap={1} align="center">
-                  <Text variant="title" tone="muted">{s.step}</Text>
-                  <Text variant="micro" tone="muted">{s.l}</Text>
-                </Stack>
-              </Card>
-            ))}
-          </Grid>
+          <EmptyState heading="Select a new PLR SKU to assign a like-item" />
         </Stack>
       </Card>
     );
@@ -280,7 +270,7 @@ export default function LikeItemForecast({ onNavigate }) {
         <Stack direction="column" gap={4}>
           <Grid columns={4} gap={3}>
             {kpis.map((k) => (
-              <Card key={k.l} sx={{ ...softSx, padding: "var(--sp-3)" }}>
+              <Card size="small" key={k.l} sx={{ ...softSx, padding: "var(--sp-3)" }}>
                 <Stack direction="column" gap={1} align="center">
                   <Text variant="kpi" tone={k.tone}>{k.v}</Text>
                   <Text variant="micro" tone="muted">{k.l}</Text>
@@ -294,10 +284,10 @@ export default function LikeItemForecast({ onNavigate }) {
               const grp = vg[v];
               const avg = grp.length ? Math.round(grp.reduce((a, b) => a + b, 0) / grp.length) : 0;
               return (
-                <Card key={v} sx={{ ...softSx, padding: "var(--sp-3)" }}>
+                <Card size="small" key={v} sx={{ ...softSx, padding: "var(--sp-3)" }}>
                   <Stack direction="column" gap={1} align="center">
                     <Badge variant="subtle" size="small" color={VELOCITY_BADGE[v]} label={`Vel ${v} · ${grp.length}`} />
-                    <Text variant="heading" tone="strong">{avg}</Text>
+                    <Text variant="kpi" tone="strong">{avg}</Text>
                     <Text variant="micro" tone="muted">sqft avg</Text>
                   </Stack>
                 </Card>
@@ -309,7 +299,7 @@ export default function LikeItemForecast({ onNavigate }) {
       defaultColDef={{ floatingFilter: true }}
             cardContainer
             rowHeight="compact"
-            tableHeader="Projected demand by store"
+            tableHeader=""
             columnDefs={projColumns}
             rowData={proj}
             domLayout="autoHeight"
@@ -318,11 +308,8 @@ export default function LikeItemForecast({ onNavigate }) {
             pagination={false}
           />
 
-          <Card sx={{ ...panelSx, background: "var(--color-primary-soft)" }}>
-            <Stack direction="column" gap={1}>
-              <Text variant="caption" tone="primary"><strong>Forecast received — downstream steps unlocked</strong></Text>
-              <Text variant="micro" tone="muted">Assortment Intelligence will now use this forecast as the primary signal for {active.desc}.</Text>
-            </Stack>
+          <Card size="small" sx={{ ...panelSx, background: "var(--color-primary-soft)" }}>
+            <Text variant="body-strong" tone="primary">Forecast received</Text>
           </Card>
 
           <Stack direction="row" gap={2} wrap>
@@ -333,25 +320,20 @@ export default function LikeItemForecast({ onNavigate }) {
       );
     } else if (step3Active) {
       step3Body = (
-        <Stack direction="column" gap={3}>
-          <Text variant="caption" tone="muted">
-            Request submitted. In a real workflow the external system responds here. Simulate receipt to continue.
-          </Text>
-          <div>
-            <Button variant="primary" size="medium" onClick={() => simReceive(active.sku)}>
-              Simulate: receive forecast from external system
-            </Button>
-          </div>
-        </Stack>
+        <div>
+          <Button variant="primary" size="medium" onClick={() => simReceive(active.sku)}>
+            Receive forecast
+          </Button>
+        </div>
       );
     } else {
-      step3Body = <Text variant="caption" tone="subtle">Complete steps 1 and 2 first.</Text>;
+      step3Body = null;
     }
 
     rightPanel = (
       <Stack direction="column" gap={4}>
         {/* SKU header */}
-        <Card sx={panelSx}>
+        <Card size="small" sx={panelSx}>
           <Stack direction="row" gap={2} align="center" wrap style={{ marginBottom: "var(--sp-2)" }}>
             <SkuSwatch sku={active} size={32} />
             <Text variant="subheading" tone="strong">{active.desc}</Text>
@@ -365,12 +347,12 @@ export default function LikeItemForecast({ onNavigate }) {
         </Card>
 
         {/* Step 1 — Assign like-item */}
-        <StepCard step="1" title="Assign like-item (proxy SKU)" state={step1Done ? "done" : "active"}>
+        <StepCard step="1" title="Assign like-item" state={step1Done ? "done" : "active"}>
           {step1Done ? (
-            <Card sx={{ ...panelSx, background: "var(--color-teal-soft)", boxShadow: "none" }}>
+            <Card size="small" sx={{ ...panelSx, background: "var(--color-teal-soft)", boxShadow: "none" }}>
               <Stack direction="row" justify="space-between" align="center" gap={3} wrap>
                 <Stack direction="column" gap={1} flex="1 1 auto" style={{ minWidth: 0 }}>
-                  <Text variant="caption" tone="teal"><strong>{st.likeSkuDesc}</strong></Text>
+                  <Text variant="body-strong" tone="teal">{st.likeSkuDesc}</Text>
                   <Text variant="micro" mono tone="muted">{st.likeSkuId} · R13: {likeStats.r13} sqft · {likeStats.stores}/21 stores</Text>
                 </Stack>
                 {st.status === "assigned" ? (
@@ -380,41 +362,28 @@ export default function LikeItemForecast({ onNavigate }) {
             </Card>
           ) : (
             <Stack direction="column" gap={2}>
-              <Text variant="caption" tone="muted">
-                Select an existing SKU from the same department whose sales history will proxy this new item&apos;s demand.
-              </Text>
               <FdSelect
-                label=""
-                value=""
+                label="Proxy SKU"
                 options={likeOptions}
                 onChange={(v) => setLike(active.sku, v)}
-                width="100%"
-                isWithSearch
               />
             </Stack>
           )}
         </StepCard>
 
         {/* Step 2 — Submit request */}
-        <StepCard step="2" title="Submit forecast request to external system" state={step2Done ? "done" : step2Active ? "active" : "locked"}>
+        <StepCard step="2" title="Submit forecast request" state={step2Done ? "done" : step2Active ? "active" : "locked"}>
           {step2Done ? (
-            <Text variant="caption" tone="muted">Submitted at {st.submittedAt} · Awaiting external system response</Text>
+            <Text variant="caption" tone="muted">Submitted {st.submittedAt}</Text>
           ) : step2Active ? (
-            <Stack direction="column" gap={3}>
-              <Text variant="caption" tone="muted">
-                Forecast request will be sent to the external forecasting system using <strong>{st.likeSkuDesc}</strong> as the proxy SKU.
-              </Text>
-              <div>
-                <Button variant="primary" size="medium" onClick={() => submit(active.sku)}>Submit forecast request →</Button>
-              </div>
-            </Stack>
-          ) : (
-            <Text variant="caption" tone="subtle">Complete step 1 first.</Text>
-          )}
+            <div>
+              <Button variant="primary" size="medium" onClick={() => submit(active.sku)}>Submit →</Button>
+            </div>
+          ) : null}
         </StepCard>
 
         {/* Step 3 — Receive forecast */}
-        <StepCard step="3" title="Forecast received — results from external system" state={step3Done ? "done" : step3Active ? "active" : "locked"}>
+        <StepCard step="3" title="Receive forecast" state={step3Done ? "done" : step3Active ? "active" : "locked"}>
           {step3Body}
         </StepCard>
       </Stack>

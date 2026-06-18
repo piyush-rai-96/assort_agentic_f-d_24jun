@@ -5,36 +5,15 @@
   min-height: 100%;
 }
 
-/* ── Header ── */
-.ws-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: var(--sp-6);
-  flex-wrap: wrap;
-  gap: var(--sp-3);
-  padding-bottom: var(--sp-5);
-  border-bottom: 1px solid var(--color-border);
-}
-.ws-header-left { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; }
-.ws-title { font-size: 24px; font-weight: var(--fw-extrabold); color: var(--color-text); margin: 0; letter-spacing: -0.3px; }
-.ws-season-badge {
-  padding: 4px 12px; border-radius: 20px; font-size: var(--fs-micro); font-weight: var(--fw-bold);
-  background: var(--color-primary-soft); color: var(--color-primary);
-  border: 1px solid rgba(37,99,235,0.2);
-}
-.ws-active-badge {
-  padding: 4px 12px; border-radius: 20px; font-size: var(--fs-micro); font-weight: var(--fw-bold);
-  background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0;
-}
+/* .ws-header / .ws-title / .ws-season-badge / .ws-active-badge removed — replaced by Card component */
 
 /* ── Filters ── */
 .ws-filters {
   margin-bottom: var(--sp-5);
   padding: var(--sp-4) var(--sp-5);
-  background: #fff;
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: 12px;
+  border-radius: var(--r2);
 }
 .ws-status-tabs {
   display: flex; gap: var(--sp-1); flex-wrap: wrap; margin-bottom: var(--sp-3);
@@ -72,13 +51,13 @@
 
 /* ── Plan card ── */
 .ws-plan-card {
-  background: #fff;
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: 12px;
+  border-radius: var(--r2);
   padding: var(--sp-5) var(--sp-5);
   cursor: pointer;
   transition: box-shadow 0.2s, border-color 0.2s, transform 0.15s;
-  box-shadow: 0 1px 4px rgba(0,0,0,.04);
+  box-shadow: var(--sh);
   position: relative;
   overflow: hidden;
 }
@@ -92,7 +71,7 @@
   transition: background 0.2s;
 }
 .ws-plan-card:hover {
-  box-shadow: 0 6px 24px rgba(0,0,0,.10);
+  box-shadow: var(--sh-lg, 0 6px 24px rgba(0,0,0,.10));
   border-color: var(--color-primary);
   transform: translateY(-2px);
 }
@@ -136,9 +115,9 @@
 }
 .ws-kpi-chip {
   display: flex; flex-direction: column; align-items: center;
-  background: #fff;
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--r2); padding: 8px 12px; min-width: 56px; flex: 1;
+  border-radius: var(--r2); padding: var(--sp-2) var(--sp-3); min-width: 56px; flex: 1;
 }
 .ws-kpi-val { font-size: 15px; font-weight: var(--fw-extrabold); color: var(--color-text); line-height: 1; }
 .ws-kpi-lbl { font-size: 9px; font-weight: var(--fw-semibold); text-transform: uppercase; letter-spacing: .04em; color: var(--color-text-subtle); margin-top: 3px; }
@@ -178,23 +157,14 @@
 .ws-compare-slot-name { font-weight: var(--fw-bold); font-size: var(--fs-body); display: block; margin-bottom: var(--sp-1); }
 .ws-compare-slot-kpis { display: flex; gap: var(--sp-3); flex-wrap: wrap; margin-bottom: var(--sp-1); }
 .ws-compare-slot-kpi { font-size: var(--fs-micro); color: rgba(255,255,255,.7); }
-.ws-compare-close {
-  padding: 6px 14px; border-radius: var(--r2); border: 1px solid rgba(255,255,255,.2);
-  background: transparent; color: rgba(255,255,255,.6); cursor: pointer; font-size: var(--fs-caption);
-  white-space: nowrap;
-}
-.ws-compare-close:hover { background: rgba(255,255,255,.1); }
+/* .ws-compare-close replaced by Button component */
 
 /* ── Plan detail ── */
 .ws-detail { max-width: 900px; }
 .ws-detail-header { margin-bottom: var(--sp-6); }
-.ws-back-btn {
-  background: none; border: none; cursor: pointer; color: var(--color-primary);
-  font-size: var(--fs-body); font-weight: var(--fw-semibold); padding: 0; margin-bottom: var(--sp-3);
-}
+/* .ws-back-btn replaced by Button component */
 .ws-detail-title-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
-.ws-detail-name { font-size: 22px; font-weight: var(--fw-extrabold); margin: 0; color: var(--color-text); }
-.ws-detail-meta { font-size: var(--fs-body); color: var(--color-text-subtle); margin: 0 0 10px; }
+/* .ws-detail-name / .ws-detail-meta replaced by Text components */
 .ws-detail-notes {
   background: var(--color-surface-alt); border-radius: var(--r2); padding: 10px 14px;
   font-size: var(--fs-body); color: var(--color-text-muted); border-left: 3px solid var(--color-primary);
@@ -236,18 +206,8 @@
 .ws-stage-label { display: block; font-size: var(--fs-body); font-weight: var(--fw-bold); color: var(--color-text); }
 .ws-stage-state { display: block; font-size: var(--fs-micro); color: var(--color-text-subtle); }
 
-.ws-stage-go {
-  padding: var(--sp-1) 10px; border-radius: 6px; border: none; cursor: pointer; font-size: var(--fs-caption); font-weight: var(--fw-bold);
-  background: var(--color-primary); color: var(--color-surface); white-space: nowrap;
-}
-.ws-stage-card--done .ws-stage-go { background: var(--color-success); }
-
+/* .ws-stage-go / .ws-cta-btn replaced by Button components */
 .ws-detail-cta { margin-top: var(--sp-2); }
-.ws-cta-btn {
-  padding: var(--sp-3) var(--sp-6); border-radius: var(--r); border: none; background: var(--color-primary);
-  color: var(--color-surface); font-size: var(--fs-body-lg); font-weight: var(--fw-bold); cursor: pointer;
-}
-.ws-cta-btn:hover { opacity: .9; }
 
 /* ── Wizard ── */
 .ws-wizard-overlay {
@@ -295,15 +255,7 @@
 .ws-wizard-body { flex: 1; overflow-y: auto; padding: var(--sp-5) var(--sp-6); }
 .ws-wizard-section {}
 
-.ws-form-label {
-  display: block; font-size: var(--fs-caption); font-weight: var(--fw-bold); color: var(--color-text-muted);
-  text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px;
-}
-.ws-form-input {
-  width: 100%; padding: 10px var(--sp-3); border-radius: var(--r2); font-size: var(--fs-body-lg);
-  border: 1px solid var(--color-border); outline: none; box-sizing: border-box;
-}
-.ws-form-input:focus { border-color: var(--color-primary); }
+/* .ws-form-label / .ws-form-input removed — replaced by Text variant="overline" + Input component */
 .ws-form-textarea {
   width: 100%; padding: 10px var(--sp-3); border-radius: var(--r2); font-size: var(--fs-body);
   border: 1px solid var(--color-border); outline: none; resize: vertical; font-family: inherit;
@@ -367,17 +319,7 @@
 }
 
 /* ── Shared buttons ── */
-.ws-btn-primary {
-  padding: 9px var(--sp-5); border-radius: var(--r2); border: none; background: var(--color-primary);
-  color: var(--color-surface); font-size: var(--fs-body); font-weight: var(--fw-bold); cursor: pointer; transition: opacity .12s;
-}
-.ws-btn-primary:hover { opacity: .9; }
-.ws-btn-primary:disabled { opacity: .45; cursor: not-allowed; }
-.ws-btn-ghost {
-  padding: 9px var(--sp-5); border-radius: var(--r2); border: 1px solid var(--color-border);
-  background: var(--color-surface); color: var(--color-text-muted); font-size: var(--fs-body); font-weight: var(--fw-bold); cursor: pointer;
-}
-.ws-btn-ghost:hover { background: var(--color-surface-alt); }
+/* .ws-btn-primary / .ws-btn-ghost removed — replaced by Button components */
 
 /* ── Empty state ── */
 .ws-empty {
@@ -408,8 +350,8 @@
 /* Idle CTA avatar — gentle breathing pulsation */
 .cat-agent-dot { animation: catBreathe 3.2s ease-in-out infinite; }
 @keyframes catBreathe {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(45,106,45,0.18); }
-  50%       { box-shadow: 0 0 0 8px rgba(45,106,45,0); }
+  0%, 100% { box-shadow: 0 0 0 0 var(--color-primary-tint-12); }
+  50%       { box-shadow: 0 0 0 8px transparent; }
 }
 
 /* ── Pipeline preview chips ───────────────────────────────────────────────── */
@@ -444,8 +386,8 @@
 }
 .cat-bot.is-done { animation: catPop 0.5s ease-out; background: var(--color-success-soft); }
 @keyframes catPulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(45,106,45,0.35); }
-  50%       { box-shadow: 0 0 0 10px rgba(45,106,45,0); }
+  0%, 100% { box-shadow: 0 0 0 0 var(--color-primary-tint-20); }
+  50%       { box-shadow: 0 0 0 10px transparent; }
 }
 @keyframes catPop {
   0%   { transform: scale(0.6); }
@@ -462,7 +404,7 @@
   height: 100%; border-radius: var(--r-pill);
   background: linear-gradient(90deg, var(--color-primary), var(--color-teal));
   transition: width 0.55s cubic-bezier(0.22,1,0.36,1);
-  box-shadow: 0 0 12px rgba(45,106,45,0.4);
+  box-shadow: 0 0 12px var(--color-primary-tint-20);
 }
 
 /* ── Two-pane grid ────────────────────────────────────────────────────────── */
@@ -489,11 +431,11 @@
   display: flex; align-items: center; justify-content: center;
   border-radius: 50%; font-size: 13px;
   background: var(--color-surface-alt);
-  border: 1.5px solid var(--color-border); color: var(--color-text-muted); z-index: 1;
+  border: 1px solid var(--color-border); color: var(--color-text-muted); z-index: 1;
 }
 .cat-step.is-done .cat-step-ico {
   background: var(--color-success); border-color: var(--color-success);
-  color: #fff; font-weight: var(--fw-bold);
+  color: var(--color-surface); font-weight: var(--fw-bold);
 }
 .cat-step.is-active .cat-step-ico {
   background: var(--color-surface); border-color: var(--color-primary);
@@ -523,31 +465,31 @@
   50%  { content: ".."; } 75% { content: "..."; } 100% { content: ""; }
 }
 
-/* ── Live console ─────────────────────────────────────────────────────────── */
+/* ── Live console — dark terminal using blue-navy theme ──────────────────── */
 .cat-console {
-  background: #0b1f12; border: 1px solid #14361f; border-radius: var(--r2);
+  background: var(--navy-blue); border: 1px solid var(--navy-blue2); border-radius: var(--r2);
   overflow: hidden; display: flex; flex-direction: column; min-height: 240px;
 }
 .cat-console-bar {
   display: flex; align-items: center; gap: 6px;
-  padding: 8px 12px; background: #0f2a18; border-bottom: 1px solid #14361f;
+  padding: 8px 12px; background: var(--navy-blue2); border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 .cat-dot { width: 10px; height: 10px; border-radius: 50%; }
-.cat-dot.r { background: #ff5f56; } .cat-dot.y { background: #ffbd2e; } .cat-dot.g { background: #27c93f; }
-.cat-console-title { margin-left: 8px; font-family: var(--font-mono); font-size: var(--fs-micro); color: #6fae82; letter-spacing: 0.04em; }
+.cat-dot.r { background: #ff5f56; } .cat-dot.y { background: #ffbd2e; } .cat-dot.g { background: var(--color-success); }
+.cat-console-title { margin-left: 8px; font-family: var(--font-mono); font-size: var(--fs-micro); color: var(--color-on-dark-subtle); letter-spacing: 0.04em; }
 .cat-console-body {
   padding: 12px 14px; font-family: var(--font-mono); font-size: var(--fs-micro);
-  line-height: 1.7; color: #d8f0d8; overflow-y: auto; flex: 1 1 auto;
+  line-height: 1.7; color: rgba(255,255,255,0.85); overflow-y: auto; flex: 1 1 auto;
 }
 .cat-log { animation: catLogIn 0.3s ease; white-space: pre-wrap; word-break: break-word; }
-.cat-log-muted { color: #6fae82; } .cat-log-ok { color: #27c93f; font-weight: 700; }
-.cat-log-arrow { color: #7fd6ff; } .cat-log-run { color: #aee9c0; }
-.cat-log-done { color: #27c93f; font-weight: 700; margin-top: 4px; }
+.cat-log-muted { color: var(--color-on-dark-subtle); } .cat-log-ok { color: var(--color-success-soft); font-weight: 700; }
+.cat-log-arrow { color: #7fd6ff; } .cat-log-run { color: rgba(255,255,255,0.7); }
+.cat-log-done { color: var(--color-success-soft); font-weight: 700; margin-top: 4px; }
 @keyframes catLogIn { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: translateY(0); } }
 
 .cat-cursor {
   display: inline-block; width: 7px; height: 13px; margin-left: 4px;
-  background: #aee9c0; vertical-align: middle;
+  background: var(--color-primary-soft); vertical-align: middle;
   animation: catBlink 1s steps(2,start) infinite;
 }
 @keyframes catBlink { 50% { opacity: 0; } }
@@ -563,50 +505,13 @@
 .cat-pipe-chip.tone-info    { color: var(--color-info); }
 .cat-pipe-chip.tone-accent  { color: var(--color-accent); }
 
-/* ── Agent done cascade tiles ─────────────────────────────────────────────── */
-.ws-agent-cascade {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--sp-3);
-}
-@media (max-width: 640px) { .ws-agent-cascade { grid-template-columns: 1fr; } }
-
-.ws-agent-cascade-tile {
-  display: flex; flex-direction: column; gap: 2px;
-  padding: var(--sp-4); border-radius: var(--r2);
-  background: var(--color-surface-alt);
-  border-top: 3px solid var(--wac, var(--color-border));
-}
-.ws-agent-cascade-n {
-  font-size: 32px; font-weight: var(--fw-black, 900);
-  color: var(--wac, var(--color-text)); line-height: 1;
-}
-.ws-agent-cascade-label {
-  font-size: var(--fs-caption); font-weight: var(--fw-semibold);
-  color: var(--color-text-strong);
-}
-.ws-agent-cascade-note {
-  font-size: var(--fs-micro); color: var(--color-text-muted);
-}
+/* .ws-agent-cascade* rules removed — replaced by Grid+Card components */
 
 /* ═══════════════════════════════════════════════════════════════════════════
    HTML v6 Gap-Fill additions
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ── Cluster Banner ────────────────────────────────────────────────────── */
-.ws-cluster-banner {
-  background: #fff;
-  border: 1px solid var(--color-border);
-  border-left: 4px solid #059669;
-  border-radius: 12px;
-  padding: var(--sp-5);
-  margin-bottom: var(--sp-4);
-  box-shadow: 0 1px 4px rgba(0,0,0,.04);
-}
-.ws-cluster-banner--warn {
-  border-left-color: #d97706;
-  background: #fffbeb;
-}
+/* ── Cluster Banner — now rendered as Card; keep grid/col styles only ── */
 .ws-cluster-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
@@ -618,8 +523,8 @@
   flex-direction: column;
   gap: var(--sp-1);
   padding: var(--sp-3) var(--sp-4);
-  background: #f8fafb;
-  border-radius: 8px;
+  background: var(--color-surface-alt);
+  border-radius: var(--r2);
   border: 1px solid var(--color-border);
   transition: border-color 0.15s;
 }
@@ -646,55 +551,7 @@
   color: var(--color-text-muted);
 }
 
-/* ── Stat Tiles ────────────────────────────────────────────────────────── */
-.ws-stat-tiles {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: var(--sp-4);
-  margin-bottom: var(--sp-5);
-}
-@media (max-width: 768px) { .ws-stat-tiles { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 480px) { .ws-stat-tiles { grid-template-columns: 1fr; } }
-
-.ws-stat-tile {
-  background: #fff;
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  padding: var(--sp-5) var(--sp-5);
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-1);
-  position: relative;
-  overflow: hidden;
-  transition: box-shadow 0.2s, transform 0.15s;
-  box-shadow: 0 1px 4px rgba(0,0,0,.04);
-}
-.ws-stat-tile::after {
-  content: "";
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 3px;
-  background: var(--ws-tile-accent, var(--color-primary));
-  border-radius: 12px 12px 0 0;
-}
-.ws-stat-tile:hover {
-  box-shadow: 0 6px 20px rgba(0,0,0,.09);
-  transform: translateY(-2px);
-}
-.ws-stat-tile-value {
-  font-size: 36px;
-  font-weight: var(--fw-black, 900);
-  color: var(--ws-tile-accent, var(--color-text));
-  line-height: 1;
-  margin-top: var(--sp-2);
-}
-.ws-stat-tile-label {
-  font-size: 11px;
-  font-weight: var(--fw-semibold);
-  color: var(--color-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
+/* .ws-stat-tile* rules removed — replaced by Grid+Card components */
 
 /* ── Cluster Pills on PlanCard ─────────────────────────────────────────── */
 .ws-cluster-pills {
@@ -707,11 +564,11 @@
   display: inline-flex;
   align-items: center;
   padding: 2px 7px;
-  background: #eff6ff;
-  color: #2563eb;
-  border: 1px solid #bfdbfe;
-  border-radius: 20px;
-  font-size: 11px;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary-border, var(--color-primary));
+  border-radius: var(--r-pill);
+  font-size: var(--fs-micro);
   font-weight: var(--fw-semibold);
   line-height: 1.4;
   white-space: nowrap;
@@ -749,13 +606,13 @@
   align-items: flex-start;
   gap: var(--sp-3);
   padding: var(--sp-3) var(--sp-4);
-  border: 1.5px solid var(--color-border);
+  border: 1px solid var(--color-border);
   border-radius: var(--r2);
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
 }
-.ws-plr-row:hover { border-color: var(--color-primary); background: #f0f7ff; }
-.ws-plr-row.selected { border-color: var(--color-primary); background: #eff6ff; }
+.ws-plr-row:hover { border-color: var(--color-primary); background: var(--color-primary-soft); }
+.ws-plr-row.selected { border-color: var(--color-primary); background: var(--color-primary-soft); }
 .ws-plr-row-body { flex: 1; display: flex; flex-direction: column; gap: var(--sp-1); }
 .ws-plr-row-top {
   display: flex;
@@ -775,12 +632,12 @@
   justify-content: space-between;
   gap: var(--sp-3);
   padding: var(--sp-3) var(--sp-4);
-  background: #ecfdf5;
-  border: 1px solid #6ee7b7;
+  background: var(--color-success-soft);
+  border: 1px solid var(--color-success-border, var(--color-success));
   border-radius: var(--r2);
   margin-bottom: var(--sp-3);
   font-size: var(--fs-body);
-  color: #065f46;
+  color: var(--color-success);
 }
 
 /* ── Wizard — Scenario tabs ────────────────────────────────────────────── */
@@ -823,24 +680,24 @@
   align-items: center;
   gap: var(--sp-3);
   padding: var(--sp-3) var(--sp-3);
-  border: 1.5px solid var(--color-border);
+  border: 1px solid var(--color-border);
   border-radius: var(--r2);
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
 }
-.ws-clust-row:hover { border-color: var(--color-primary); background: #f0f7ff; }
-.ws-clust-row.selected { border-color: var(--color-primary); background: #eff6ff; }
+.ws-clust-row:hover { border-color: var(--color-primary); background: var(--color-primary-soft); }
+.ws-clust-row.selected { border-color: var(--color-primary); background: var(--color-primary-soft); }
 .ws-clust-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
 .ws-clust-name { font-weight: var(--fw-medium); color: var(--color-text-strong); flex: 1; }
 .ws-clust-meta { font-size: var(--fs-caption); color: var(--color-text-muted); }
 .ws-clust-summary {
   margin-top: var(--sp-3);
   padding: var(--sp-3) var(--sp-4);
-  background: #ecfdf5;
+  background: var(--color-success-soft);
   border-radius: var(--r2);
   font-size: var(--fs-body);
   font-weight: var(--fw-semibold);
-  color: #065f46;
+  color: var(--color-success);
 }
 
 /* ── Wizard — What happens block ───────────────────────────────────────── */
@@ -864,8 +721,8 @@
   width: 22px; height: 22px;
   border-radius: 50%;
   background: var(--color-primary);
-  color: #fff;
-  font-size: 11px;
+  color: var(--color-surface);
+  font-size: var(--fs-micro);
   font-weight: var(--fw-bold);
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
@@ -875,18 +732,14 @@
 .ws-missing-warn {
   margin-top: var(--sp-3);
   padding: var(--sp-3) var(--sp-4);
-  background: #fffbeb;
-  border: 1px solid #fcd34d;
+  background: var(--color-warning-soft);
+  border: 1px solid var(--color-warning);
   border-radius: var(--r2);
   font-size: var(--fs-caption);
-  color: #92400e;
+  color: var(--color-warning);
 }
 
-/* ── Small ghost button modifier ───────────────────────────────────────── */
-.ws-btn-ghost--sm {
-  padding: var(--sp-1) var(--sp-2);
-  font-size: var(--fs-caption);
-}
+/* .ws-btn-ghost--sm removed — replaced by Button size="small" */
 
 /* ── Plans section header ─────────────────────────────────────────────── */
 .ws-section-header {

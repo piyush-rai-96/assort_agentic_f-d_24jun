@@ -9,7 +9,7 @@
  * structured cards, tables, action buttons, and follow-up chips.
  */
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { ChatBotComponent, Button } from "impact-ui";
+import { ChatBotComponent, Button, Badge, Card } from "impact-ui";
 import {
   AGENT_SIGNALS, SUGGESTED_QUESTIONS, AGENT_KPIS,
 } from "../data/agentActivity.js";
@@ -78,21 +78,21 @@ function buildConversation(messages) {
 /* Shared atoms */
 const Divider = () => <div style={{ height: 1, background: C.border, margin: "8px 0" }} />;
 const SectionLabel = ({ children }) => (
-  <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em", color: C.textSubtle, marginBottom: 6 }}>{children}</div>
+  <div style={{ fontSize: "var(--fs-xs)", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em", color: C.textSubtle, marginBottom: 6 }}>{children}</div>
 );
 const MetricRow = ({ label, value, color }) => (
   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "5px 0", borderBottom: `1px solid ${C.border}` }}>
-    <span style={{ fontSize: 12, color: C.textMuted }}>{label}</span>
-    <span style={{ fontSize: 12, fontWeight: 700, color: color || C.text }}>{value}</span>
+    <span style={{ fontSize: "var(--fs-caption)", color: C.textMuted }}>{label}</span>
+    <span style={{ fontSize: "var(--fs-caption)", fontWeight: 700, color: color || C.text }}>{value}</span>
   </div>
 );
 const ActionChip = ({ label, onClick }) => (
-  <Button variant="ghost" onClick={onClick} style={{ padding: "4px 12px", borderRadius: 14, fontSize: 11, fontWeight: 700, border: `1px solid ${C.border}`, background: C.bg, color: C.textMuted, whiteSpace: "nowrap" }}>
+  <Button variant="ghost" onClick={onClick} style={{ padding: "4px 12px", borderRadius: 14, fontSize: "var(--fs-micro)", fontWeight: 700, border: `1px solid ${C.border}`, background: C.bg, color: C.textMuted, whiteSpace: "nowrap" }}>
     {label}
   </Button>
 );
 const PrimaryAction = ({ label, onClick }) => (
-  <Button variant="primary" onClick={onClick} style={{ padding: "6px 14px", borderRadius: 8, fontSize: 12, fontWeight: 700, background: C.blue }}>
+  <Button variant="primary" onClick={onClick} style={{ padding: "6px 14px", borderRadius: 8, fontSize: "var(--fs-caption)", fontWeight: 700, background: C.blue }}>
     {label}
   </Button>
 );
@@ -103,7 +103,7 @@ const CohesionBar = ({ value }) => {
       <div style={{ flex: 1, height: 5, background: C.bgSunken, borderRadius: 3, overflow: "hidden" }}>
         <div style={{ width: `${value * 100}%`, height: "100%", background: clr, borderRadius: 3 }} />
       </div>
-      <span style={{ fontSize: 11, fontWeight: 700, color: clr, minWidth: 28 }}>{value.toFixed(2)}</span>
+      <span style={{ fontSize: "var(--fs-micro)", fontWeight: 700, color: clr, minWidth: 28 }}>{value.toFixed(2)}</span>
     </div>
   );
 };
@@ -120,21 +120,21 @@ const FollowUps = ({ questions, onAsk }) => (
 function buildClusterJsx(onAsk) {
   const { clusters, runId, method, cohesion } = ACTIVE_CLUSTER_SET || {};
   return (
-    <div style={{ fontFamily: "Manrope, system-ui, sans-serif", fontSize: 13, color: C.text }}>
+    <div style={{ fontFamily: "Manrope, system-ui, sans-serif", fontSize: "var(--fs-body)", color: C.text }}>
       <div style={{ background: C.blueSoft, border: `1px solid ${C.blueLight}`, borderRadius: 10, padding: "10px 14px", marginBottom: 10 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{ fontWeight: 800, fontSize: 14, color: C.blue }}>📍 Active: {runId}</span>
-          <span style={{ fontSize: 10, fontWeight: 700, background: C.mint, color: "white", padding: "2px 8px", borderRadius: 10 }}>Live</span>
+          <span style={{ fontWeight: 800, fontSize: "var(--fs-body-lg)", color: C.blue }}>📍 Active: {runId}</span>
+          <span style={{ fontSize: "var(--fs-xs)", fontWeight: 700, background: C.mint, color: "white", padding: "2px 8px", borderRadius: 10 }}>Live</span>
         </div>
-        <div style={{ fontSize: 11, color: C.textMuted, marginTop: 3 }}>{method} · Avg cohesion {cohesion}</div>
+        <div style={{ fontSize: "var(--fs-micro)", color: C.textMuted, marginTop: 3 }}>{method} · Avg cohesion {cohesion}</div>
       </div>
 
       <SectionLabel>5 clusters — all healthy ✅</SectionLabel>
       {clusters?.map((c) => (
         <div key={c.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 0", borderBottom: `1px solid ${C.border}` }}>
           <div style={{ width: 9, height: 9, borderRadius: "50%", background: c.color, flexShrink: 0 }} />
-          <span style={{ flex: 1, fontWeight: 600, fontSize: 12 }}>{c.name}</span>
-          <span style={{ fontSize: 11, color: C.textSubtle }}>{c.stores} stores</span>
+          <span style={{ flex: 1, fontWeight: 600, fontSize: "var(--fs-caption)" }}>{c.name}</span>
+          <span style={{ fontSize: "var(--fs-micro)", color: C.textSubtle }}>{c.stores} stores</span>
           <div style={{ width: 80 }}><CohesionBar value={c.cohesion} /></div>
         </div>
       ))}
@@ -156,16 +156,16 @@ function buildClusterJsx(onAsk) {
 function buildCohesionJsx(onAsk) {
   const { clusters } = ACTIVE_CLUSTER_SET || {};
   return (
-    <div style={{ fontFamily: "Manrope, system-ui, sans-serif", fontSize: 13, color: C.text }}>
+    <div style={{ fontFamily: "Manrope, system-ui, sans-serif", fontSize: "var(--fs-body)", color: C.text }}>
       <SectionLabel>Cohesion scores — CR-018</SectionLabel>
       {clusters?.map((c) => (
         <div key={c.id} style={{ display: "grid", gridTemplateColumns: "20px 1fr auto", gap: 8, alignItems: "center", padding: "6px 0", borderBottom: `1px solid ${C.border}` }}>
           <div style={{ width: 8, height: 8, borderRadius: "50%", background: c.color }} />
-          <span style={{ fontSize: 12, fontWeight: 600 }}>{c.name}</span>
+          <span style={{ fontSize: "var(--fs-caption)", fontWeight: 600 }}>{c.name}</span>
           <div style={{ width: 100 }}><CohesionBar value={c.cohesion} /></div>
         </div>
       ))}
-      <div style={{ background: C.mintSoft, borderRadius: 8, padding: "8px 12px", marginTop: 10, fontSize: 12, color: C.mint, fontWeight: 600 }}>
+      <div style={{ background: C.mintSoft, borderRadius: 8, padding: "8px 12px", marginTop: 10, fontSize: "var(--fs-caption)", color: C.mint, fontWeight: 600 }}>
         ✅ All 5 clusters above the 0.75 healthy threshold. Network average: <strong>0.80</strong>.
         Next re-run: <strong>Apr 12, 2026</strong>.
       </div>
@@ -181,10 +181,10 @@ function buildCohesionJsx(onAsk) {
 /* ── Curation response ────────────────────────────────────────────────────  */
 function buildCurationJsx(onAsk) {
   return (
-    <div style={{ fontFamily: "Manrope, system-ui, sans-serif", fontSize: 13, color: C.text }}>
+    <div style={{ fontFamily: "Manrope, system-ui, sans-serif", fontSize: "var(--fs-body)", color: C.text }}>
       <div style={{ background: C.amberSoft, border: `1px solid ${C.amber}`, borderLeft: `3px solid ${C.amber}`, borderRadius: 8, padding: "10px 14px", marginBottom: 12 }}>
         <div style={{ fontWeight: 800, color: C.amber }}>⚠️ Action required — 8 stores not started</div>
-        <div style={{ fontSize: 11, color: C.textMuted, marginTop: 2 }}>Curation window closes in <strong>9 days</strong>. Auto-close: Sep 20.</div>
+        <div style={{ fontSize: "var(--fs-micro)", color: C.textMuted, marginTop: 2 }}>Curation window closes in <strong>9 days</strong>. Auto-close: Sep 20.</div>
       </div>
 
       <SectionLabel>Submission status</SectionLabel>
@@ -194,7 +194,7 @@ function buildCurationJsx(onAsk) {
       <MetricRow label="Completion" value={`${Math.round((AGENT_KPIS.storesSubmitted / AGENT_KPIS.storesTotal) * 100)}%`} color={C.blue} />
 
       <Divider />
-      <div style={{ background: C.bg, borderRadius: 8, padding: "8px 12px", fontSize: 12 }}>
+      <div style={{ background: C.bg, borderRadius: 8, padding: "8px 12px", fontSize: "var(--fs-caption)" }}>
         <strong>Gulf cluster stores at risk:</strong> Austin Central, Dallas Uptown, Houston South, San Antonio Pro + 4 others.
         Stores not submitted by Sep 20 will receive <strong>agent-generated defaults</strong>.
       </div>
@@ -214,20 +214,20 @@ function buildCurationJsx(onAsk) {
 /* ── SKU / Catalogue response ─────────────────────────────────────────────  */
 function buildSkuJsx(onAsk) {
   return (
-    <div style={{ fontFamily: "Manrope, system-ui, sans-serif", fontSize: 13, color: C.text }}>
+    <div style={{ fontFamily: "Manrope, system-ui, sans-serif", fontSize: "var(--fs-body)", color: C.text }}>
       <div style={{ background: C.blueSoft, border: `1px solid ${C.blueLight}`, borderRadius: 8, padding: "8px 12px", marginBottom: 10 }}>
-        <div style={{ fontWeight: 700, fontSize: 13, color: C.blue }}>📦 Catalogue: 35 SKUs · FW 2025</div>
-        <div style={{ fontSize: 11, color: C.textMuted, marginTop: 2 }}>Forecast confidence: <strong style={{ color: C.mint }}>{AGENT_KPIS.confidence}%</strong> · Agent not yet run in Catalogue step</div>
+        <div style={{ fontWeight: 700, fontSize: "var(--fs-body)", color: C.blue }}>📦 Catalogue: 35 SKUs · FW 2025</div>
+        <div style={{ fontSize: "var(--fs-micro)", color: C.textMuted, marginTop: 2 }}>Forecast confidence: <strong style={{ color: C.mint }}>{AGENT_KPIS.confidence}%</strong> · Agent not yet run in Catalogue step</div>
       </div>
 
       <SectionLabel>Agent recommendations</SectionLabel>
       <div style={{ background: C.violetSoft, borderLeft: `3px solid ${C.violet}`, borderRadius: 6, padding: "8px 12px", marginBottom: 8 }}>
-        <div style={{ fontWeight: 700, fontSize: 12, color: C.violet }}>🤖 SOL-SEASHELL — Expansion flagged</div>
-        <div style={{ fontSize: 11, color: C.textMuted, marginTop: 2 }}>+12 stores show high demand vs LY comps. Agent recommends adding to 3 additional clusters before next assortment lock.</div>
+        <div style={{ fontWeight: 700, fontSize: "var(--fs-caption)", color: C.violet }}>🤖 SOL-SEASHELL — Expansion flagged</div>
+        <div style={{ fontSize: "var(--fs-micro)", color: C.textMuted, marginTop: 2 }}>+12 stores show high demand vs LY comps. Agent recommends adding to 3 additional clusters before next assortment lock.</div>
       </div>
       <div style={{ background: C.redSoft, borderLeft: `3px solid ${C.red}`, borderRadius: 6, padding: "8px 12px", marginBottom: 8 }}>
-        <div style={{ fontWeight: 700, fontSize: 12, color: C.red }}>⚠️ POR-TRAVERT — Lead time extended to 20 wk</div>
-        <div style={{ fontSize: 11, color: C.textMuted, marginTop: 2 }}>Sourcing risk for Q2 replenishment. Consider backup supplier or reducing forward buy quantity.</div>
+        <div style={{ fontWeight: 700, fontSize: "var(--fs-caption)", color: C.red }}>⚠️ POR-TRAVERT — Lead time extended to 20 wk</div>
+        <div style={{ fontSize: "var(--fs-micro)", color: C.textMuted, marginTop: 2 }}>Sourcing risk for Q2 replenishment. Consider backup supplier or reducing forward buy quantity.</div>
       </div>
 
       <SectionLabel>National Core — 5 locked SKUs</SectionLabel>
@@ -239,12 +239,12 @@ function buildSkuJsx(onAsk) {
         { sku: "NAT-SLATE",     desc: "Natural Slate Charcoal · 18\"×18\" stone",status: "Locked ✅"            },
       ].map((s) => (
         <div key={s.sku} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 0", borderBottom: `1px solid ${C.border}` }}>
-          <span style={{ fontSize: 11, fontWeight: 800, color: C.mint, flexShrink: 0 }}>✅</span>
+          <span style={{ fontSize: "var(--fs-micro)", fontWeight: 800, color: C.mint, flexShrink: 0 }}>✅</span>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: C.text }}>{s.sku}</div>
-            <div style={{ fontSize: 10.5, color: C.textMuted }}>{s.desc}</div>
+            <div style={{ fontSize: "var(--fs-caption)", fontWeight: 700, color: C.text }}>{s.sku}</div>
+            <div style={{ fontSize: "var(--fs-micro)", color: C.textMuted }}>{s.desc}</div>
           </div>
-          <span style={{ fontSize: 10.5, color: s.status.includes("Forecast") ? C.blue : C.mint, fontWeight: 600, flexShrink: 0 }}>{s.status}</span>
+          <span style={{ fontSize: "var(--fs-micro)", color: s.status.includes("Forecast") ? C.blue : C.mint, fontWeight: 600, flexShrink: 0 }}>{s.status}</span>
         </div>
       ))}
       <MetricRow label="National Core lock" value="✅ Active — no changes without VP approval" color={C.mint} />
@@ -274,11 +274,11 @@ function buildPipelineJsx(onAsk) {
   const statusIcon  = { done: "✅", active: "▶", partial: "◑", pending: "○" };
 
   return (
-    <div style={{ fontFamily: "Manrope, system-ui, sans-serif", fontSize: 13, color: C.text }}>
+    <div style={{ fontFamily: "Manrope, system-ui, sans-serif", fontSize: "var(--fs-body)", color: C.text }}>
       <div style={{ background: C.bg, borderRadius: 8, padding: "10px 14px", marginBottom: 12 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-          <span style={{ fontWeight: 800, fontSize: 14 }}>FW 2025 Pipeline</span>
-          <span style={{ fontWeight: 800, fontSize: 16, color: C.blue }}>{AGENT_KPIS.pipelinePct}% complete</span>
+          <span style={{ fontWeight: 800, fontSize: "var(--fs-body-lg)" }}>FW 2025 Pipeline</span>
+          <span style={{ fontWeight: 800, fontSize: "var(--fs-heading)", color: C.blue }}>{AGENT_KPIS.pipelinePct}% complete</span>
         </div>
         <div style={{ height: 7, background: C.bgSunken, borderRadius: 4, overflow: "hidden" }}>
           <div style={{ width: `${AGENT_KPIS.pipelinePct}%`, height: "100%", background: `linear-gradient(90deg, ${C.blue}, ${C.violet})`, borderRadius: 4 }} />
@@ -287,13 +287,13 @@ function buildPipelineJsx(onAsk) {
 
       {steps.map((s) => (
         <div key={s.label} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 0", borderBottom: `1px solid ${C.border}` }}>
-          <span style={{ fontSize: 13, flexShrink: 0 }}>{statusIcon[s.status]}</span>
-          <span style={{ flex: 1, fontSize: 12, fontWeight: s.status !== "pending" ? 600 : 400 }}>{s.label}</span>
-          <span style={{ fontSize: 11, color: statusColor[s.status], fontWeight: 600 }}>{s.detail}</span>
+          <span style={{ fontSize: "var(--fs-body)", flexShrink: 0 }}>{statusIcon[s.status]}</span>
+          <span style={{ flex: 1, fontSize: "var(--fs-caption)", fontWeight: s.status !== "pending" ? 600 : 400 }}>{s.label}</span>
+          <span style={{ fontSize: "var(--fs-micro)", color: statusColor[s.status], fontWeight: 600 }}>{s.detail}</span>
         </div>
       ))}
 
-      <div style={{ background: C.blueSoft, borderRadius: 8, padding: "8px 12px", marginTop: 10, fontSize: 12 }}>
+      <div style={{ background: C.blueSoft, borderRadius: 8, padding: "8px 12px", marginTop: 10, fontSize: "var(--fs-caption)" }}>
         <strong style={{ color: C.blue }}>Critical path:</strong> Run the Catalogue agent first → complete store curation before Sep 20 → MPI/NPI → Oracle export.
       </div>
       <FollowUps questions={[
@@ -318,18 +318,18 @@ function buildRegionalJsx(onAsk) {
     { name: "Pacific South",     status: "pending",   date: "—"         },
   ];
   return (
-    <div style={{ fontFamily: "Manrope, system-ui, sans-serif", fontSize: 13, color: C.text }}>
+    <div style={{ fontFamily: "Manrope, system-ui, sans-serif", fontSize: "var(--fs-body)", color: C.text }}>
       <div style={{ background: C.amberSoft, border: `1px solid ${C.amber}`, borderLeft: `3px solid ${C.amber}`, borderRadius: 8, padding: "10px 14px", marginBottom: 12 }}>
         <div style={{ fontWeight: 800, color: C.amber }}>◑ Regional review — 6 of 8 clusters submitted</div>
-        <div style={{ fontSize: 11, color: C.textMuted, marginTop: 2 }}>Mid-Atlantic (GA) and Pacific South (CA) are still pending. Lock date TBD.</div>
+        <div style={{ fontSize: "var(--fs-micro)", color: C.textMuted, marginTop: 2 }}>Mid-Atlantic (GA) and Pacific South (CA) are still pending. Lock date TBD.</div>
       </div>
 
       <SectionLabel>Cluster submission status</SectionLabel>
       {clusters.map((c) => (
         <div key={c.name} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 0", borderBottom: `1px solid ${C.border}` }}>
-          <span style={{ fontSize: 12, flexShrink: 0 }}>{c.status === "submitted" ? "✅" : "⏳"}</span>
-          <span style={{ flex: 1, fontSize: 12, fontWeight: c.status === "pending" ? 500 : 600 }}>{c.name}</span>
-          <span style={{ fontSize: 11, color: c.status === "submitted" ? C.mint : C.amber, fontWeight: 600 }}>
+          <span style={{ fontSize: "var(--fs-caption)", flexShrink: 0 }}>{c.status === "submitted" ? "✅" : "⏳"}</span>
+          <span style={{ flex: 1, fontSize: "var(--fs-caption)", fontWeight: c.status === "pending" ? 500 : 600 }}>{c.name}</span>
+          <span style={{ fontSize: "var(--fs-micro)", color: c.status === "submitted" ? C.mint : C.amber, fontWeight: 600 }}>
             {c.status === "submitted" ? `Submitted ${c.date}` : "Pending"}
           </span>
         </div>
@@ -347,30 +347,30 @@ function buildRegionalJsx(onAsk) {
 /* ── Market Intel response ────────────────────────────────────────────────  */
 function buildIntelJsx(onAsk) {
   return (
-    <div style={{ fontFamily: "Manrope, system-ui, sans-serif", fontSize: 13, color: C.text }}>
+    <div style={{ fontFamily: "Manrope, system-ui, sans-serif", fontSize: "var(--fs-body)", color: C.text }}>
       <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
         {[{ label: "7", sub: "Active signals", color: C.blue }, { label: "2", sub: "Threats", color: C.red }, { label: "1", sub: "Opportunity", color: C.mint }].map((k) => (
           <div key={k.sub} style={{ flex: "1 1 80px", background: C.bg, border: `1px solid ${C.border}`, borderRadius: 8, padding: "8px 10px", textAlign: "center" }}>
-            <div style={{ fontSize: 20, fontWeight: 800, color: k.color, lineHeight: 1 }}>{k.label}</div>
-            <div style={{ fontSize: 10, color: C.textSubtle, fontWeight: 700, marginTop: 3 }}>{k.sub}</div>
+            <div style={{ fontSize: "var(--fs-title)", fontWeight: 800, color: k.color, lineHeight: 1 }}>{k.label}</div>
+            <div style={{ fontSize: "var(--fs-xs)", color: C.textSubtle, fontWeight: 700, marginTop: 3 }}>{k.sub}</div>
           </div>
         ))}
       </div>
 
       <SectionLabel>Competitor threats</SectionLabel>
       <div style={{ background: C.redSoft, borderLeft: `3px solid ${C.red}`, borderRadius: 6, padding: "8px 12px", marginBottom: 6 }}>
-        <div style={{ fontWeight: 700, fontSize: 12 }}>Flooring competitor — Southeast tile expansion</div>
-        <div style={{ fontSize: 11, color: C.textMuted, marginTop: 2 }}>New tile line launching Q4 — 12 of your C3 stores are at direct risk. Recommended action: review assortment depth and price positioning.</div>
+        <div style={{ fontWeight: 700, fontSize: "var(--fs-caption)" }}>Flooring competitor — Southeast tile expansion</div>
+        <div style={{ fontSize: "var(--fs-micro)", color: C.textMuted, marginTop: 2 }}>New tile line launching Q4 — 12 of your C3 stores are at direct risk. Recommended action: review assortment depth and price positioning.</div>
       </div>
       <div style={{ background: C.redSoft, borderLeft: `3px solid ${C.red}`, borderRadius: 6, padding: "8px 12px", marginBottom: 10 }}>
-        <div style={{ fontWeight: 700, fontSize: 12 }}>Big-box LVP promotion running through Oct</div>
-        <div style={{ fontSize: 11, color: C.textMuted, marginTop: 2 }}>Price pressure in DIY-Heavy clusters — 15 stores may see traffic shift to big-box. Consider promotional depth on core LVP SKUs.</div>
+        <div style={{ fontWeight: 700, fontSize: "var(--fs-caption)" }}>Big-box LVP promotion running through Oct</div>
+        <div style={{ fontSize: "var(--fs-micro)", color: C.textMuted, marginTop: 2 }}>Price pressure in DIY-Heavy clusters — 15 stores may see traffic shift to big-box. Consider promotional depth on core LVP SKUs.</div>
       </div>
 
       <SectionLabel>Growth opportunity</SectionLabel>
       <div style={{ background: C.mintSoft, borderLeft: `3px solid ${C.mint}`, borderRadius: 6, padding: "8px 12px" }}>
-        <div style={{ fontWeight: 700, fontSize: 12, color: C.mint }}>Natural stone demand +18% YoY — Pacific South</div>
-        <div style={{ fontSize: 11, color: C.textMuted, marginTop: 2 }}>C4 Mixed Urban East: recommend expanding stone SKU depth before the assortment lock. Demand signal strongest in CA and WA.</div>
+        <div style={{ fontWeight: 700, fontSize: "var(--fs-caption)", color: C.mint }}>Natural stone demand +18% YoY — Pacific South</div>
+        <div style={{ fontSize: "var(--fs-micro)", color: C.textMuted, marginTop: 2 }}>C4 Mixed Urban East: recommend expanding stone SKU depth before the assortment lock. Demand signal strongest in CA and WA.</div>
       </div>
 
       <FollowUps questions={[
@@ -385,8 +385,8 @@ function buildIntelJsx(onAsk) {
 /* ── Generic / default response ───────────────────────────────────────────  */
 function buildDefaultJsx(question, onAsk) {
   return (
-    <div style={{ fontFamily: "Manrope, system-ui, sans-serif", fontSize: 13, color: C.text }}>
-      <div style={{ background: C.bg, borderRadius: 8, padding: "10px 14px", marginBottom: 10, fontSize: 12 }}>
+    <div style={{ fontFamily: "Manrope, system-ui, sans-serif", fontSize: "var(--fs-body)", color: C.text }}>
+      <div style={{ background: C.bg, borderRadius: 8, padding: "10px 14px", marginBottom: 10, fontSize: "var(--fs-caption)" }}>
         I'm the <strong>FD Assortment Intelligence Agent</strong> for FW 2025. I can analyse clusters, curation status, SKU recommendations, pipeline progress, regional review, and market intelligence.
       </div>
       <SectionLabel>Quick status — FW 2025</SectionLabel>
@@ -450,10 +450,10 @@ function resolveJsxResponse(text, onAsk) {
    ══════════════════════════════════════════════════════════════════════════ */
 
 const CAT_STYLE = {
-  "Clusters":         { color: "#6366f1", bg: "#eef2ff",  border: "#c7d2fe" },
-  "Curation":         { color: "#d97706", bg: "#fffbeb",  border: "#fcd34d" },
-  "SKUs & Catalogue": { color: "#7c3aed", bg: "#f5f3ff",  border: "#ddd6fe" },
-  "Performance":      { color: "#0891b2", bg: "#e0f2fe",  border: "#bae6fd" },
+  "Clusters":         { color: "var(--color-accent)",   bg: "var(--color-accent-soft)",   border: "var(--color-accent)"   },
+  "Curation":         { color: "var(--color-warning)",  bg: "var(--color-warning-soft)",  border: "var(--color-warning)"  },
+  "SKUs & Catalogue": { color: "var(--color-primary)",  bg: "var(--color-primary-soft)",  border: "var(--color-primary)"  },
+  "Performance":      { color: "var(--color-teal)",     bg: "var(--color-teal-soft)",     border: "var(--color-teal)"     },
 };
 
 /* Inline SVG icons for question categories */
@@ -466,70 +466,64 @@ const CAT_ICON = {
 
 function ChatLandingContent({ onAsk }) {
   return (
-    <div style={{ fontFamily: "Manrope, system-ui, sans-serif", display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
+    <div style={{ fontFamily: "var(--font-sans)", display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
 
       {/* ══ HERO ═══════════════════════════════════════════════════════════════ */}
-      <div style={{ padding: "24px 20px 16px", textAlign: "center", flexShrink: 0 }}>
+      <div style={{ padding: "var(--sp-6) var(--sp-5) var(--sp-4)", textAlign: "center", flexShrink: 0 }}>
         {/* Avatar */}
-        <div style={{ width: 56, height: 56, borderRadius: "50%", background: "linear-gradient(135deg, #b3bdf8 0%, #ddd6fe 55%, rgba(247,190,163,.95) 100%)", margin: "0 auto 12px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, boxShadow: "0 4px 20px rgba(99,102,241,.25)", position: "relative" }}>
+        <div style={{ width: 56, height: 56, borderRadius: "50%", background: "linear-gradient(135deg, var(--color-primary-soft) 0%, var(--color-accent-soft) 100%)", margin: "0 auto var(--sp-3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "var(--fs-display)", boxShadow: "var(--sh)", position: "relative" }}>
           ✦
-          <div style={{ position: "absolute", bottom: 2, right: 2, width: 12, height: 12, borderRadius: "50%", background: "#34d399", border: "2px solid #fff" }} />
+          <div style={{ position: "absolute", bottom: 2, right: 2, width: 12, height: 12, borderRadius: "50%", background: "var(--color-success)", border: "2px solid var(--color-surface)" }} />
         </div>
         {/* Name */}
-        <div style={{ fontSize: 20, fontWeight: 800, color: "#111827", letterSpacing: "-.02em", lineHeight: 1.2 }}>
+        <div style={{ fontSize: "var(--fs-title)", fontWeight: 800, color: "var(--color-text-strong)", letterSpacing: "-.02em", lineHeight: 1.2 }}>
           FD Assortment{" "}
-          <span style={{ background: "linear-gradient(82deg, #ec7550 10%, #a0508f 90%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>Agent</span>
+          <span style={{ color: "var(--color-primary)" }}>Agent</span>
         </div>
-        <div style={{ fontSize: 11.5, color: C.textSubtle, marginTop: 4, fontWeight: 500 }}>
+        <div style={{ fontSize: "var(--fs-micro)", color: C.textSubtle, marginTop: "var(--sp-1)", fontWeight: 500 }}>
           FW 2025 · 70 stores · Ask me anything
         </div>
         {/* KPI pills */}
-        <div style={{ display: "flex", justifyContent: "center", gap: 5, marginTop: 12, flexWrap: "wrap" }}>
-          {[
-            { v: `${AGENT_KPIS.confidence}%`,  l: "confidence", c: "#059669" },
-            { v: `${AGENT_KPIS.pipelinePct}%`, l: "pipeline",   c: "#6366f1" },
-            { v: `${AGENT_KPIS.storesSubmitted}/${AGENT_KPIS.storesTotal}`, l: "curated", c: "#d97706" },
-            { v: `${AGENT_KPIS.activeSignals}`, l: "signals",   c: "#dc2626" },
-          ].map((k) => (
-            <div key={k.l} style={{ display: "flex", alignItems: "center", gap: 4, background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: 20, padding: "3px 9px 3px 8px" }}>
-              <span style={{ fontWeight: 800, fontSize: 11.5, color: k.c }}>{k.v}</span>
-              <span style={{ fontSize: 10, color: C.textSubtle, fontWeight: 500 }}>{k.l}</span>
-            </div>
-          ))}
+        <div style={{ display: "flex", justifyContent: "center", gap: "var(--sp-2)", marginTop: "var(--sp-3)", flexWrap: "wrap" }}>
+          <Badge variant="subtle" size="small" color="success" label={`${AGENT_KPIS.confidence}% confidence`} />
+          <Badge variant="subtle" size="small" color="info"    label={`${AGENT_KPIS.pipelinePct}% pipeline`} />
+          <Badge variant="subtle" size="small" color="warning" label={`${AGENT_KPIS.storesSubmitted}/${AGENT_KPIS.storesTotal} curated`} />
+          <Badge variant="subtle" size="small" color="error"   label={`${AGENT_KPIS.activeSignals} signals`} />
         </div>
       </div>
 
       {/* ══ SCROLLABLE BODY ════════════════════════════════════════════════════ */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "0 14px 20px" }}>
+      <div style={{ flex: 1, overflowY: "auto", padding: "0 var(--sp-4) var(--sp-5)" }}>
 
         {/* ── Active Signals ──────────────────────────────────────────────────── */}
-        <div style={{ marginBottom: 18 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-            <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".08em", color: C.textSubtle }}>
+        <div style={{ marginBottom: "var(--sp-4)" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "var(--sp-2)" }}>
+            <span style={{ fontSize: "var(--fs-xs)", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".08em", color: C.textSubtle }}>
               Active Signals
             </span>
-            <span style={{ fontSize: 10, fontWeight: 700, background: "#fee2e2", color: "#dc2626", borderRadius: 10, padding: "1px 7px" }}>
-              {AGENT_SIGNALS.length}
-            </span>
+            <Badge variant="subtle" size="small" color="error" label={String(AGENT_SIGNALS.length)} />
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-2)" }}>
             {AGENT_SIGNALS.map((sig) => {
               const s = SEV[sig.severity] || SEV.info;
               return (
-                <button key={sig.id} onClick={() => onAsk(sig.ask || sig.title)}
-                  style={{ display: "flex", alignItems: "flex-start", gap: 9, padding: "9px 11px", background: "#fff", border: `1px solid ${C.border}`, borderLeft: `3px solid ${s.dot}`, borderRadius: 9, cursor: "pointer", textAlign: "left", width: "100%", boxShadow: "0 1px 2px rgba(0,0,0,.04)", transition: "background .12s" }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = s.bg; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = "#fff"; }}>
-                  <span style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }}>{sig.icon}</span>
+                <Card
+                  key={sig.id}
+                  size="small"
+                  sx={{ borderLeft: `3px solid ${s.dot}`, cursor: "pointer", display: "flex", alignItems: "flex-start", gap: "var(--sp-2)", padding: "var(--sp-2) var(--sp-3)" }}
+                  onClick={() => onAsk(sig.ask || sig.title)}
+                  tabIndex={0}
+                >
+                  <span style={{ fontSize: "var(--fs-body-lg)", flexShrink: 0, marginTop: 1 }}>{sig.icon}</span>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 11.5, fontWeight: 700, color: C.text, marginBottom: 1 }}>{sig.title}</div>
-                    <div style={{ fontSize: 10.5, color: C.textMuted, lineHeight: 1.4, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{sig.body}</div>
+                    <div style={{ fontSize: "var(--fs-micro)", fontWeight: 700, color: C.text, marginBottom: 1 }}>{sig.title}</div>
+                    <div style={{ fontSize: "var(--fs-micro)", color: C.textMuted, lineHeight: 1.4, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{sig.body}</div>
                   </div>
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4, flexShrink: 0 }}>
-                    <span style={{ fontSize: 9.5, color: C.textSubtle, whiteSpace: "nowrap" }}>{sig.time}</span>
-                    <span style={{ fontSize: 9.5, fontWeight: 700, color: s.dot, whiteSpace: "nowrap" }}>Ask →</span>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "var(--sp-1)", flexShrink: 0 }}>
+                    <span style={{ fontSize: "var(--fs-xs)", color: C.textSubtle, whiteSpace: "nowrap" }}>{sig.time}</span>
+                    <span style={{ fontSize: "var(--fs-xs)", fontWeight: 700, color: s.dot, whiteSpace: "nowrap" }}>Ask →</span>
                   </div>
-                </button>
+                </Card>
               );
             })}
           </div>
@@ -537,24 +531,27 @@ function ChatLandingContent({ onAsk }) {
 
         {/* ── Suggested Questions ─────────────────────────────────────────────── */}
         <div>
-          <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".08em", color: C.textSubtle, marginBottom: 8 }}>
+          <div style={{ fontSize: "var(--fs-xs)", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".08em", color: C.textSubtle, marginBottom: "var(--sp-2)" }}>
             Start with a question
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 7 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--sp-2)" }}>
             {SUGGESTED_QUESTIONS.flatMap((cat) =>
               cat.questions.slice(0, 2).map((q, i) => {
                 const cs = CAT_STYLE[cat.category] || { color: C.blue, bg: C.blueSoft, border: C.blueLight };
                 return (
-                  <button key={`${cat.category}-${i}`} onClick={() => onAsk(q)}
-                    style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 5, padding: "10px 10px 9px", background: "#fff", border: `1px solid ${C.border}`, borderRadius: 10, cursor: "pointer", textAlign: "left", transition: "border-color .15s, background .15s", boxShadow: "0 1px 2px rgba(0,0,0,.04)" }}
-                    onMouseEnter={(e) => { e.currentTarget.style.background = cs.bg; e.currentTarget.style.borderColor = cs.border; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.background = "#fff"; e.currentTarget.style.borderColor = C.border; }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 4, color: cs.color }}>
+                  <Card
+                    key={`${cat.category}-${i}`}
+                    size="small"
+                    sx={{ cursor: "pointer", padding: "var(--sp-2) var(--sp-3)" }}
+                    onClick={() => onAsk(q)}
+                    tabIndex={0}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: "var(--sp-1)", color: cs.color, marginBottom: "var(--sp-1)" }}>
                       {CAT_ICON[cat.category]}
-                      <span style={{ fontSize: 9, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".07em" }}>{cat.category}</span>
+                      <span style={{ fontSize: "var(--fs-xs)", fontWeight: 800, textTransform: "uppercase", letterSpacing: ".07em" }}>{cat.category}</span>
                     </div>
-                    <span style={{ fontSize: 11, fontWeight: 500, color: C.text, lineHeight: 1.4 }}>{q}</span>
-                  </button>
+                    <span style={{ fontSize: "var(--fs-micro)", fontWeight: 500, color: C.text, lineHeight: 1.4 }}>{q}</span>
+                  </Card>
                 );
               })
             )}

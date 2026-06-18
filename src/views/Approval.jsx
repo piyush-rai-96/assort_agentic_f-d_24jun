@@ -1,32 +1,37 @@
-import React, { useState } from "react";
-import { Badge, Button } from "impact-ui";
+import React, { useMemo, useState } from "react";
+import { Card, Badge, Button, ProgressBar, Chips, FiltersStrip, FilterPanel } from "impact-ui";
+import { Cog, Home, ClipboardList, BarChart2, CheckCircle2, Search, Check, Lock } from "lucide-react";
 import Text from "../components/Text.jsx";
 import Stack from "../components/Stack.jsx";
+import FdSelect from "../components/FdSelect.jsx";
 import {
   PLANS, PIPE_STAGES, PLAN_STATUS, PLR_PERIODS,
 } from "../data/workspace.js";
+import { panelSx } from "../styles/panelSx.js";
 import "./Approval.css";
 
-/* ─── Lane definitions (mirrors HTML renderApproval LANES[]) ────────────── */
+/* ─── Lane definitions ───────────────────────────────────────────────────── */
 const LANES = [
   {
     id: "setup",
     label: "PLR Set Up",
-    icon: "⚙️",
+    Icon: Cog,
     pipe: "catalogue",
     actions: [
-      { l: "Edit PLR",             mod: null },
-      { l: "Merchant Add",         mod: "catalogue" },
-      { l: "Merchant Drop",        mod: "catalogue" },
-      { l: "Set to Ready for SDRM",mod: null },
+      { l: "Edit PLR",              mod: null },
+      { l: "Merchant Add",          mod: "catalogue" },
+      { l: "Merchant Drop",         mod: "catalogue" },
+      { l: "Set to Ready for SDRM", mod: null },
     ],
-    statusFn: (plan) =>
-      `PLR Pres: ${plan.name}\nPlan created: ${plan.createdAt}`,
+    statusFn: (plan) => [
+      `PLR Pres: ${plan.name}`,
+      `Plan created: ${plan.createdAt}`,
+    ],
   },
   {
     id: "store",
     label: "Store Reviews",
-    icon: "🏠",
+    Icon: Home,
     pipe: "curation",
     actions: [
       { l: "Add / Drop",            mod: "store-curation" },
@@ -37,13 +42,13 @@ const LANES = [
     statusFn: (plan) => {
       const cls = plan.clustIds || [];
       const done = plan.stagesCompleted.includes("curation") ? cls.length : 0;
-      return `Clusters done: ${done} of ${cls.length}\nDays open: ${done === cls.length ? 0 : 35}`;
+      return [`Clusters done: ${done} of ${cls.length}`, `Days open: ${done === cls.length ? 0 : 35}`];
     },
   },
   {
     id: "existing",
     label: "Existing SKU Approval",
-    icon: "📋",
+    Icon: ClipboardList,
     pipe: "regional",
     actions: [
       { l: "National Core",   mod: "national" },
@@ -53,28 +58,34 @@ const LANES = [
     statusFn: (plan) => {
       const natDone = plan.stagesCompleted.includes("national");
       const regDone = plan.stagesCompleted.includes("regional");
-      return `National Core: ${natDone ? "✓ Complete" : "Pending"}\nRegional: ${regDone ? "✓ Complete" : "Pending"}`;
+      return [
+        `National Core: ${natDone ? "✓ Complete" : "Pending"}`,
+        `Regional: ${regDone ? "✓ Complete" : "Pending"}`,
+      ];
     },
   },
   {
     id: "npi",
     label: "New Item Forecasting",
-    icon: "📊",
+    Icon: BarChart2,
     pipe: "mpi",
     actions: [
-      { l: "New SKU Selection",  mod: "mpi" },
-      { l: "New Item Forecast",  mod: "forecast" },
+      { l: "New SKU Selection", mod: "mpi" },
+      { l: "New Item Forecast", mod: "forecast" },
     ],
     statusFn: (plan) => {
       const fDone = plan.stagesCompleted.includes("forecast");
       const mDone = plan.stagesCompleted.includes("mpi");
-      return `NPI items: ${mDone ? "✓ Reviewed" : "Pending"}\nForecast: ${fDone ? "✓ Done" : "Pending"}`;
+      return [
+        `NPI items: ${mDone ? "✓ Reviewed" : "Pending"}`,
+        `Forecast: ${fDone ? "✓ Done" : "Pending"}`,
+      ];
     },
   },
   {
     id: "sku-approval",
     label: "New SKU Approval",
-    icon: "✅",
+    Icon: CheckCircle2,
     pipe: "approval",
     actions: [
       { l: "Publish Assortment", mod: "approval" },
@@ -83,13 +94,16 @@ const LANES = [
     statusFn: (plan) => {
       const oDone = plan.stagesCompleted.includes("oracle");
       const aDone = plan.stagesCompleted.includes("approval");
-      return `Oracle: ${oDone ? "✓ Done" : "Pending"}\nApproval: ${aDone ? "✓ Published" : "Not started"}`;
+      return [
+        `Oracle: ${oDone ? "✓ Done" : "Pending"}`,
+        `Approval: ${aDone ? "✓ Published" : "Not started"}`,
+      ];
     },
   },
   {
     id: "hindsight",
     label: "Hindsight & Feedback",
-    icon: "🔍",
+    Icon: Search,
     pipe: "hindsight",
     actions: [
       { l: "Hindsight Report", mod: "hindsight" },
@@ -97,20 +111,19 @@ const LANES = [
     ],
     statusFn: (plan) => {
       const hDone = plan.stagesCompleted.includes("hindsight");
-      return `Hindsight: ${hDone ? "✓ Complete" : "Pending"}\nFeedback: Active post-publish`;
+      return [
+        `Hindsight: ${hDone ? "✓ Complete" : "Pending"}`,
+      ];
     },
   },
 ];
 
-/* Lane pipe keys in order — used for lock logic */
 const LANE_PIPE_ORDER = LANES.map((l) => l.pipe);
 
-/* ─── Derive lane state from plan stagesCompleted + activeStage ─────────── */
 function laneStatus(lane, plan) {
   const key = lane.pipe;
   if (plan.stagesCompleted.includes(key)) return "done";
   if (plan.activeStage === key) return "active";
-  // locked if any upstream lane pipe is not done and not active
   const myIdx = LANE_PIPE_ORDER.indexOf(key);
   for (let i = 0; i < myIdx; i++) {
     const upKey = LANE_PIPE_ORDER[i];
@@ -121,47 +134,60 @@ function laneStatus(lane, plan) {
   return "not-started";
 }
 
-/* ─── Lane visual theme maps ─────────────────────────────────────────────── */
-const LANE_THEME = {
-  done:        { border: "#10B981", headerBg: "#065F46", cardBg: "#F0FDF4", headerSub: "#A7F3D0", subLabel: "Complete",     statusColor: "#065F46", statusBorder: "#A7F3D0", btnBg: "#D1FAE5", btnBorder: "#6EE7B7", btnColor: "#065F46" },
-  active:      { border: "#10B981", headerBg: "#0B3D2E", cardBg: "#F0FAFA", headerSub: "#6EEDB8", subLabel: "In progress",  statusColor: "#0F766E", statusBorder: "#99F6E4", btnBg: "#CCFBF1", btnBorder: "#99F6E4", btnColor: "#0F766E" },
-  locked:      { border: "#E2E8F0", headerBg: "#334155", cardBg: "#F8FAFC", headerSub: "rgba(255,255,255,.4)", subLabel: "Locked",     statusColor: "#64748B", statusBorder: "#E2E8F0", btnBg: "#E2E8F0", btnBorder: "#CBD5E1", btnColor: "#94A3B8" },
-  "not-started": { border: "#E2E8F0", headerBg: "#334155", cardBg: "#F8FAFC", headerSub: "rgba(255,255,255,.4)", subLabel: "Not started", statusColor: "#64748B", statusBorder: "#E2E8F0", btnBg: "#E2E8F0", btnBorder: "#CBD5E1", btnColor: "#475569" },
+/* Badge color per lane state */
+const LANE_BADGE = {
+  done:          { color: "success", label: "Complete"    },
+  active:        { color: "info",    label: "In Progress" },
+  locked:        { color: "neutral", label: "Locked"      },
+  "not-started": { color: "neutral", label: "Not Started" },
 };
 
-/* ─── Status badge color map ─────────────────────────────────────────────── */
+/* Plan status badge */
 const STATUS_BADGE = {
-  draft:       { color: "neutral",  label: "Draft"        },
-  "in-progress": { color: "info",   label: "In Progress"  },
-  review:      { color: "warning",  label: "Under Review" },
-  approved:    { color: "success",  label: "Approved"     },
+  draft:         { color: "neutral", label: "Draft"        },
+  "in-progress": { color: "info",    label: "In Progress"  },
+  review:        { color: "warning", label: "Under Review" },
+  approved:      { color: "success", label: "Approved"     },
 };
 
 /* ─── Swim Lane Card ─────────────────────────────────────────────────────── */
 function SwimLane({ lane, plan, onNavigate }) {
   const st = laneStatus(lane, plan);
-  const theme = LANE_THEME[st];
   const isDone   = st === "done";
   const isActive = st === "active";
   const isLocked = st === "locked";
-  const statusLines = lane.statusFn(plan).split("\n");
+  const badge    = LANE_BADGE[st];
+  const lines    = lane.statusFn(plan);
 
   return (
-    <div
-      className={`ap-lane ap-lane--${st}`}
-      style={{ borderColor: theme.border, background: theme.cardBg }}
+    <Card
+      size="small"
+      sx={{
+        ...panelSx,
+        width: 200,
+        flexShrink: 0,
+        padding: 0,
+        overflow: "hidden",
+        borderColor: isActive
+          ? "var(--color-primary)"
+          : isDone
+          ? "var(--color-success-border)"
+          : "var(--color-border)",
+        boxShadow: isActive ? "var(--sh3)" : "var(--sh)",
+        opacity: isLocked ? 0.7 : 1,
+      }}
     >
       {/* Lane header */}
-      <div className="ap-lane-header" style={{ background: theme.headerBg }}>
+      <div className={`ap-lane-header ap-lane-header--${st}`}>
         <div className="ap-lane-header-top">
-          <span className="ap-lane-title">{lane.label}</span>
-          {isDone   && <div className="ap-lane-check">✓</div>}
+          <Text variant="caption" style={{ color: "inherit", fontWeight: 700, flex: 1, lineHeight: 1.3 }}>
+            {lane.label}
+          </Text>
+          {isDone   && <div className="ap-lane-check"><Check size={10} /></div>}
           {isActive && <div className="ap-lane-pulse" />}
-          {isLocked && <span className="ap-lane-lock">🔒</span>}
+          {isLocked && <Lock size={11} className="ap-lane-lock" />}
         </div>
-        <div className="ap-lane-sub" style={{ color: theme.headerSub }}>
-          {theme.subLabel}
-        </div>
+        <Badge variant="subtle" color={badge.color} label={badge.label} size="small" />
       </div>
 
       {/* Action buttons */}
@@ -169,92 +195,89 @@ function SwimLane({ lane, plan, onNavigate }) {
         {lane.actions.map((act) => {
           const canClick = !isLocked && !!act.mod;
           return (
-            <button
+            <Button
               key={act.l}
-              type="button"
-              className={`ap-action-btn ${canClick ? "ap-action-btn--clickable" : "ap-action-btn--disabled"}`}
-              style={{
-                background: theme.btnBg,
-                borderColor: theme.btnBorder,
-                color: theme.btnColor,
-                cursor: canClick ? "pointer" : "not-allowed",
-              }}
+              variant="ghost"
+              size="small"
               disabled={!canClick}
               onClick={canClick ? () => onNavigate?.(act.mod) : undefined}
+              sx={{ width: "100%", justifyContent: "flex-start", fontSize: "var(--fs-xs)" }}
             >
               {act.l}
-            </button>
+            </Button>
           );
         })}
       </div>
 
       {/* Status footer */}
-      <div className="ap-lane-footer" style={{ borderColor: theme.statusBorder }}>
-        {statusLines.map((line, i) => (
-          <div key={i} className="ap-lane-footer-line" style={{ color: theme.statusColor }}>
+      <div className="ap-lane-footer">
+        {lines.map((line, i) => (
+          <Text key={i} variant="micro" tone="muted" style={{ lineHeight: 1.7 }}>
             {line}
-          </div>
+          </Text>
         ))}
       </div>
-    </div>
+    </Card>
   );
 }
 
-/* ─── Plan Meta Header ───────────────────────────────────────────────────── */
+/* ─── Plan Meta Bar ──────────────────────────────────────────────────────── */
 function PlanMetaBar({ plan }) {
   const plrPeriod = PLR_PERIODS.find((p) => p.id === plan.plrId);
   const doneCount = PIPE_STAGES.filter((s) => plan.stagesCompleted.includes(s.id)).length;
-  const pct = Math.round((doneCount / PIPE_STAGES.length) * 100);
-  const badge = STATUS_BADGE[plan.status] || STATUS_BADGE.draft;
+  const pct       = Math.round((doneCount / PIPE_STAGES.length) * 100);
+  const badge     = STATUS_BADGE[plan.status] || STATUS_BADGE.draft;
 
   return (
-    <div className="ap-meta-bar">
-      <div className="ap-meta-left">
-        <div className="ap-meta-accent" />
-        <div className="ap-meta-fields">
-          <div className="ap-meta-row">
-            <span className="ap-meta-key">DEPARTMENT</span>
-            <span className="ap-meta-val">{plan.dept}</span>
-            {plan.plrId && (
-              <>
-                <span className="ap-meta-key">PLR ID</span>
-                <span className="ap-meta-val">{plan.plrId}</span>
-              </>
-            )}
-            <span className="ap-meta-key">PLR NAME</span>
-            <span className="ap-meta-val">{plan.name}</span>
-          </div>
-          <div className="ap-meta-row">
-            {plrPeriod ? (
-              <>
-                <span className="ap-meta-key">PLR PRESENTATION DATE</span>
-                <span className="ap-meta-val ap-meta-val--green">{plrPeriod.due}</span>
-                <span className="ap-meta-key">SEASON</span>
-                <span className="ap-meta-val">{plrPeriod.season}</span>
-              </>
-            ) : (
-              <span className="ap-meta-no-plr">No PLR period linked — created manually</span>
-            )}
-          </div>
-        </div>
-      </div>
-      <div className="ap-meta-right">
-        <div className="ap-meta-progress">
-          <div className="ap-meta-progress-label">Pipeline progress</div>
-          <div className="ap-meta-progress-row">
-            <div className="ap-meta-progress-track">
-              <div className="ap-meta-progress-fill" style={{ width: `${pct}%` }} />
+    <Card sx={{ ...panelSx, borderRadius: 0, borderLeft: "none", borderRight: "none" }}>
+      <div className="ap-meta-bar">
+        <div className="ap-meta-left">
+          <div className="ap-meta-accent" />
+          <Stack gap={1}>
+            <div className="ap-meta-row">
+              <span className="ap-meta-key">Department</span>
+              <Text variant="caption" style={{ fontWeight: 700 }}>{plan.dept}</Text>
+              {plan.plrId && (
+                <>
+                  <span className="ap-meta-sep" />
+                  <span className="ap-meta-key">PLR ID</span>
+                  <Text variant="caption" style={{ fontWeight: 700 }}>{plan.plrId}</Text>
+                </>
+              )}
+              <span className="ap-meta-sep" />
+              <span className="ap-meta-key">PLR Name</span>
+              <Text variant="caption" style={{ fontWeight: 700 }}>{plan.name}</Text>
             </div>
-            <span className="ap-meta-progress-val">{doneCount}/{PIPE_STAGES.length}</span>
-          </div>
+            <div className="ap-meta-row">
+              {plrPeriod ? (
+                <>
+                  <span className="ap-meta-key">PLR Presentation Date</span>
+                  <Text variant="caption" tone="success" style={{ fontWeight: 700 }}>{plrPeriod.due}</Text>
+                  <span className="ap-meta-sep" />
+                  <span className="ap-meta-key">Season</span>
+                  <Text variant="caption" style={{ fontWeight: 700 }}>{plrPeriod.season}</Text>
+                </>
+              ) : (
+                <Text variant="micro" tone="muted" style={{ fontStyle: "italic" }}>
+                  No PLR period linked — created manually
+                </Text>
+              )}
+            </div>
+          </Stack>
         </div>
-        <Badge
-          variant="subtle"
-          color={badge.color}
-          label={badge.label}
-        />
+
+        <div className="ap-meta-right">
+          <div className="ap-meta-progress">
+            <ProgressBar
+              value={pct}
+              customLabel={`${doneCount}/${PIPE_STAGES.length} stages`}
+              status={pct === 100 ? "success" : "remaining"}
+            />
+          </div>
+          <Badge variant="subtle" color={badge.color} label={badge.label} />
+        </div>
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -262,59 +285,96 @@ function PlanMetaBar({ plan }) {
 export default function Approval({ onNavigate }) {
   const [planIdx, setPlanIdx] = useState(0);
   const [published, setPublished] = useState(false);
+  const [filterPanelOpen, setFilterPanelOpen] = useState(false);
+  const [activeFilterTab, setActiveFilterTab] = useState("plan");
 
-  // Mirrors HTML: show non-draft plans; fall back to all plans
-  const activePlans = PLANS.filter((p) => p.status !== "draft");
+  const activePlans  = PLANS.filter((p) => p.status !== "draft");
   const displayPlans = activePlans.length ? activePlans : PLANS;
-  const plan = displayPlans[Math.min(planIdx, displayPlans.length - 1)];
+  const plan         = displayPlans[Math.min(planIdx, displayPlans.length - 1)];
 
-  // Publish gate: all PIPE_STAGES except 'approval' must be done
-  const allDone = PIPE_STAGES.every(
-    (s) => s.id === "approval" || plan.stagesCompleted.includes(s.id)
-  );
+  const allDone   = PIPE_STAGES.every((s) => s.id === "approval" || plan.stagesCompleted.includes(s.id));
   const doneCount = PIPE_STAGES.filter((s) => plan.stagesCompleted.includes(s.id)).length;
 
+  const approvalFilterTags = useMemo(() => [
+    { id: "plan", label: "PLR", values: [{ id: 1, label: plan.name }] },
+  ], [plan]);
+
+  const PLAN_FD_OPTIONS = displayPlans.map((p, i) => ({ value: String(i), label: p.name }));
+
   return (
-    <div className="ap-root">
-      {/* ── Dark page header ────────────────────────────────────────────────── */}
-      <div className="ap-page-header">
-        <div className="ap-page-header-top">
-          <div className="ap-page-header-left">
-            <div className="ap-page-title">Product Line Reviews</div>
-            <div className="ap-page-subtitle">
-              PLR Review Status &nbsp;·&nbsp; {displayPlans.length} active plan{displayPlans.length !== 1 ? "s" : ""}
-            </div>
+    <Stack gap={4}>
+      {/* ── Page header Card ──────────────────────────────────────────────── */}
+      <Card sx={panelSx}>
+        <div className="ap-page-header">
+          <div className="ap-page-header-top">
+            <Stack gap={1}>
+              <Text variant="title" style={{ fontWeight: 800, letterSpacing: "-0.3px" }}>
+                Product Line Reviews
+              </Text>
+            </Stack>
+            <Button
+              variant="primary"
+              size="small"
+              onClick={() => onNavigate?.("workspace")}
+            >
+              + Create New PLR
+            </Button>
           </div>
-          <button
-            type="button"
-            className="ap-create-btn"
-            onClick={() => onNavigate?.("workspace")}
-          >
-            + Create New PLR
-          </button>
         </div>
+      </Card>
 
-        {/* Plan selector tabs — only shown when >1 plan */}
-        {displayPlans.length > 1 && (
-          <div className="ap-plan-tabs">
-            {displayPlans.map((p, i) => (
-              <button
-                key={p.id}
-                type="button"
-                className={`ap-plan-tab ${i === planIdx ? "active" : ""}`}
-                onClick={() => setPlanIdx(i)}
-              >
-                {p.name}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+      {/* ── Filters strip ──────────────────────────────────────────────────── */}
+      {displayPlans.length > 1 && (
+        <>
+          <FiltersStrip
+            filterTags={approvalFilterTags}
+            filterButtonLabel="All Filters"
+            filterButtonClick={() => setFilterPanelOpen(true)}
+            hideSelectedFilterBadge
+            recentFilters={[]}
+            savedFiltersBadge={[]}
+            savedFilterLists={[]}
+            selectedFilter={null}
+            setSelectedFilter={() => {}}
+            handleBadgeChange={() => {}}
+            handleSavedRecentFilterDropdown={() => {}}
+          />
+          <FilterPanel
+            title="PLR Filters"
+            size="medium"
+            anchor="right"
+            isOpen={filterPanelOpen}
+            setIsOpen={setFilterPanelOpen}
+            active={activeFilterTab}
+            setActive={setActiveFilterTab}
+            filters={[
+              {
+                value: "plan",
+                title: "PLR Plan",
+                numberOfFilter: 1,
+                children: (
+                  <Stack direction="column" gap={3} style={{ padding: "var(--sp-4)" }}>
+                    <FdSelect
+                      label="Product Line Review"
+                      value={String(planIdx)}
+                      options={PLAN_FD_OPTIONS}
+                      onChange={(v) => setPlanIdx(Number(v))}
+                      width={320}
+                    />
+                  </Stack>
+                ),
+              },
+            ]}
+            primaryButtonLabel="Apply"
+            onPrimaryButtonClick={() => setFilterPanelOpen(false)}
+          />
+        </>
+      )}
 
-      {/* ── Plan meta bar ───────────────────────────────────────────────────── */}
+      {/* ── Plan meta bar ─────────────────────────────────────────────────── */}
       <PlanMetaBar plan={plan} />
 
-      {/* ── Swim lanes ──────────────────────────────────────────────────────── */}
+      {/* ── Swim lanes ────────────────────────────────────────────────────── */}
       <div className="ap-swim-scroll">
         <div className="ap-swim-row">
           {LANES.map((lane) => (
@@ -328,21 +388,24 @@ export default function Approval({ onNavigate }) {
         </div>
       </div>
 
-      {/* ── Bottom action bar ───────────────────────────────────────────────── */}
-      <div className="ap-action-bar">
-        <div className="ap-action-bar-left">
-          {doneCount} of {PIPE_STAGES.length} pipeline stages complete
-          {plan.notes ? <>&nbsp;·&nbsp;<span className="ap-action-note">{plan.notes}</span></> : null}
+      {/* ── Bottom action bar ─────────────────────────────────────────────── */}
+      <Card sx={{ ...panelSx, padding: "var(--sp-3) var(--sp-4)" }}>
+        <div className="ap-action-bar">
+          {plan.notes ? (
+            <Text variant="caption" tone="muted">
+              <span className="ap-action-note">{plan.notes}</span>
+            </Text>
+          ) : null}
+          <Button
+            variant="primary"
+            size="medium"
+            disabled={!allDone && !published}
+            onClick={allDone ? () => setPublished(true) : undefined}
+          >
+            {published ? "✓ Assortment Published" : "Publish Assortment"}
+          </Button>
         </div>
-        <button
-          type="button"
-          className={`ap-publish-btn ${allDone ? "ap-publish-btn--enabled" : "ap-publish-btn--disabled"}`}
-          disabled={!allDone && !published}
-          onClick={allDone ? () => setPublished(true) : undefined}
-        >
-          {published ? "✅ Assortment Published" : "✅ Publish Assortment"}
-        </button>
-      </div>
-    </div>
+      </Card>
+    </Stack>
   );
 }

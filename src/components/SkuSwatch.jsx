@@ -65,7 +65,7 @@ export function skuSwatchColor(colorStr, dept) {
   return `hsl(${hue}, ${sat}%, ${lit}%)`;
 }
 
-function deriveDept(text, fallback) {
+export function deriveDept(text, fallback) {
   if (fallback) return fallback;
   const t = text.toLowerCase();
   if (/lvp|vinyl|nucore|laminate|\bspc\b|\bwpc\b|duralux|aquaguard|optimax|hydroshield/.test(t)) return "Laminate & Vinyl";
@@ -75,7 +75,7 @@ function deriveDept(text, fallback) {
 }
 
 /* Pick the visual look from the richest text we have. */
-function deriveLook(text, dept) {
+export function deriveLook(text, dept) {
   const t = text.toLowerCase();
   if (/hex/.test(t)) return "hex";
   if (/penny/.test(t)) return "penny";
@@ -94,7 +94,7 @@ const SEAM = "rgba(0,0,0,.20)";
 const SEAM_SOFT = "rgba(0,0,0,.12)";
 const GRAIN = "rgba(0,0,0,.10)";
 
-function Pattern({ look, finishMeta }) {
+export function Pattern({ look, finishMeta }) {
   switch (look) {
     case "plank":
       return (
@@ -201,7 +201,16 @@ function Pattern({ look, finishMeta }) {
   }
 }
 
-export default function SkuSwatch({ sku, desc, dept, color, size = 32 }) {
+/*
+ * getSkuVisual — single source of truth for a SKU's derived appearance.
+ * Returns the resolved department, material "look", base color, finish meta,
+ * a department accent color, a gloss factor (0–1), and a human label.
+ * Shared by SkuSwatch (thumbnail) and SkuMedia (enlarged gallery / 3D preview)
+ * so both always render the exact same material for a given SKU.
+ */
+const GLOSS_FINISHES = /polished|glossy|gloss|lacquer/i;
+
+export function getSkuVisual({ sku, desc, dept, color } = {}) {
   const text = [
     sku?.cls, sku?.subCls, sku?.subDept, sku?.desc, sku?.look,
     desc, color,
@@ -209,14 +218,21 @@ export default function SkuSwatch({ sku, desc, dept, color, size = 32 }) {
     .filter(Boolean)
     .join(" ");
 
-  if (!sku && !text) return null;
-
   const dpt = deriveDept(text, sku?.dept || dept);
   const look = deriveLook(text, dpt);
   const baseColor = skuSwatchColor(sku?.color || color || text, dpt);
   const finishMeta = FINISH_PATTERNS[sku?.finish] || FINISH_PATTERNS.Smooth;
   const deptDot = dpt === "Wood" ? "#c8a82a" : dpt === "Tile" ? "#2a7ab4" : "#6aaa6a";
+  const gloss = GLOSS_FINISHES.test(sku?.finish || text) ? 0.5 : 0.16;
   const label = sku?.desc || desc || "product";
+  return { dpt, look, baseColor, finishMeta, deptDot, gloss, label, text };
+}
+
+export default function SkuSwatch({ sku, desc, dept, color, size = 32 }) {
+  const hasInput = !!(sku || desc || dept || color);
+  if (!hasInput) return null;
+
+  const { look, baseColor, finishMeta, deptDot, label } = getSkuVisual({ sku, desc, dept, color });
 
   return (
     <svg

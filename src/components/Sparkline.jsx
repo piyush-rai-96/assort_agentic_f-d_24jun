@@ -5,7 +5,7 @@ import React from "react";
  * primitives. `color` must be a concrete value (SVG can't read CSS vars
  * reliably for stroke), so pass a token value from styles/tokens.js.
  */
-export default function Sparkline({ data, width = 72, height = 22, color = "#2d6a2d", fill, strokeWidth = 1.5 }) {
+export default function Sparkline({ data, width = 72, height = 22, color = "#2563eb", fill, strokeWidth = 1.5 }) {
   if (!data || data.length < 2) return null;
   const min = Math.min(...data);
   const max = Math.max(...data);

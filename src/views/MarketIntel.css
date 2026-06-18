@@ -202,25 +202,25 @@
   text-transform: none;
 }
 .mi-tag--portfolio {
-  background: #FFF8E1;
-  color: #B45309;
-  border: 1px solid #FCD34D;
+  background: var(--color-warning-soft);
+  color: var(--color-wood);
+  border: 1px solid var(--color-warning-border);
   text-transform: none;
   font-weight: 700;
 }
 
 /* ── Highlight ring — list row arriving from Portfolio Build chip ───────── */
 .mi-list-row.is-from-portfolio {
-  border: 1.5px solid #F59E0B !important;
-  background: #FFFBEB;
-  border-radius: var(--r, 6px);
+  border: 1.5px solid var(--color-warning) !important;
+  background: var(--color-warning-soft);
+  border-radius: var(--r);
   animation: mi-portfolio-pulse 1.8s ease-out 3;
 }
 
 @keyframes mi-portfolio-pulse {
-  0%   { box-shadow: 0 0 0 0   rgba(245, 158, 11, 0.45); }
-  50%  { box-shadow: 0 0 0 6px rgba(245, 158, 11, 0); }
-  100% { box-shadow: 0 0 0 0   rgba(245, 158, 11, 0); }
+  0%   { box-shadow: 0 0 0 0   var(--color-primary-tint-12); }
+  50%  { box-shadow: 0 0 0 6px transparent; }
+  100% { box-shadow: 0 0 0 0   transparent; }
 }
 
 /* 2-line clamp for titles / teasers */

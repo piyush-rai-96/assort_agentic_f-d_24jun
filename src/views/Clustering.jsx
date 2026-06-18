@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Card, Button, Badge, Table } from "impact-ui";
+import { Card, Button, Badge, Table, Chips, Input, Checkbox } from "impact-ui";
+import { BarChart2, Users, Tag, Cpu, AlertTriangle, CheckCircle2, MapPin, TrendingUp, Building2, ChevronLeft, ChevronRight, Play, Bot, Database, Layers, Check, ScanLine } from "lucide-react";
 import Text from "../components/Text.jsx";
 import StepIndicator from "../components/StepIndicator.jsx";
 import Stack from "../components/Stack.jsx";
@@ -12,7 +13,7 @@ import {
   clusterStores, scenarioTagline,
   /* run management */
   ACTIVE_CLUSTER_SET, CLUSTER_RUNS, CLUSTER_ATTRIBUTES,
-  WIZARD_DEFAULTS, SCOPE_OPTIONS, METHOD_OPTIONS, RUN_STATUS_PHASES,
+  WIZARD_DEFAULTS, SCOPE_OPTIONS, METHOD_OPTIONS,
   previewClusters,
   /* analytics */
   PREVIEW_CLUSTER_STORES, NETWORK_AVERAGES, VEL_SCORE_LABEL,
@@ -320,23 +321,23 @@ function ClusterFingerprint({ cluster, allClusters }) {
           <div className="cr-insight-card-body">
             {[
               {
-                bg: "#e8f5e9", color: "#2e7d32",
-                icon: <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" fill="#2e7d32" opacity=".18"/><path d="M4 7.5l2 2 4-4" stroke="#2e7d32" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+                bg: "var(--color-success-soft)", color: "var(--color-success)",
+                icon: <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" fill="var(--color-success)" opacity=".18"/><path d="M4 7.5l2 2 4-4" stroke="var(--color-success)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>,
                 text: `${stats.proSplit}% Pro mix — ${stats.proSplit > NETWORK_AVERAGES.proSplit ? "above" : "below"} network avg by ${Math.abs(Math.round(stats.proSplit - NETWORK_AVERAGES.proSplit))}pp`,
               },
               {
-                bg: "#e3f2fd", color: "#1565c0",
-                icon: <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><rect x="2" y="2" width="10" height="10" rx="3" fill="#1565c0" opacity=".18"/><rect x="4" y="6" width="6" height="1.5" rx=".75" fill="#1565c0"/><rect x="4" y="8.5" width="4" height="1.5" rx=".75" fill="#1565c0"/></svg>,
+                bg: "var(--color-info-soft)", color: "var(--color-info)",
+                icon: <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><rect x="2" y="2" width="10" height="10" rx="3" fill="var(--color-info)" opacity=".18"/><rect x="4" y="6" width="6" height="1.5" rx=".75" fill="var(--color-info)"/><rect x="4" y="8.5" width="4" height="1.5" rx=".75" fill="var(--color-info)"/></svg>,
                 text: `Avg store size ${stats.sqftK}k sqft — ${stats.sqftK > NETWORK_AVERAGES.sqftK ? "larger" : "smaller"} than typical network store`,
               },
               {
-                bg: "#fff8e1", color: "#f57f17",
-                icon: <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><polygon points="7,2 9,6 13,6.5 10,9.5 10.5,13 7,11 3.5,13 4,9.5 1,6.5 5,6" fill="#f57f17" opacity=".25"/><polygon points="7,3.5 8.5,6.5 12,7 9.5,9.5 10,12.5 7,11 4,12.5 4.5,9.5 2,7 5.5,6.5" fill="#f57f17"/></svg>,
+                bg: "var(--color-warning-soft)", color: "var(--color-warning)",
+                icon: <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><polygon points="7,2 9,6 13,6.5 10,9.5 10.5,13 7,11 3.5,13 4,9.5 1,6.5 5,6" fill="var(--color-warning)" opacity=".25"/><polygon points="7,3.5 8.5,6.5 12,7 9.5,9.5 10,12.5 7,11 4,12.5 4.5,9.5 2,7 5.5,6.5" fill="var(--color-warning)"/></svg>,
                 text: `Velocity ${VEL_SCORE_LABEL[Math.round(stats.velScore)] || "B"} — ${stats.velScore < NETWORK_AVERAGES.velScore ? "faster" : "slower"} than network median`,
               },
               {
-                bg: "#f3e5f5", color: "#6a1b9a",
-                icon: <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M7 2l1.5 3.5H12l-2.8 2 1 3.5L7 9.5 3.8 11l1-3.5L2 5.5h3.5L7 2z" fill="#6a1b9a" opacity=".25"/><path d="M7 3.5l1.1 2.6H11l-2.2 1.6.8 2.6L7 8.5l-2.6 1.8.8-2.6L3 6.1h2.9L7 3.5z" fill="#6a1b9a"/></svg>,
+                bg: "var(--color-accent-soft)", color: "var(--color-accent)",
+                icon: <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M7 2l1.5 3.5H12l-2.8 2 1 3.5L7 9.5 3.8 11l1-3.5L2 5.5h3.5L7 2z" fill="var(--color-accent)" opacity=".25"/><path d="M7 3.5l1.1 2.6H11l-2.2 1.6.8 2.6L7 8.5l-2.6 1.8.8-2.6L3 6.1h2.9L7 3.5z" fill="var(--color-accent)"/></svg>,
                 text: `${stats.catTile}% tile sales share — ${stats.catTile > NETWORK_AVERAGES.catTile ? "tile-heavy" : "LVP-heavy"} assortment profile`,
               },
             ].map((r, i) => (
@@ -468,22 +469,22 @@ function StoreManagerPanel({ managedClusters, setManagedClusters, availableStore
     <div className="cr-manager-layout">
       {/* Left: store table for selected cluster */}
       <Stack direction="column" gap={4}>
-        {/* Cluster tabs */}
-        <div className="cr-cluster-tabs">
+        {/* Cluster selector chips */}
+        <Stack direction="row" gap={2} wrap>
           {managedClusters.map((c) => (
-            <button key={c.id} className={`cr-cluster-tab${c.id === selectedId ? " is-active" : ""}`}
-              onClick={() => { setSelectedId(c.id); setExpandedId(null); }}>
-              <div style={{ width: 8, height: 8, borderRadius: "50%", background: c.color, flexShrink: 0 }} />
-              {c.name}
-              <span style={{ marginLeft: 2, fontSize: 10, fontWeight: 600, color: "inherit", opacity: 0.7 }}>({c.storeList?.length ?? c.stores})</span>
-            </button>
+            <Chips
+              key={c.id}
+              label={`${c.name} (${c.storeList?.length ?? c.stores})`}
+              isActive={c.id === selectedId}
+              onClick={() => { setSelectedId(c.id); setExpandedId(null); }}
+            />
           ))}
-        </div>
+        </Stack>
 
         {/* Change log banner */}
         {hasChanges && (
           <div className="cr-change-banner">
-            <span style={{ fontSize: 14 }}>🔄</span>
+            <span style={{ fontSize: "var(--fs-body-lg)" }}>🔄</span>
             <Stack direction="column" gap={0.5} flex="1 1 auto">
               <Text variant="caption" style={{ color: color.info, fontWeight: 700 }}>Unsaved changes</Text>
               <Text variant="micro" style={{ color: color.info }}>{changeLog[0]}</Text>
@@ -538,7 +539,7 @@ function StoreManagerPanel({ managedClusters, setManagedClusters, availableStore
                   <span className={`cr-fit-badge ${fitClass}`}>{fitScore}%</span>
                   <Button variant="secondary" size="small"
                     onClick={(e) => { e.stopPropagation(); removeStore(store); }}
-                    style={{ padding: "2px 6px", fontSize: 11 }}>
+                    style={{ padding: "2px 6px", fontSize: "var(--fs-micro)" }}>
                     ✕
                   </Button>
                 </div>
@@ -595,8 +596,13 @@ function StoreManagerPanel({ managedClusters, setManagedClusters, availableStore
             )}
           </div>
           <div style={{ padding: "var(--sp-3) var(--sp-4)", borderBottom: "1px solid var(--color-border)" }}>
-            <input className="cr-input" placeholder="Search by name, state, or region…"
-              value={addSearch} onChange={(e) => setAddSearch(e.target.value)} />
+            <Input
+              id="cr-store-search"
+              placeholder="Search by name, state, or region…"
+              value={addSearch}
+              onChange={(e) => setAddSearch(e.target.value)}
+              size="medium"
+            />
           </div>
           {filteredAvailable.length === 0 ? (
             <div style={{ padding: "var(--sp-5)", textAlign: "center" }}>
@@ -746,14 +752,11 @@ function ClusterAnalyticsPanel({ managedClusters, setManagedClusters, availableS
         </Stack>
       </div>
 
-      <div className="cr-analytics-tabs">
+      <Stack direction="row" gap={2} wrap style={{ marginTop: "var(--sp-4)", marginBottom: "var(--sp-3)" }}>
         {TABS.map((t) => (
-          <button key={t.id} className={`cr-analytics-tab${tab === t.id ? " is-active" : ""}`}
-            onClick={() => setTab(t.id)}>
-            {t.label}
-          </button>
+          <Chips key={t.id} label={t.label} isActive={tab === t.id} onClick={() => setTab(t.id)} />
         ))}
-      </div>
+      </Stack>
 
       {/* Overview */}
       {tab === "overview" && (
@@ -768,25 +771,17 @@ function ClusterAnalyticsPanel({ managedClusters, setManagedClusters, availableS
       {/* Fingerprint */}
       {tab === "fingerprint" && (
         <Stack direction="column" gap={4}>
-          {/* Cluster selector pills — color-aware */}
-          <div className="cr-cluster-tabs">
-            {managedClusters.map((c) => {
-              const isActive = c.id === fpClusterId;
-              // derive a soft 15%-alpha tint from the cluster hex color
-              const hex = c.color.replace("#", "");
-              const r = parseInt(hex.slice(0,2),16), g = parseInt(hex.slice(2,4),16), b = parseInt(hex.slice(4,6),16);
-              const bg = `rgba(${r},${g},${b},0.12)`;
-              return (
-                <button key={c.id}
-                  className={`cr-cluster-tab${isActive ? " is-active" : ""}`}
-                  style={{ "--cr-cluster-color": c.color, "--cr-cluster-bg": bg }}
-                  onClick={() => setFpClusterId(c.id)}>
-                  <div className="cr-cluster-tab-dot" style={{ background: c.color }} />
-                  {c.name}
-                </button>
-              );
-            })}
-          </div>
+          {/* Cluster selector chips — color-aware */}
+          <Stack direction="row" gap={2} wrap>
+            {managedClusters.map((c) => (
+              <Chips
+                key={c.id}
+                label={c.name}
+                isActive={c.id === fpClusterId}
+                onClick={() => setFpClusterId(c.id)}
+              />
+            ))}
+          </Stack>
           {fpCluster && (
             <ClusterFingerprint cluster={fpCluster} allClusters={managedClusters} />
           )}
@@ -806,17 +801,78 @@ function ClusterAnalyticsPanel({ managedClusters, setManagedClusters, availableS
   );
 }
 
-/* ════════════════════════════════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════════════════════════════
    WIZARD SUB-SCREENS
    ════════════════════════════════════════════════════════════════════════════ */
 
-/* ── Step 0 — Input ─────────────────────────────────────────────────────── */
-function StepInput({ draft, setDraft }) {
+/* ── Agentic pipeline definition ─────────────────────────────────────────── */
+const CLUSTER_PIPELINE = [
+  {
+    id: "load",     Icon: Database,    tone: "primary",
+    title: "Loading store profiles",
+    sub:   "Reading store-level attributes, velocity bands, and category mix…",
+    result: (draft) => `${STORE_COUNT} stores loaded · ${draft.dept !== "All" ? draft.dept : "All depts"} · ${draft.channel}`,
+  },
+  {
+    id: "norm",     Icon: Layers,      tone: "info",
+    title: "Normalising features",
+    sub:   "Standardising pro-split, velocity, sqft, and category indexes…",
+    result: () => "Features scaled to [0,1] · 4 dimensions · outliers flagged",
+  },
+  {
+    id: "matrix",   Icon: ScanLine,    tone: "info",
+    title: "Computing similarity matrix",
+    sub:   "Pairwise cosine distances across all store pairs…",
+    result: () => `${STORE_COUNT}×${STORE_COUNT} matrix · cosine similarity`,
+  },
+  {
+    id: "cluster",  Icon: Cpu,         tone: "primary",
+    title: "Running clustering algorithm",
+    sub:   "Generating Behavioral, Geographic, and DC-based scenarios…",
+    result: (draft) => `3 scenarios computed for ${draft.season} · converged in 18 iterations`,
+  },
+  {
+    id: "cohesion", Icon: BarChart2,   tone: "success",
+    title: "Scoring cohesion & business fit",
+    sub:   "Intra-cluster variance · silhouette index · business actionability…",
+    result: () => "Avg cohesion 0.80 · Behavioral scores highest at 0.91 composite",
+  },
+  {
+    id: "ready",    Icon: CheckCircle2, tone: "success",
+    title: "Scenarios ready for review",
+    sub:   "Generating comparison cards and store assignments…",
+    result: () => "A=Geographic · B=Behavioral ★ · C=DC-based — pick one to accept",
+  },
+];
+
+/* ── Step 0 — Define Scope ──────────────────────────────────────────────── */
+const DEPT_OPTS    = ["All", "Wood", "Tile", "Laminate & Vinyl"];
+const CHANNEL_OPTS = ["All Stores", "Brick & Mortar", "Online"];
+const SEASON_OPTS  = ["SS25", "FW25", "SS26", "FW26", "SS27"];
+
+function RadioList({ options, value, name, onChange }) {
+  return (
+    <Stack direction="column" gap={1}>
+      {options.map((opt) => {
+        const on = value === opt;
+        return (
+          <label key={opt} className={`cr-radio-card${on ? " is-selected" : ""}`}
+            style={{ cursor: "pointer" }} onClick={() => onChange(opt)}>
+            <input type="radio" name={name} value={opt} checked={on}
+              onChange={() => onChange(opt)}
+              style={{ position: "absolute", opacity: 0, width: 0, height: 0 }} />
+            <div className="cr-radio-dot" />
+            <Text variant="caption" tone={on ? "primary" : "muted"}
+              style={{ fontWeight: on ? 600 : 400 }}>{opt}</Text>
+          </label>
+        );
+      })}
+    </Stack>
+  );
+}
+
+function StepScope({ draft, setDraft }) {
   const update = (k, v) => setDraft((d) => ({ ...d, [k]: v }));
-  const showK = draft.method === "kmeans";
-  const kHint = draft.k <= 3 ? "Too few — clusters may be too coarse"
-              : draft.k >= 8 ? "Too many — clusters become too thin"
-              : "Balanced cluster count for this network";
 
   return (
     <div className="cr-step-grid">
@@ -827,23 +883,14 @@ function StepInput({ draft, setDraft }) {
             <Text variant="body-strong" tone="strong">Run details</Text>
           </div>
           <div className="cr-form-section-body">
-            <Stack direction="column" gap={3}>
-              <Stack direction="column" gap={1}>
-                <Text variant="caption" tone="muted" style={{ fontWeight: 600 }}>
-                  Run name <span style={{ color: color.error }}>*</span>
-                </Text>
-                <input className="cr-input" value={draft.name}
-                  onChange={(e) => update("name", e.target.value)}
-                  placeholder="e.g. Network 5-cluster (k-means)" />
-              </Stack>
-              <Stack direction="column" gap={1}>
-                <Text variant="caption" tone="muted" style={{ fontWeight: 600 }}>Notes (optional)</Text>
-                <textarea className="cr-input" rows={2} value={draft.notes}
-                  onChange={(e) => update("notes", e.target.value)}
-                  placeholder="e.g. Quarterly refresh — same attributes as CR-018"
-                  style={{ resize: "vertical" }} />
-              </Stack>
-            </Stack>
+            <Input
+              id="cr-run-name"
+              label="Run name"
+              isRequired
+              value={draft.name}
+              onChange={(e) => update("name", e.target.value)}
+              placeholder="e.g. SS26 Behavioral network run"
+            />
           </div>
         </div>
 
@@ -851,86 +898,25 @@ function StepInput({ draft, setDraft }) {
         <div className="cr-form-section">
           <div className="cr-form-section-header">
             <Stack direction="row" align="center" gap={2}>
-              <Text variant="body-strong" tone="strong">Scope</Text>
-              <Text variant="micro" tone="subtle">Choose which stores to cluster</Text>
+              <Text variant="body-strong" tone="strong">Clustering scope</Text>
+              <Text variant="micro" tone="subtle">Department · Channel · Season</Text>
             </Stack>
           </div>
           <div className="cr-form-section-body">
-            <Stack direction="column" gap={2}>
-              {SCOPE_OPTIONS.map((opt) => (
-                <label key={opt.id} className={`cr-radio-card${draft.scope === opt.id ? " is-selected" : ""}`}>
-                  <input
-                    type="radio"
-                    name="cluster-scope"
-                    value={opt.id}
-                    checked={draft.scope === opt.id}
-                    onChange={() => update("scope", opt.id)}
-                    style={{ position: "absolute", opacity: 0, width: 0, height: 0 }}
-                  />
-                  <div className="cr-radio-dot" />
-                  <Stack direction="column" gap={0.5}>
-                    <Text variant="caption" tone="strong" style={{ fontWeight: 600 }}>{opt.label}</Text>
-                    <Text variant="micro" tone="subtle">{opt.desc}</Text>
-                  </Stack>
-                </label>
-              ))}
-            </Stack>
-          </div>
-        </div>
-
-        {/* Method */}
-        <div className="cr-form-section">
-          <div className="cr-form-section-header">
-            <Text variant="body-strong" tone="strong">Clustering method</Text>
-          </div>
-          <div className="cr-form-section-body">
-            <Stack direction="column" gap={2}>
-              {METHOD_OPTIONS.map((opt) => (
-                <label key={opt.id}
-                  className={`cr-radio-card${draft.method === opt.id ? " is-selected" : ""}${opt.disabled ? " is-disabled" : ""}`}
-                  style={{ cursor: opt.disabled ? "not-allowed" : "pointer" }}>
-                  <input
-                    type="radio"
-                    name="cluster-method"
-                    value={opt.id}
-                    checked={draft.method === opt.id}
-                    disabled={opt.disabled}
-                    onChange={() => !opt.disabled && update("method", opt.id)}
-                    style={{ position: "absolute", opacity: 0, width: 0, height: 0 }}
-                  />
-                  <div className="cr-radio-dot" />
-                  <Stack direction="column" gap={0.5} flex="1 1 auto" style={{ minWidth: 0 }}>
-                    <Stack direction="row" align="center" gap={2}>
-                      <Text variant="caption" tone="strong" style={{ fontWeight: 600 }}>{opt.label}</Text>
-                      {opt.badge && (
-                        <span style={{ fontSize: 9, fontWeight: 700, padding: "1px 6px", borderRadius: 6,
-                          background: opt.id === "kmeans" ? color.primarySoft : color.surfaceAlt,
-                          color: opt.id === "kmeans" ? color.primary : color.neutral }}>
-                          {opt.badge}
-                        </span>
-                      )}
-                    </Stack>
-                    <Text variant="micro" tone="subtle">{opt.desc}</Text>
-                  </Stack>
-                </label>
-              ))}
-
-              {showK && (
-                <Stack direction="column" gap={2} style={{ marginTop: 4, padding: "var(--sp-4)", background: "var(--color-surface-alt)", borderRadius: "var(--r2)", border: "1px solid var(--color-border)" }}>
-                  <Stack direction="row" justify="space-between" align="center">
-                    <Text variant="caption" tone="strong" style={{ fontWeight: 600 }}>Number of clusters</Text>
-                    <Text variant="title" tone="primary" style={{ fontWeight: 800, lineHeight: 1 }}>k = {draft.k}</Text>
-                  </Stack>
-                  <input type="range" min={3} max={9} value={draft.k} className="cr-k-slider"
-                    onChange={(e) => update("k", Number(e.target.value))} />
-                  <Stack direction="row" justify="space-between">
-                    <Text variant="micro" tone="subtle">3</Text>
-                    <Text variant="micro" tone={draft.k <= 3 || draft.k >= 8 ? "warning" : "success"} style={{ fontWeight: 600 }}>{kHint}</Text>
-                    <Text variant="micro" tone="subtle">9</Text>
-                  </Stack>
-                </Stack>
-              )}
-            </Stack>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "var(--sp-5)" }}>
+              <Stack direction="column" gap={2}>
+                <Text variant="micro" tone="subtle" style={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em" }}>Department</Text>
+                <RadioList options={DEPT_OPTS} value={draft.dept} name="scope-dept" onChange={(v) => update("dept", v)} />
+              </Stack>
+              <Stack direction="column" gap={2}>
+                <Text variant="micro" tone="subtle" style={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em" }}>Channel</Text>
+                <RadioList options={CHANNEL_OPTS} value={draft.channel} name="scope-channel" onChange={(v) => update("channel", v)} />
+              </Stack>
+              <Stack direction="column" gap={2}>
+                <Text variant="micro" tone="subtle" style={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em" }}>Season</Text>
+                <RadioList options={SEASON_OPTS} value={draft.season} name="scope-season" onChange={(v) => update("season", v)} />
+              </Stack>
+            </div>
           </div>
         </div>
       </Stack>
@@ -940,7 +926,11 @@ function StepInput({ draft, setDraft }) {
         <div className="cr-info-box">
           <Stack direction="column" gap={3}>
             <Text variant="body-strong" tone="strong">What happens next</Text>
-            {["Pick the attributes that drive cluster similarity", "Preview cluster shapes and cohesion scores", "Promote the approved set to live"].map((step, i) => (
+            {[
+              "Select the signals that drive cluster similarity",
+              "Agent generates 3 scenarios to compare",
+              "Review, pick, and accept the best fit",
+            ].map((step, i) => (
               <div key={i} className="cr-info-step">
                 <div className="cr-info-step-num">{i + 1}</div>
                 <Text variant="caption" tone="muted">{step}</Text>
@@ -954,16 +944,16 @@ function StepInput({ draft, setDraft }) {
         <div className="cr-last-run-box">
           <Stack direction="column" gap={1}>
             <Text variant="micro" tone="subtle" style={{ textTransform: "uppercase", letterSpacing: ".06em", fontWeight: 700 }}>Last live run</Text>
-            <Text variant="caption" tone="strong" style={{ fontWeight: 700 }}>CR-018 · k-means · k=5</Text>
+            <Text variant="caption" tone="strong" style={{ fontWeight: 700 }}>CR-018 · Behavioral · {STORE_COUNT} stores</Text>
             <Text variant="micro" tone="muted">Cohesion 0.80 · Jan 12, 2026</Text>
             <Text variant="micro" tone="subtle" style={{ marginTop: 2 }}>Author: D. Rivera</Text>
           </Stack>
         </div>
-        <div className="cr-info-box" style={{ background: "var(--teal-pale)", borderColor: "var(--color-teal)" }}>
+        <div className="cr-info-box" style={{ background: "var(--color-primary-soft)", borderColor: "var(--color-primary)" }}>
           <Stack direction="column" gap={1}>
-            <Text variant="caption" style={{ fontWeight: 600, color: color.teal }}>Tip</Text>
-            <Text variant="micro" style={{ color: color.teal }}>
-              Running with the same attributes as CR-018 gives the most comparable cohesion benchmark.
+            <Text variant="caption" style={{ fontWeight: 600, color: "var(--color-primary)" }}>Tip</Text>
+            <Text variant="micro" style={{ color: "var(--color-primary)" }}>
+              Running with the same scope as CR-018 gives the most comparable cohesion benchmark.
             </Text>
           </Stack>
         </div>
@@ -972,112 +962,136 @@ function StepInput({ draft, setDraft }) {
   );
 }
 
-/* ── Step 1 — Attributes ─────────────────────────────────────────────────── */
-function StepAttributes({ draft, setDraft }) {
-  const toggleAttr = (id) =>
-    setDraft((d) => ({ ...d, attrs: d.attrs.includes(id) ? d.attrs.filter((a) => a !== id) : [...d.attrs, id] }));
+/* ── Step 1 — Select Signals ─────────────────────────────────────────────── */
+const SIGNAL_OPTS = [
+  {
+    key: "performance",
+    Icon: BarChart2,
+    label: "Performance",
+    desc: "R13 sqft/wk · Sell-through · Velocity band · On-hand turnover",
+  },
+  {
+    key: "demographics",
+    Icon: Users,
+    label: "Demographics",
+    desc: "Market population · Median income · Housing starts · Store maturity",
+  },
+  {
+    key: "attributes",
+    Icon: Tag,
+    label: "Product attributes",
+    desc: "Top sub-depts · Price tier mix · Format penetration · Category spread",
+  },
+];
 
-  const groups = useMemo(() => {
-    const map = {};
-    CLUSTER_ATTRIBUTES.forEach((a) => { (map[a.group] ??= []).push(a); });
-    return Object.entries(map);
-  }, []);
+const SCENARIO_INFO = [
+  { letter: "A", Icon: MapPin,    name: "Geographic",        desc: "Familiar region-based groupings — fast to explain, limited behavioral depth." },
+  { letter: "B", Icon: TrendingUp, name: "Behavioral",       desc: "Groups stores by how they actually sell — velocity, basket, DIY vs Pro mix.", recommended: true },
+  { letter: "C", Icon: Building2, name: "DC-based Operational", desc: "Logistics-optimised groupings aligned to distribution centre networks." },
+];
 
-  const preview = useMemo(
-    () => previewClusters(draft.k, draft.attrs.length, draft.method),
-    [draft.k, draft.attrs.length, draft.method]
-  );
-
-  const selCount = draft.attrs.length;
-  const selHealth = selCount === 0 ? "error" : selCount < 3 ? "warning" : selCount <= 6 ? "success" : "warning";
+function StepSignals({ draft, setDraft }) {
+  const toggleParam = (key) =>
+    setDraft((d) => ({ ...d, params: { ...d.params, [key]: !d.params[key] } }));
+  const selCount = Object.values(draft.params).filter(Boolean).length;
 
   return (
     <div className="cr-step-grid">
       <Stack direction="column" gap={4}>
         <Stack direction="row" align="center" gap={3}>
-          <Text variant="body-strong" tone="strong">Choose clustering attributes</Text>
-          <Badge variant="subtle" size="small" color={selHealth}
-            label={`${selCount} selected${selCount >= 3 && selCount <= 6 ? " — good" : selCount === 0 ? " — required" : selCount < 3 ? " — add more" : " — consider trimming"}`} />
+          <Text variant="body-strong" tone="strong">Select clustering signals</Text>
+          <Badge
+            variant="subtle" size="small"
+            color={selCount === 0 ? "error" : selCount === 1 ? "warning" : "success"}
+            label={selCount === 0 ? "Select at least one" : `${selCount} selected — ${selCount >= 2 ? "strong signal mix" : "add more for richer results"}`}
+          />
         </Stack>
-        {groups.map(([group, attrs]) => (
-          <div key={group} className="cr-form-section">
-            <div className="cr-form-section-header">
-              <Text variant="caption" tone="muted" style={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em" }}>{group}</Text>
-            </div>
-            <div className="cr-form-section-body">
-              <Stack direction="column" gap={1}>
-                {attrs.map((attr) => {
-                  const selected = draft.attrs.includes(attr.id);
-                  return (
-                    <label key={attr.id} className={`cr-attr-check${selected ? " is-selected" : ""}`}>
-                      <input
-                        type="checkbox"
-                        checked={selected}
-                        onChange={() => toggleAttr(attr.id)}
-                        style={{ position: "absolute", opacity: 0, width: 0, height: 0 }}
-                      />
-                      <div className="cr-attr-checkbox" aria-hidden="true" />
-                      <Stack direction="column" gap={0.5} flex="1 1 auto" style={{ minWidth: 0 }}>
-                        <Stack direction="row" align="center" gap={1}>
-                          <Text variant="caption" tone="strong" style={{ fontWeight: 600 }}>{attr.name}</Text>
-                          {attr.recommended && <span className="cr-recommended-badge">★ Recommended</span>}
-                        </Stack>
-                        <Text variant="micro" tone="subtle">{attr.desc}</Text>
-                      </Stack>
-                    </label>
-                  );
-                })}
-              </Stack>
-            </div>
-          </div>
-        ))}
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "var(--sp-3)" }}>
+          {SIGNAL_OPTS.map((opt) => {
+            const on = draft.params[opt.key];
+            const { Icon } = opt;
+            return (
+              <div
+                key={opt.key}
+                className="cr-form-section"
+                style={{
+                  cursor: "pointer",
+                  borderColor: on ? "var(--color-primary)" : "var(--color-border)",
+                  background: on ? "var(--color-primary-soft)" : "var(--color-surface)",
+                  transition: "all 0.15s",
+                }}
+                onClick={() => toggleParam(opt.key)}
+              >
+                <div className="cr-form-section-body">
+                  <Stack direction="column" gap={3}>
+                    <Stack direction="row" justify="space-between" align="flex-start">
+                      <div style={{
+                        width: 36, height: 36, borderRadius: "var(--r2)",
+                        background: on ? "var(--color-primary)" : "var(--color-surface-alt)",
+                        border: `1px solid ${on ? "var(--color-primary)" : "var(--color-border)"}`,
+                        display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                      }}>
+                        <Icon size={18} color={on ? "white" : "var(--color-text-muted)"} strokeWidth={1.75} />
+                      </div>
+                      <Checkbox checked={on} onChange={() => toggleParam(opt.key)} />
+                    </Stack>
+                    <Stack direction="column" gap={1}>
+                      <Text variant="caption" tone={on ? "primary" : "strong"} style={{ fontWeight: 700 }}>{opt.label}</Text>
+                      <Text variant="micro" tone="subtle" style={{ lineHeight: 1.5 }}>{opt.desc}</Text>
+                    </Stack>
+                  </Stack>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </Stack>
 
-      {/* Right: live preview */}
+      {/* Right: which scenarios will be generated */}
       <Stack direction="column" gap={4}>
         <div className="cr-preview-panel">
           <div className="cr-form-section-header" style={{ background: "var(--color-surface-alt)", borderBottom: "1px solid var(--color-border)", padding: "var(--sp-3) var(--sp-4)" }}>
             <Stack direction="row" align="center" justify="space-between">
-              <Text variant="body-strong" tone="strong">Live preview</Text>
-              <Text variant="micro" tone="muted">{draft.method === "kmeans" ? `k-means · k=${draft.k}` : draft.method} · {selCount} attrs</Text>
+              <Text variant="body-strong" tone="strong">Agent will generate</Text>
+              <Badge variant="subtle" size="small" color="info" label="3 scenarios" />
             </Stack>
           </div>
-          <div style={{ padding: "var(--sp-3) var(--sp-4)", borderBottom: "1px solid var(--color-border)" }}>
-            <NetworkDistBar clusters={preview} />
-            <Stack direction="row" justify="space-between" style={{ marginTop: 6 }}>
-              {preview.map((c) => (
-                <Stack key={c.id} direction="row" align="center" gap={1}>
-                  <div style={{ width: 6, height: 6, borderRadius: "50%", background: c.color, flexShrink: 0 }} />
-                  <Text variant="micro" tone="subtle">{c.stores}</Text>
-                </Stack>
-              ))}
-            </Stack>
-          </div>
-          {preview.map((c) => (
-            <div key={c.id} className="cr-preview-cluster">
-              <div className="cr-preview-cluster-header">
-                <Stack direction="row" align="center" gap={2}>
-                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: c.color, flexShrink: 0 }} />
-                  <Text variant="caption" tone="strong" style={{ fontWeight: 600 }}>{c.name}</Text>
-                </Stack>
-                <Text variant="micro" tone="subtle">{c.stores} stores</Text>
+          {SCENARIO_INFO.map((s) => {
+            const { Icon: SIcon } = s;
+            return (
+              <div key={s.letter} className="cr-preview-cluster">
+                <div className="cr-preview-cluster-header" style={{ alignItems: "flex-start" }}>
+                  <Stack direction="row" align="flex-start" gap={3} style={{ flex: 1 }}>
+                    <div style={{
+                      width: 28, height: 28, borderRadius: "var(--r2)",
+                      background: "var(--color-surface-alt)", border: "1px solid var(--color-border)",
+                      display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                    }}>
+                      <SIcon size={14} color="var(--color-text-muted)" strokeWidth={1.75} />
+                    </div>
+                    <Stack direction="column" gap={0.5} style={{ flex: 1, minWidth: 0 }}>
+                      <Stack direction="row" align="center" gap={2} wrap>
+                        <Text variant="caption" tone="strong" style={{ fontWeight: 700 }}>{s.letter}. {s.name}</Text>
+                        {s.recommended && <Badge variant="subtle" size="small" color="success" label="Recommended" />}
+                      </Stack>
+                      <Text variant="micro" tone="subtle" style={{ lineHeight: 1.4 }}>{s.desc}</Text>
+                    </Stack>
+                  </Stack>
+                </div>
               </div>
-              <CohesionBar value={c.cohesion} />
-            </div>
-          ))}
+            );
+          })}
           <div style={{ padding: "var(--sp-3) var(--sp-4)", background: "var(--color-surface-sunken)", borderTop: "1px solid var(--color-border)" }}>
-            <Text variant="micro" tone="subtle">Cohesion above 0.75 is healthy. Recommended: 3–6 attributes.</Text>
+            <Text variant="micro" tone="subtle">Each scenario is scored on composite quality, statistical fit, and business actionability.</Text>
           </div>
         </div>
 
         <div className="cr-info-box">
           <Stack direction="column" gap={1}>
-            <Text variant="caption" tone="strong" style={{ fontWeight: 600 }}>Attribute guidance</Text>
+            <Text variant="caption" tone="strong" style={{ fontWeight: 600 }}>Signal guidance</Text>
             <Text variant="micro" tone="subtle">
-              Start with the ★ recommended set — these produced the best cohesion in CR-018.
-            </Text>
-            <Text variant="micro" tone="subtle" style={{ marginTop: 4 }}>
-              Adding Format or Geography reduces statistical purity but improves operational interpretability.
+              Performance alone produces the sharpest behavioral clusters. Add Demographics to identify growth markets. Product Attributes adds assortment-level nuance.
             </Text>
           </Stack>
         </div>
@@ -1086,21 +1100,16 @@ function StepAttributes({ draft, setDraft }) {
   );
 }
 
-/* ── Step 2 — Finalize ───────────────────────────────────────────────────── */
-function StepFinalize({ draft, runState, runProgress, runPhase, onRun, nextRunId, onPromote }) {
+/* ── Step 2 — Review & Accept ────────────────────────────────────────────── */
+function StepReview({ draft, runState, runProgress, runStep, onRun, nextRunId, onPromote }) {
   const preview = useMemo(
     () => previewClusters(draft.k, draft.attrs.length, draft.method),
     [draft.k, draft.attrs.length, draft.method]
   );
 
-  const attrNames = useMemo(
-    () => draft.attrs.map((id) => CLUSTER_ATTRIBUTES.find((a) => a.id === id)?.name ?? id),
-    [draft.attrs]
-  );
-
-  /* Managed clusters/stores state — initialised once run completes */
-  const [managedClusters,   setManagedClusters]   = useState(null);
-  const [availableStores,   setAvailableStores]   = useState(null);
+  const [selectedScenario, setSelectedScenario] = useState(null);
+  const [managedClusters, setManagedClusters]   = useState(null);
+  const [availableStores, setAvailableStores]   = useState(null);
 
   useEffect(() => {
     if (runState === "done" && !managedClusters) {
@@ -1114,20 +1123,48 @@ function StepFinalize({ draft, runState, runProgress, runPhase, onRun, nextRunId
     }
   }, [runState, managedClusters, preview]);
 
-  const scopeLabel  = SCOPE_OPTIONS.find((s) => s.id === draft.scope)?.label  ?? draft.scope;
-  const methodLabel = METHOD_OPTIONS.find((m) => m.id === draft.method)?.label ?? draft.method;
-  const overallCohesion = preview.length
-    ? (preview.reduce((s, c) => s + c.cohesion, 0) / preview.length).toFixed(2)
-    : "—";
-  const deltaMap = { C1: +2, C2: -1, C3: 0, C4: +3, C5: -2 };
+  const signalNames = useMemo(
+    () => SIGNAL_OPTS.filter((s) => draft.params[s.key]).map((s) => s.label),
+    [draft.params]
+  );
+
+  const REVIEW_SCENARIOS = [
+    {
+      key: "A",
+      Icon: MapPin,
+      name: "Geographic",
+      subtitle: "Clustered by region and location",
+      ...FD_CLUST_SCENARIOS.A,
+    },
+    {
+      key: "B",
+      Icon: TrendingUp,
+      name: "Behavioral",
+      subtitle: "Groups stores by how they actually sell",
+      recommended: true,
+      ...FD_CLUST_SCENARIOS.B,
+    },
+    {
+      key: "C",
+      Icon: Building2,
+      name: "DC-based Operational",
+      subtitle: "Optimised for logistics & replenishment",
+      ...FD_CLUST_SCENARIOS.C,
+    },
+  ];
+
+  const scopeSummary = [
+    draft.dept !== "All" ? draft.dept : "All depts",
+    draft.channel,
+    draft.season,
+  ].join(" · ");
 
   return (
     <Stack direction="column" gap={5}>
-      {/* ── Main 2-col summary ── */}
+      {/* ── Run summary + controls ── */}
       <div className="cr-step-grid">
-        {/* Left */}
         <Stack direction="column" gap={4}>
-          {/* Run summary */}
+          {/* Summary card */}
           <div className="cr-form-section">
             <div className="cr-form-section-header">
               <Text variant="body-strong" tone="strong">Run summary</Text>
@@ -1135,19 +1172,16 @@ function StepFinalize({ draft, runState, runProgress, runPhase, onRun, nextRunId
             <div className="cr-form-section-body">
               <Stack direction="column" gap={3}>
                 {[
-                  ["Name",       draft.name || "(untitled)"],
-                  ["Scope",      `${scopeLabel} · ${STORE_COUNT} stores`],
-                  ["Method",     draft.method === "kmeans" ? `k-means · k=${draft.k}` : methodLabel],
-                  ["Attributes", `${draft.attrs.length} selected`],
+                  ["Name",    draft.name || "(untitled)"],
+                  ["Scope",   scopeSummary],
+                  ["Signals", `${signalNames.join(", ") || "—"}`],
+                  ["Stores",  `${STORE_COUNT} in scope`],
                 ].map(([k, v]) => (
                   <Stack key={k} direction="row" gap={3} align="flex-start">
-                    <Text variant="caption" tone="muted" style={{ fontWeight: 600, minWidth: 100 }}>{k}</Text>
+                    <Text variant="caption" tone="muted" style={{ fontWeight: 600, minWidth: 80 }}>{k}</Text>
                     <Text variant="caption" tone="strong" style={{ fontWeight: 600 }}>{v}</Text>
                   </Stack>
                 ))}
-                <Stack direction="row" gap={2} wrap style={{ borderTop: "1px solid var(--color-border)", paddingTop: 12 }}>
-                  {attrNames.map((n) => <span key={n} className="cr-cat-pill">{n}</span>)}
-                </Stack>
               </Stack>
             </div>
           </div>
@@ -1155,10 +1189,10 @@ function StepFinalize({ draft, runState, runProgress, runPhase, onRun, nextRunId
           {/* Warning */}
           {runState !== "done" && (
             <div className="cr-warning-banner">
-              <span style={{ fontSize: 16 }}>⚠️</span>
+              <AlertTriangle size={16} color={color.warning} strokeWidth={2} style={{ flexShrink: 0, marginTop: 1 }} />
               <Stack direction="column" gap={0.5}>
                 <Text variant="caption" tone="strong" style={{ fontWeight: 700, color: color.warning }}>Preview only</Text>
-                <Text variant="micro" tone="muted">This run produces a preview cluster set. Live recommendations remain unchanged until you promote it.</Text>
+                <Text variant="micro" tone="muted">This run produces a preview cluster set. Live recommendations remain unchanged until you accept and promote a scenario.</Text>
               </Stack>
             </div>
           )}
@@ -1167,114 +1201,133 @@ function StepFinalize({ draft, runState, runProgress, runPhase, onRun, nextRunId
           {runState === "idle" && (
             <div style={{ textAlign: "center", padding: "var(--sp-8) var(--sp-6)", background: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: "var(--r)", boxShadow: "var(--sh)" }}>
               <Stack direction="column" gap={4} align="center">
-                <div style={{ width: 56, height: 56, borderRadius: "50%", background: "var(--color-primary-soft)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <span style={{ fontSize: 24 }}>⚙️</span>
+                <div style={{
+                  width: 52, height: 52, borderRadius: "var(--r)",
+                  background: "var(--color-primary-soft)", border: "1px solid var(--color-border)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}>
+                  <Cpu size={24} color="var(--color-primary)" strokeWidth={1.5} />
                 </div>
                 <Stack direction="column" gap={1} align="center">
                   <Text variant="body-strong" tone="strong">Ready to run</Text>
-                  <Text variant="caption" tone="muted">Estimated runtime: ~12 seconds</Text>
+                  <Text variant="caption" tone="muted">Agent will generate 3 scenarios — est. ~12 seconds</Text>
                 </Stack>
-                <Button variant="primary" size="large" onClick={onRun}>Run clustering</Button>
+                <Button variant="primary" size="large" onClick={onRun}>
+                  <Play size={14} style={{ marginRight: 6 }} />
+                  Run clustering
+                </Button>
               </Stack>
             </div>
           )}
 
-          {/* Running */}
+          {/* Running — agentic pipeline panel */}
           {runState === "running" && (
-            <div style={{ padding: "var(--sp-6)", background: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: "var(--r)", boxShadow: "var(--sh)" }}>
-              <Stack direction="column" gap={3}>
-                <Stack direction="row" justify="space-between" align="center">
-                  <Text variant="caption" tone="strong" style={{ fontWeight: 600 }}>Running…</Text>
-                  <Text variant="caption" tone="primary" style={{ fontWeight: 700 }}>{Math.round(runProgress)}%</Text>
-                </Stack>
-                <div className="cr-progress-track">
-                  <div className="cr-progress-fill" style={{ width: `${runProgress}%` }} />
+            <div className="cr-agent-run">
+              {/* Header */}
+              <div className="cr-agent-run-head">
+                <div className="cr-agent-bot">
+                  <Bot size={20} strokeWidth={1.5} />
                 </div>
-                <Text variant="micro" tone="muted" style={{ fontStyle: "italic" }}>{runPhase}</Text>
-              </Stack>
-            </div>
-          )}
-
-          {/* Done: results table */}
-          {runState === "done" && (
-            <Stack direction="column" gap={3}>
-              <Stack direction="row" align="center" gap={3}>
-                <Stack direction="column" gap={0}>
-                  <Text variant="body-strong" tone="strong">Preview — {nextRunId}</Text>
-                  <Text variant="micro" tone="muted">k-means · k={draft.k} · {draft.attrs.length} attributes · {STORE_COUNT} stores</Text>
-                </Stack>
-                <Badge variant="subtle" size="small" color="info" label="Preview" />
-              </Stack>
-
-              <NetworkDistBar clusters={preview} />
-
-              <div className="cr-active-set" style={{ overflow: "hidden" }}>
-                <table className="cr-table" style={{ width: "100%" }}>
-                  <thead>
-                    <tr>
-                      <th>Cluster</th>
-                      <th>Stores</th>
-                      <th>Cohesion</th>
-                      <th>Δ vs live</th>
-                      <th>Dominant categories</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {preview.map((c, i) => {
-                      const delta = deltaMap[c.id] ?? 0;
-                      return (
-                        <tr key={c.id}>
-                          <td>
-                            <Stack direction="row" align="center" gap={2}>
-                              <div style={{ width: 8, height: 8, borderRadius: "50%", background: c.color, flexShrink: 0 }} />
-                              <Text variant="caption" tone="strong" style={{ fontWeight: 600 }}>{c.name}</Text>
-                            </Stack>
-                          </td>
-                          <td><Text variant="caption" mono style={{ fontWeight: 700 }}>{c.stores}</Text></td>
-                          <td style={{ minWidth: 120 }}><CohesionBar value={c.cohesion} /></td>
-                          <td>
-                            {delta > 0 ? <span className="cr-delta-pos">+{delta} stores</span>
-                              : delta < 0 ? <span className="cr-delta-neg">{delta} stores</span>
-                              : <span className="cr-delta-neutral">· no change</span>}
-                          </td>
-                          <td><CatPills cats={ACTIVE_CLUSTER_SET.clusters[i]?.dominantCats ?? []} /></td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-
-              <div className="cr-promote-success">
-                <Stack direction="column" gap={1}>
-                  <Text variant="caption" tone="success" style={{ fontWeight: 700 }}>
-                    Cohesion: {overallCohesion} · {Number(overallCohesion) >= 0.75 ? "✓ Healthy — ready to promote" : "⚠ Below threshold — review before promoting"}
+                <div className="cr-agent-run-head-txt">
+                  <Text variant="subheading" tone="primary">
+                    Agent is generating cluster scenarios…
                   </Text>
-                </Stack>
+                  <Text variant="caption" tone="muted">
+                    Step {Math.min(runStep + 1, CLUSTER_PIPELINE.length)} of {CLUSTER_PIPELINE.length} · {CLUSTER_PIPELINE[runStep]?.title ?? ""}
+                  </Text>
+                </div>
+                <Text variant="kpi" tone="primary">{runProgress}%</Text>
               </div>
-            </Stack>
+
+              {/* Progress bar */}
+              <div className="cr-agent-run-bar">
+                <div className="cr-agent-run-bar-fill" style={{ width: `${runProgress}%` }} />
+              </div>
+
+              {/* Step list + console */}
+              <div className="cr-agent-run-grid">
+                {/* Pipeline steps */}
+                <ol className="cr-agent-steps">
+                  {CLUSTER_PIPELINE.map((s, i) => {
+                    const state = i < runStep ? "done" : i === runStep ? "active" : "queued";
+                    const { Icon: SIcon } = s;
+                    return (
+                      <li key={s.id} className={`cr-agent-step is-${state}`}>
+                        <span className={`cr-agent-step-ico tone-${s.tone}`}>
+                          {state === "done"
+                            ? <Check size={12} strokeWidth={2.5} />
+                            : state === "active"
+                              ? <span className="cr-agent-spin" />
+                              : <SIcon size={12} strokeWidth={1.75} />}
+                        </span>
+                        <div className="cr-agent-step-body">
+                          <span className="cr-agent-step-title">{s.title}</span>
+                          <span className="cr-agent-step-sub">
+                            {state === "active"
+                              ? <>{s.sub}<span className="cr-agent-dots" /></>
+                              : state === "done"
+                                ? s.result(draft)
+                                : "Waiting…"}
+                          </span>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ol>
+
+                {/* Terminal console */}
+                <div className="cr-agent-console">
+                  <div className="cr-agent-console-bar">
+                    <span className="cr-agent-dot cr-dot-r" />
+                    <span className="cr-agent-dot cr-dot-y" />
+                    <span className="cr-agent-dot cr-dot-g" />
+                    <span className="cr-agent-console-title">cluster-agent · trace</span>
+                  </div>
+                  <div className="cr-agent-console-body">
+                    <div className="cr-agent-log cr-agent-log-muted">
+                      $ cluster-agent run --dept {draft.dept} --season {draft.season} --stores {STORE_COUNT}
+                    </div>
+                    {CLUSTER_PIPELINE.slice(0, runStep).map((s) => (
+                      <div key={s.id} className="cr-agent-log">
+                        <span className="cr-agent-log-ok">✓</span> {s.title}{" "}
+                        <span className="cr-agent-log-muted">— {s.result(draft)}</span>
+                      </div>
+                    ))}
+                    {runStep < CLUSTER_PIPELINE.length && (
+                      <div className="cr-agent-log cr-agent-log-run">
+                        <span className="cr-agent-log-arrow">▸</span>{" "}
+                        {CLUSTER_PIPELINE[runStep]?.title}
+                        <span className="cr-agent-cursor" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
           )}
         </Stack>
 
-        {/* Right: configuration */}
+        {/* Right: config recap */}
         <div className="cr-info-rail">
           <div className="cr-info-box">
             <Stack direction="column" gap={3}>
               <Text variant="body-strong" tone="strong">Configuration</Text>
               {[
-                ["Method",        draft.method === "kmeans" ? `k-means · k=${draft.k}` : methodLabel],
-                ["Scope",         scopeLabel],
-                ["Attributes",    `${draft.attrs.length} selected`],
-                ["Est. runtime",  "~12 seconds"],
+                ["Dept",    draft.dept],
+                ["Channel", draft.channel],
+                ["Season",  draft.season],
+                ["Est. runtime", "~12 seconds"],
               ].map(([k, v]) => (
                 <Stack key={k} direction="row" justify="space-between" align="flex-start">
                   <Text variant="micro" tone="subtle" style={{ fontWeight: 600 }}>{k}</Text>
                   <Text variant="micro" tone="strong" style={{ fontWeight: 700, textAlign: "right" }}>{v}</Text>
                 </Stack>
               ))}
-              <Stack direction="row" gap={1} wrap style={{ borderTop: "1px solid var(--color-border)", paddingTop: 8 }}>
-                {attrNames.map((n) => <span key={n} className="cr-cat-pill">{n}</span>)}
-              </Stack>
+              {signalNames.length > 0 && (
+                <Stack direction="row" gap={1} wrap style={{ borderTop: "1px solid var(--color-border)", paddingTop: 8 }}>
+                  {signalNames.map((n) => <span key={n} className="cr-cat-pill">{n}</span>)}
+                </Stack>
+              )}
             </Stack>
           </div>
 
@@ -1282,11 +1335,11 @@ function StepFinalize({ draft, runState, runProgress, runPhase, onRun, nextRunId
             <div className="cr-info-box" style={{ background: "var(--color-success-soft)", borderColor: color.success }}>
               <Stack direction="column" gap={2}>
                 <Stack direction="row" align="center" gap={2}>
-                  <span style={{ fontSize: 16 }}>✅</span>
-                  <Text variant="caption" style={{ fontWeight: 700, color: color.success }}>Run complete</Text>
+                  <CheckCircle2 size={16} color={color.success} strokeWidth={2} />
+                  <Text variant="caption" style={{ fontWeight: 700, color: color.success }}>3 scenarios ready</Text>
                 </Stack>
-                <Text variant="micro" style={{ color: color.teal }}>
-                  Explore analytics below, adjust store assignments, then promote when satisfied. CR-018 will be archived.
+                <Text variant="micro" style={{ color: color.success }}>
+                  Compare below, pick the best fit, and accept to use it as the active model. CR-018 will be archived.
                 </Text>
               </Stack>
             </div>
@@ -1294,14 +1347,131 @@ function StepFinalize({ draft, runState, runProgress, runPhase, onRun, nextRunId
         </div>
       </div>
 
-      {/* ── Analytics section — only when run is done ── */}
-      {runState === "done" && managedClusters && (
-        <ClusterAnalyticsPanel
-          managedClusters={managedClusters}
-          setManagedClusters={setManagedClusters}
-          availableStores={availableStores ?? []}
-          setAvailableStores={setAvailableStores}
-        />
+      {/* ── Scenario cards — only when run is done ── */}
+      {runState === "done" && (
+        <Stack direction="column" gap={4}>
+          <Stack direction="row" align="center" gap={3}>
+            <Text variant="heading" tone="strong">Choose a scenario</Text>
+            <Badge variant="subtle" size="small" color="info" label={nextRunId} />
+            {selectedScenario && (
+              <Text variant="caption" tone="muted" style={{ marginLeft: "auto" }}>
+                Selected: <strong>{REVIEW_SCENARIOS.find((s) => s.key === selectedScenario)?.name}</strong>
+              </Text>
+            )}
+          </Stack>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "var(--sp-4)" }}>
+            {REVIEW_SCENARIOS.map((sc) => {
+              const isSelected = selectedScenario === sc.key;
+              const avgCohesion = sc.clusters.length
+                ? (sc.clusters.reduce((s, c) => s + (c.cohesion ?? 0.72), 0) / sc.clusters.length).toFixed(2)
+                : "—";
+              return (
+                <div
+                  key={sc.key}
+                  className={`cr-scenario-card${isSelected ? " is-selected" : ""}`}
+                  onClick={() => setSelectedScenario(sc.key)}
+                >
+                  {/* Card header */}
+                  <div className="cr-scenario-card-header">
+                    <Stack direction="row" align="center" gap={3} style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{
+                        width: 32, height: 32, borderRadius: "var(--r2)",
+                        background: isSelected ? "var(--color-primary)" : "var(--color-surface-alt)",
+                        border: `1px solid ${isSelected ? "var(--color-primary)" : "var(--color-border)"}`,
+                        display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                        transition: "all 0.15s",
+                      }}>
+                        <sc.Icon size={16} color={isSelected ? "white" : "var(--color-text-muted)"} strokeWidth={1.75} />
+                      </div>
+                      <Stack direction="column" gap={0.5} style={{ flex: 1, minWidth: 0 }}>
+                        <Stack direction="row" align="center" gap={2} wrap>
+                          <Text variant="caption" tone="strong" style={{ fontWeight: 700 }}>{sc.key}. {sc.name}</Text>
+                          {sc.recommended && <Badge variant="subtle" size="small" color="success" label="Agent recommended" />}
+                        </Stack>
+                        <Text variant="micro" tone="subtle">{sc.subtitle}</Text>
+                      </Stack>
+                    </Stack>
+                    <div className={`cr-scenario-radio${isSelected ? " is-on" : ""}`} />
+                  </div>
+
+                  {/* Score row */}
+                  <div className="cr-scenario-scores">
+                    {[
+                      { label: "Composite", value: `${sc.composite}%`, color: sc.composite >= 85 ? color.success : sc.composite >= 75 ? color.info : color.warning },
+                      { label: "Statistical", value: `${sc.statScore}%`, color: color.info },
+                      { label: "Business", value: `${sc.bizScore}%`, color: color.primary },
+                    ].map((m) => (
+                      <Stack key={m.label} direction="column" gap={0.5} align="center">
+                        <Text variant="body-strong" style={{ fontWeight: 800, color: m.color, lineHeight: 1 }}>{m.value}</Text>
+                        <Text variant="micro" tone="subtle" style={{ textTransform: "uppercase", letterSpacing: ".05em", fontWeight: 600 }}>{m.label}</Text>
+                      </Stack>
+                    ))}
+                  </div>
+
+                  {/* Clusters */}
+                  <div className="cr-scenario-clusters">
+                    {sc.clusters.slice(0, 4).map((cl) => (
+                      <Stack key={cl.id} direction="row" align="center" gap={2} style={{ padding: "4px 0" }}>
+                        <div style={{ width: 8, height: 8, borderRadius: "50%", background: cl.color, flexShrink: 0 }} />
+                        <Text variant="micro" tone="muted" truncate style={{ flex: 1, minWidth: 0 }}>{cl.label}</Text>
+                        <Text variant="micro" tone="subtle" mono>{cl.stores?.length ?? cl.stores} stores</Text>
+                      </Stack>
+                    ))}
+                    {sc.clusters.length > 4 && (
+                      <Text variant="micro" tone="subtle" style={{ paddingTop: 2 }}>+{sc.clusters.length - 4} more clusters</Text>
+                    )}
+                    {sc.clusters.length === 0 && (
+                      <Text variant="micro" tone="subtle">—</Text>
+                    )}
+                  </div>
+
+                  {/* Note */}
+                  <div className="cr-scenario-note">
+                    <Text variant="micro" tone="subtle" style={{ lineHeight: 1.5 }}>{sc.note}</Text>
+                  </div>
+
+                  {/* Network distribution */}
+                  {sc.clusters.length > 0 && (
+                    <div style={{ padding: "var(--sp-3) var(--sp-4)", borderTop: "1px solid var(--color-border)" }}>
+                      <NetworkDistBar clusters={sc.clusters.map((c) => ({ ...c, stores: c.stores?.length ?? c.stores ?? 0 }))} />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Accept action bar */}
+          <div style={{ display: "flex", alignItems: "center", gap: "var(--sp-4)", padding: "var(--sp-4) var(--sp-5)", background: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: "var(--r)", boxShadow: "var(--sh)" }}>
+            <Stack direction="column" gap={0.5} flex="1 1 auto">
+              <Text variant="caption" tone="muted">
+                {selectedScenario
+                  ? `Accepting scenario ${selectedScenario} (${REVIEW_SCENARIOS.find((s) => s.key === selectedScenario)?.name}) will set it as the active cluster model for assortment curation.`
+                  : "Select a scenario above to continue."}
+              </Text>
+            </Stack>
+            <Button
+              variant="primary"
+              size="medium"
+              disabled={!selectedScenario}
+              onClick={onPromote}
+            >
+              Accept scenario
+              <ChevronRight size={14} style={{ marginLeft: 4 }} />
+            </Button>
+          </div>
+
+          {/* Analytics panel after selecting */}
+          {managedClusters && (
+            <ClusterAnalyticsPanel
+              managedClusters={managedClusters}
+              setManagedClusters={setManagedClusters}
+              availableStores={availableStores ?? []}
+              setAvailableStores={setAvailableStores}
+            />
+          )}
+        </Stack>
       )}
     </Stack>
   );
@@ -1480,32 +1650,40 @@ export default function Clustering({ onNavigate }) {
   const [runState,    setRunState]    = useState("idle");
   const [runProgress, setRunProgress] = useState(0);
   const [runPhase,    setRunPhase]    = useState("");
+  const [runStep,     setRunStep]     = useState(0);
   const [promoted,    setPromoted]    = useState(false);
   const intervalRef = useRef(null);
-  const STEPS = ["Input", "Attributes", "Finalize"];
+  const STEPS = ["Define Scope", "Select Signals", "Review & Accept"];
 
   const openWizard = useCallback(() => {
     setWizardOpen(true); setWizardStep(0);
     setDraft({ ...WIZARD_DEFAULTS });
-    setRunState("idle"); setRunProgress(0); setRunPhase(""); setPromoted(false);
+    setRunState("idle"); setRunProgress(0); setRunPhase(""); setRunStep(0); setPromoted(false);
   }, []);
 
   const closeWizard = useCallback(() => {
-    if (intervalRef.current) clearInterval(intervalRef.current);
+    if (intervalRef.current) clearTimeout(intervalRef.current);
     setWizardOpen(false);
   }, []);
 
-  useEffect(() => () => { if (intervalRef.current) clearInterval(intervalRef.current); }, []);
+  useEffect(() => () => { if (intervalRef.current) clearTimeout(intervalRef.current); }, []);
 
   const startRun = () => {
-    setRunState("running"); setRunProgress(0);
-    let p = 0;
-    intervalRef.current = setInterval(() => {
-      p += Math.random() * 12 + 4;
-      if (p >= 100) { p = 100; clearInterval(intervalRef.current); setRunState("done"); }
-      setRunProgress(p);
-      setRunPhase(RUN_STATUS_PHASES[Math.min(Math.floor((p / 100) * (RUN_STATUS_PHASES.length - 1)), RUN_STATUS_PHASES.length - 1)]);
-    }, 250);
+    setRunState("running"); setRunProgress(0); setRunStep(0);
+    const total = CLUSTER_PIPELINE.length;
+    let step = 0;
+
+    const advance = () => {
+      step += 1;
+      setRunStep(step);
+      setRunProgress(Math.round((step / total) * 100));
+      if (step >= total) {
+        setRunState("done");
+      } else {
+        intervalRef.current = setTimeout(advance, 1500 + Math.random() * 700);
+      }
+    };
+    intervalRef.current = setTimeout(advance, 1400 + Math.random() * 600);
   };
 
   const promoteToLive = () => {
@@ -1515,7 +1693,7 @@ export default function Clustering({ onNavigate }) {
 
   const canContinue =
     wizardStep === 0 ? draft.name.trim().length > 0 :
-    wizardStep === 1 ? draft.attrs.length > 0 : true;
+    wizardStep === 1 ? Object.values(draft.params).some(Boolean) : true;
 
   /* ── Wizard overlay ─────────────────────────────────────────────────────── */
   if (wizardOpen) {
@@ -1526,7 +1704,7 @@ export default function Clustering({ onNavigate }) {
           <Stack direction="column" gap={0.5} style={{ minWidth: 0 }}>
             <Text variant="heading" tone="strong">New cluster run</Text>
             <Text variant="micro" tone="muted">
-              {draft.method === "kmeans" ? `k-means · k=${draft.k}` : METHOD_OPTIONS.find((m) => m.id === draft.method)?.label} · {STORE_COUNT} stores
+              {[draft.dept !== "All" ? draft.dept : "All depts", draft.channel, draft.season].filter(Boolean).join(" · ")} · {STORE_COUNT} stores
             </Text>
           </Stack>
 
@@ -1540,21 +1718,27 @@ export default function Clustering({ onNavigate }) {
           {promoted ? (
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
               <div className="cr-promote-success" style={{ maxWidth: 480 }}>
-                <span style={{ fontSize: 28 }}>🎉</span>
+                <div style={{
+                  width: 48, height: 48, borderRadius: "var(--r)",
+                  background: "var(--color-success-soft)", border: "1px solid " + color.success,
+                  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                }}>
+                  <CheckCircle2 size={24} color={color.success} strokeWidth={1.75} />
+                </div>
                 <Stack direction="column" gap={1}>
-                  <Text variant="heading" style={{ color: color.success }}>CR-019 promoted to live!</Text>
+                  <Text variant="heading" style={{ color: color.success }}>CR-019 accepted and live</Text>
                   <Text variant="caption" tone="muted">Previous set CR-018 has been archived. Returning to dashboard…</Text>
                 </Stack>
               </div>
             </div>
           ) : (
             <>
-              {wizardStep === 0 && <StepInput  draft={draft} setDraft={setDraft} />}
-              {wizardStep === 1 && <StepAttributes draft={draft} setDraft={setDraft} />}
+              {wizardStep === 0 && <StepScope   draft={draft} setDraft={setDraft} />}
+              {wizardStep === 1 && <StepSignals  draft={draft} setDraft={setDraft} />}
               {wizardStep === 2 && (
-                <StepFinalize
+                <StepReview
                   draft={draft} runState={runState} runProgress={runProgress}
-                  runPhase={runPhase} onRun={startRun} nextRunId="CR-019" onPromote={promoteToLive}
+                  runStep={runStep} onRun={startRun} nextRunId="CR-019" onPromote={promoteToLive}
                 />
               )}
             </>
@@ -1568,15 +1752,26 @@ export default function Clustering({ onNavigate }) {
             <div style={{ flex: 1 }} />
             {wizardStep > 0 && (
               <Button variant="secondary" size="medium" onClick={() => setWizardStep((s) => s - 1)}
-                disabled={runState === "running"}>← Back</Button>
+                disabled={runState === "running"}>
+                <ChevronLeft size={14} style={{ marginRight: 4 }} />
+                Back
+              </Button>
             )}
             {wizardStep < 2 && (
               <Button variant="primary" size="medium" onClick={() => setWizardStep((s) => s + 1)}
-                disabled={!canContinue}>Continue →</Button>
+                disabled={!canContinue}>
+                Continue
+                <ChevronRight size={14} style={{ marginLeft: 4 }} />
+              </Button>
             )}
-            {wizardStep === 2 && runState === "idle"    && <Button variant="primary" size="medium" onClick={startRun}>Run clustering</Button>}
-            {wizardStep === 2 && runState === "running" && <Button variant="primary" size="medium" disabled>Running…</Button>}
-            {wizardStep === 2 && runState === "done"    && <Button variant="primary" size="medium" onClick={promoteToLive}>Promote to live →</Button>}
+            {wizardStep === 2 && runState === "idle"    && (
+              <Button variant="primary" size="medium" onClick={startRun}>
+                <Play size={14} style={{ marginRight: 4 }} />
+                Run clustering
+              </Button>
+            )}
+            {wizardStep === 2 && runState === "running" && <Button variant="primary" size="medium" disabled>Generating…</Button>}
+            {wizardStep === 2 && runState === "done"    && <Button variant="secondary" size="medium" onClick={closeWizard}>Close</Button>}
           </div>
         )}
       </div>
@@ -1603,10 +1798,10 @@ export default function Clustering({ onNavigate }) {
                 <Text variant="micro" tone="subtle">{m.l}</Text>
               </div>
             ))}
-            <div className="cr-tabs">
-              <button className={`cr-tab${tab === "runs"      ? " is-active" : ""}`} onClick={() => setTab("runs")}>Cluster Runs</button>
-              <button className={`cr-tab${tab === "scenarios" ? " is-active" : ""}`} onClick={() => setTab("scenarios")}>Scenario Explorer</button>
-            </div>
+            <Stack direction="row" gap={2} align="center">
+              <Chips label="Cluster Runs" isActive={tab === "runs"} onClick={() => setTab("runs")} />
+              <Chips label="Scenario Explorer" isActive={tab === "scenarios"} onClick={() => setTab("scenarios")} />
+            </Stack>
             {tab === "runs" && <Button variant="primary" size="medium" onClick={openWizard}>+ New cluster run</Button>}
           </Stack>
         </Stack>

@@ -12,25 +12,28 @@
  * in My Workspace and committed to agentStore.js.  Catalogue reads it on
  * every mount so it always shows the freshest plan without prop-drilling.
  */
-import React, { useMemo } from "react";
-import { Card, Badge, Table, Button } from "impact-ui";
+import React, { useMemo, useState } from "react";
+import { Card, Badge, Table, Button, FiltersStrip, FilterPanel } from "impact-ui";
+import { Lock, Archive, MapPin, AlertTriangle, TrendingUp, Package, Layers, Star, CheckCircle } from "lucide-react";
+import FdSelect from "../components/FdSelect.jsx";
 import Text from "../components/Text.jsx";
 import Stack from "../components/Stack.jsx";
-import SkuSwatch from "../components/SkuSwatch.jsx";
+import Grid from "../components/Grid.jsx";
+import SkuMedia from "../components/SkuMedia.jsx";
 import {
   CATALOGUE_SKUS, HARD_LOCKED_COUNT, STORE_PICK_COUNT,
   isNatLocked, isClusterAdd,
 } from "../data/catalogue.js";
 import { INTEL_SEED } from "../data/intel.js";
 import { getAgentPlan } from "../data/agentStore.js";
-import { panelSx } from "../styles/panelSx.js";
+import { panelSx, softSx } from "../styles/panelSx.js";
 import "./Catalogue.css";
 
 /* ── Constants ──────────────────────────────────────────────────────────── */
 const TIER_META = {
-  core:    { label: "🔒 Core",        badge: "success", border: "var(--color-success)" },
-  cluster: { label: "🗂 Cluster",     badge: "info",    border: "var(--color-teal)" },
-  store:   { label: "📍 Store pick",  badge: "accent",  border: "transparent" },
+  core:    { Icon: Lock,    label: "Core",       badge: "success", border: "var(--color-success)" },
+  cluster: { Icon: Archive, label: "Cluster",    badge: "info",    border: "var(--color-teal)" },
+  store:   { Icon: MapPin,  label: "Store pick", badge: "accent",  border: "transparent" },
 };
 
 const DEPT_BADGE = {
@@ -70,8 +73,41 @@ export default function Catalogue({ onNavigate }) {
   const plan = getAgentPlan(); // read latest plan from shared store
   const hasAgentRun = !!plan.agentRunAt;
 
-  /* Augment every SKU row with live tier + intel signals */
-  const rows = useMemo(
+  /* ── Filter state ─────────────────────────────────────────────────────── */
+  const [filterPanelOpen, setFilterPanelOpen] = useState(false);
+  const [activeFilterTab, setActiveFilterTab] = useState("product");
+  const [deptFilter, setDeptFilter] = useState([]);
+  const [tierFilter, setTierFilter] = useState([]);
+  const [statusFilter, setStatusFilter] = useState([]);
+
+  const DEPT_OPTIONS = ["Wood", "Tile", "Laminate & Vinyl"].map((d) => ({ value: d, label: d }));
+  const TIER_OPTIONS = [
+    { value: "core", label: "Core" },
+    { value: "cluster", label: "Cluster Adds" },
+    { value: "store", label: "Store Picks" },
+  ];
+  const STATUS_OPTIONS = [
+    { value: "Active", label: "Active" },
+    { value: "Dropped", label: "Dropped" },
+  ];
+
+  const clearFilters = () => { setDeptFilter([]); setTierFilter([]); setStatusFilter([]); };
+
+  /* ── Applied filter tags for FiltersStrip ─────────────────────────────── */
+  const filterTags = useMemo(() => {
+    const tags = [];
+    if (deptFilter.length)
+      tags.push({ id: "dept", label: "Dept", values: deptFilter.map((d, i) => ({ id: i, label: d })) });
+    if (tierFilter.length)
+      tags.push({ id: "tier", label: "Tier", values: tierFilter.map((t, i) => ({ id: i, label: TIER_OPTIONS.find((o) => o.value === t)?.label || t })) });
+    if (statusFilter.length)
+      tags.push({ id: "status", label: "Status", values: statusFilter.map((s, i) => ({ id: i, label: s })) });
+    return tags;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deptFilter, tierFilter, statusFilter]);
+
+  /* Augment every SKU row with live tier + intel signals, then apply page-level filters */
+  const allRows = useMemo(
     () =>
       CATALOGUE_SKUS.map((sku) => {
         const id = parseInt(sku.id, 10);
@@ -87,6 +123,15 @@ export default function Catalogue({ onNavigate }) {
     []
   );
 
+  const rows = useMemo(() => {
+    return allRows.filter((r) => {
+      if (deptFilter.length && !deptFilter.includes(r.dept)) return false;
+      if (tierFilter.length && !tierFilter.includes(r.tier)) return false;
+      if (statusFilter.length && !statusFilter.includes(r.status)) return false;
+      return true;
+    });
+  }, [allRows, deptFilter, tierFilter, statusFilter]);
+
   const coreCount    = rows.filter((r) => r.tier === "core").length;
   const clusterCount = rows.filter((r) => r.tier === "cluster").length;
   const storeCount   = rows.filter((r) => r.tier === "store").length;
@@ -94,8 +139,37 @@ export default function Catalogue({ onNavigate }) {
   /* Column definitions */
   const columns = useMemo(() => [
     {
+      headerName: "Images",
+      colId: "images",
+      width: 92,
+      minWidth: 92,
+      maxWidth: 92,
+      sortable: false,
+      filter: false,
+      resizable: false,
+      suppressMenu: true,
+      cellClass: "media-cell",
+      cellStyle: { display: "flex", alignItems: "center", justifyContent: "center" },
+      cellRenderer: (p) => (
+        <SkuMedia
+          sku={{
+            sku: p.data.id,
+            desc: p.data.name,
+            dept: p.data.dept,
+            subDept: p.data.subDept,
+            cls: p.data.cls,
+            subCls: p.data.subCls,
+            color: p.data.color,
+            finish: p.data.finish,
+            size: p.data.sizeSpec,
+          }}
+          size={40}
+        />
+      ),
+    },
+    {
       headerName: "SKU / Description",
-      minWidth: 300,
+      minWidth: 280,
       flex: 2,
       filter: "agTextColumnFilter",
       valueGetter: (p) => p.data.name,
@@ -104,26 +178,23 @@ export default function Catalogue({ onNavigate }) {
         const signals = p.data.intel || [];
         return (
           <div className="cat-sku-cell">
-            <div className="cat-sku-swatch">
-              <SkuSwatch
-                sku={{ desc: p.data.name, dept: p.data.dept, subDept: p.data.subDept, cls: p.data.cls }}
-                size={28}
-              />
-            </div>
             <div className="cat-sku-info">
               <span className="cat-sku-name">{p.data.name}</span>
               <span className="cat-sku-id">{p.data.id}</span>
               {signals.length > 0 && (
                 <div className="cat-sku-signals">
                   {signals.map((sig, i) => (
-                    <span
+                    <Badge
                       key={i}
-                      className={`cat-signal cat-signal--${sig.direction}`}
-                      title={sig.title}
-                    >
-                      {sig.direction === "opportunity" ? "↑" : "⚠"}{" "}
-                      {sig.title.length > 32 ? sig.title.slice(0, 32) + "…" : sig.title}
-                    </span>
+                      variant="subtle"
+                      size="small"
+                      color={sig.direction === "opportunity" ? "success" : "error"}
+                      isIcon
+                      icon={sig.direction === "opportunity"
+                        ? <TrendingUp size={10} aria-hidden="true" />
+                        : <AlertTriangle size={10} aria-hidden="true" />}
+                      label={sig.title.length > 32 ? sig.title.slice(0, 32) + "…" : sig.title}
+                    />
                   ))}
                 </div>
               )}
@@ -196,7 +267,7 @@ export default function Catalogue({ onNavigate }) {
         const meta = TIER_META[p.value] || TIER_META.store;
         return (
           <div style={{ display: "flex", alignItems: "center", height: "100%" }}>
-            <Badge variant="subtle" size="small" color={meta.badge} label={meta.label} />
+            <Badge variant="subtle" size="small" color={meta.badge} isIcon icon={<meta.Icon size={11} />} label={meta.label} />
           </div>
         );
       },
@@ -211,17 +282,72 @@ export default function Catalogue({ onNavigate }) {
       : { borderLeft: "3px solid transparent" };
   };
 
+  /* ── FilterPanel tab config ───────────────────────────────────────────── */
+  const filterPanelTabs = [
+    {
+      value: "product",
+      title: "Product",
+      icon: <Layers size={16} />,
+      numberOfFilter: deptFilter.length,
+      children: (
+        <Stack direction="column" gap={3} style={{ padding: "var(--sp-4)" }}>
+          <FdSelect
+            label="Department"
+            isMulti
+            isWithSearch
+            value={deptFilter}
+            options={DEPT_OPTIONS}
+            onChange={setDeptFilter}
+            width={320}
+          />
+        </Stack>
+      ),
+    },
+    {
+      value: "tier",
+      title: "Tier",
+      icon: <Star size={16} />,
+      numberOfFilter: tierFilter.length,
+      children: (
+        <Stack direction="column" gap={3} style={{ padding: "var(--sp-4)" }}>
+          <FdSelect
+            label="Tier"
+            isMulti
+            value={tierFilter}
+            options={TIER_OPTIONS}
+            onChange={setTierFilter}
+            width={320}
+          />
+        </Stack>
+      ),
+    },
+    {
+      value: "status",
+      title: "Status",
+      icon: <CheckCircle size={16} />,
+      numberOfFilter: statusFilter.length,
+      children: (
+        <Stack direction="column" gap={3} style={{ padding: "var(--sp-4)" }}>
+          <FdSelect
+            label="Status"
+            isMulti
+            value={statusFilter}
+            options={STATUS_OPTIONS}
+            onChange={setStatusFilter}
+            width={320}
+          />
+        </Stack>
+      ),
+    },
+  ];
+
   return (
     <Stack direction="column" gap={4}>
-      {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <Card sx={panelSx}>
+      <Card size="small" sx={panelSx}>
         <Stack direction="row" justify="space-between" align="center" gap={3} wrap>
           <Stack direction="column" gap={1} flex="1 1 auto" style={{ minWidth: 0 }}>
             <Text variant="title">Catalogue</Text>
-            <Text variant="caption" tone="muted">
-              FW 2025 locked · {CATALOGUE_SKUS.length} SKUs · Full product superset across all locations ·
-              Submit scope in My Workspace to generate curation recommendations
-            </Text>
+            <Text variant="caption" tone="muted">FW 2025 · {CATALOGUE_SKUS.length} SKUs</Text>
           </Stack>
           <Stack direction="row" gap={2} align="center" wrap justify="flex-end">
             {hasAgentRun && (
@@ -234,46 +360,76 @@ export default function Catalogue({ onNavigate }) {
         </Stack>
       </Card>
 
+      {/* ── Filters strip ──────────────────────────────────────────────────── */}
+      <FiltersStrip
+        filterTags={filterTags}
+        filterButtonLabel="All Filters"
+        filterButtonClick={() => setFilterPanelOpen(true)}
+        hideSelectedFilterBadge
+        recentFilters={[]}
+        savedFiltersBadge={[]}
+        savedFilterLists={[]}
+        selectedFilter={null}
+        setSelectedFilter={() => {}}
+        handleBadgeChange={() => {}}
+        handleSavedRecentFilterDropdown={() => {}}
+      />
+      <FilterPanel
+        title="Catalogue Filters"
+        size="medium"
+        anchor="right"
+        isOpen={filterPanelOpen}
+        setIsOpen={setFilterPanelOpen}
+        active={activeFilterTab}
+        setActive={setActiveFilterTab}
+        filters={filterPanelTabs}
+        primaryButtonLabel="Apply"
+        onPrimaryButtonClick={() => setFilterPanelOpen(false)}
+        secondaryButtonLabel="Clear all"
+        onSecondaryButtonClick={() => { clearFilters(); }}
+      />
+
       {/* ── Active PLR Review banner ────────────────────────────────────────── */}
-      <div className="cat-plr-banner">
-        <div className="cat-plr-banner__left">
-          <span className="cat-plr-banner__label">Active PLR Review</span>
-          <span className="cat-plr-banner__name">{ACTIVE_PLR.name}</span>
-          <span className="cat-plr-banner__meta">
-            {ACTIVE_PLR.dept} · {ACTIVE_PLR.season} · Updated: {ACTIVE_PLR.updated}
-          </span>
-        </div>
-        <div className="cat-plr-banner__actions">
-          <Button variant="primary" size="small" onClick={() => onNavigate?.("national")}>
-            National Core →
-          </Button>
-          <Button variant="secondary" size="small" onClick={() => onNavigate?.("approval")}>
-            PLR Status →
-          </Button>
-        </div>
-      </div>
+      <Card size="small" sx={{ ...panelSx, borderLeft: "3px solid var(--color-success)" }}>
+        <Stack direction="row" justify="space-between" align="center" gap={3} wrap>
+          <Stack direction="column" gap={1} flex="1 1 auto" style={{ minWidth: 0 }}>
+            <Text variant="body-strong" tone="strong">{ACTIVE_PLR.name}</Text>
+            <Text variant="micro" tone="muted">{ACTIVE_PLR.dept} · {ACTIVE_PLR.season} · {ACTIVE_PLR.updated}</Text>
+          </Stack>
+          <Stack direction="row" gap={2} align="center" wrap justify="flex-end">
+            <Button variant="primary" size="small" onClick={() => onNavigate?.("national")}>
+              National Core →
+            </Button>
+            <Button variant="secondary" size="small" onClick={() => onNavigate?.("approval")}>
+              PLR Status →
+            </Button>
+          </Stack>
+        </Stack>
+      </Card>
 
       {/* ── Tier strip ─────────────────────────────────────────────────────── */}
-      <div className="cat-tier-strip">
+      <Grid columns={4} gap={3}>
         {[
-          { label: "National Core", n: coreCount,              icon: "🔒", color: "var(--color-success)" },
-          { label: "Cluster Adds",  n: clusterCount,           icon: "🗂", color: "var(--color-teal)" },
-          { label: "Store Picks",   n: storeCount,             icon: "📍", color: "var(--color-accent)" },
-          { label: "Total SKUs",    n: CATALOGUE_SKUS.length,  icon: "📦", color: "var(--color-text-muted)" },
+          { label: "National Core", n: coreCount,             Icon: Lock,    color: "var(--color-success)",   tone: "success" },
+          { label: "Cluster Adds",  n: clusterCount,          Icon: Archive, color: "var(--color-teal)",      tone: "info" },
+          { label: "Store Picks",   n: storeCount,            Icon: MapPin,  color: "var(--color-accent)",    tone: "default" },
+          { label: "Total SKUs",    n: CATALOGUE_SKUS.length, Icon: Package, color: "var(--color-text-muted)", tone: "muted" },
         ].map((t) => (
-          <div key={t.label} className="cat-tier-chip" style={{ "--tc": t.color }}>
-            <span className="cat-tier-icon">{t.icon}</span>
-            <span className="cat-tier-n">{t.n}</span>
-            <span className="cat-tier-lbl">{t.label}</span>
-          </div>
+          <Card size="small" key={t.label} sx={{ ...softSx, borderTop: `3px solid ${t.color}`, padding: "var(--sp-3) var(--sp-4)" }}>
+            <Stack direction="column" gap={1}>
+              <t.Icon size={18} aria-hidden="true" style={{ color: t.color }} />
+              <Text variant="kpi" tone={t.tone}>{t.n}</Text>
+              <Text variant="micro" tone="muted">{t.label}</Text>
+            </Stack>
+          </Card>
         ))}
-      </div>
+      </Grid>
 
       {/* ── SKU Table ──────────────────────────────────────────────────────── */}
       <Table
         cardContainer
         rowHeight={56}
-        tableHeader={`All ${CATALOGUE_SKUS.length} Catalogue SKUs`}
+        tableHeader=""
         columnDefs={columns}
         rowData={rows}
         domLayout="autoHeight"

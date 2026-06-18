@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { Card, Button, Badge, Table, Input, TextArea, EmptyState } from "impact-ui";
+import { Card, Button, Badge, Table, Input, TextArea, EmptyState, Tabs, FiltersStrip, FilterPanel } from "impact-ui";
 import FdSelect from "../components/FdSelect.jsx";
 import Text from "../components/Text.jsx";
 import Stack from "../components/Stack.jsx";
@@ -20,13 +20,8 @@ import { panelSx, softSx } from "../styles/panelSx.js";
 
 const paneSx = { ...panelSx, padding: 0, overflow: "hidden" };
 
-const VEL_COLOR = { A: color.success, B: color.info, C: color.warning, D: color.error };
-const VEL_PILL = {
-  A: { bg: "#ECFDF5", fg: "#059669" },
-  B: { bg: "#EFF6FF", fg: "#2563EB" },
-  C: { bg: "#FFFBEB", fg: "#D97706" },
-  D: { bg: "#FEF2F2", fg: "#DC2626" },
-};
+const VEL_COLOR  = { A: color.success, B: color.info, C: color.warning, D: color.error };
+const VEL_BADGE  = { A: "success", B: "info", C: "warning", D: "error" };
 
 const REGION_OPTIONS = [{ value: "all", label: "All regions" }, ...MPI_REGIONS.map((r) => ({ value: r, label: r }))];
 const DEPT_OPTIONS   = [{ value: "all", label: "All depts"   }, ...MPI_DEPTS.map((d) => ({ value: d, label: d }))];
@@ -47,10 +42,16 @@ function Banner({ tone, icon, children }) {
   );
 }
 
-/* ── Velocity pill ───────────────────────────────────────────────────────── */
+/* ── Velocity badge ──────────────────────────────────────────────────────── */
 function VelPill({ vel }) {
-  const c = VEL_PILL[vel] || { bg: "#F1F5F9", fg: "#64748B" };
-  return <span className="mpi-vel-pill" style={{ background: c.bg, color: c.fg }}>{vel || "—"}</span>;
+  return (
+    <Badge
+      variant="subtle"
+      size="small"
+      color={VEL_BADGE[vel] || "neutral"}
+      label={vel || "—"}
+    />
+  );
 }
 
 export default function Mpi() {
@@ -61,6 +62,16 @@ export default function Mpi() {
   const [markdownOverrides, setMarkdownOverrides] = useState({});
   const [expandedSku, setExpandedSku]     = useState(null);
   const [exitPricesSaved, setExitPricesSaved] = useState(false);
+  const [filterPanelOpen, setFilterPanelOpen] = useState(false);
+  const [activeFilterTab, setActiveFilterTab] = useState("region");
+
+  /* ── Derived filter tags for strip ───────────────────────────────────── */
+  const mpiFilterTags = useMemo(() => {
+    const tags = [];
+    if (regionFilter !== "all") tags.push({ id: "region", label: "Region", values: [{ id: 1, label: regionFilter }] });
+    if (deptFilter !== "all") tags.push({ id: "dept", label: "Dept", values: [{ id: 1, label: deptFilter }] });
+    return tags;
+  }, [regionFilter, deptFilter]);
 
   /* ── Summary metrics ─────────────────────────────────────────────────── */
   const totalNPI      = MPI_STORE_STATS.reduce((s, x) => s + x.npiOH, 0);
@@ -502,91 +513,135 @@ export default function Mpi() {
   /* ════════════════════════════════════════════════════════════════════════
      TAB BAR — updated labels matching HTML v6
   ════════════════════════════════════════════════════════════════════════ */
-  const TAB_LABELS = [
-    "Tab 1: Store NPI",
-    "Tab 2: SKU Detail",
-    "Tab 3: Dropped Sales",
-    `Tab 4: Pushback${openPushbacks ? ` (${openPushbacks})` : ""}`,
-    "Tab 5: Exit Pricing ✦",
-  ];
-
   const TAB_PANELS = [storeNpiTab, skuDetailTab, droppedSalesTab, pushbackTab, exitPricingTab];
 
-  /* ── KPI metrics for dark header ─────────────────────────────────────── */
+  /* ── KPI metrics ─────────────────────────────────────────────────────── */
   const headerMetrics = [
-    { v: MPI_DROPS.length.toLocaleString(), l: "Total drops",          sub: "this PLR cycle",        c: "#FCA5A5" },
-    { v: k$(totalNPI),                       l: "NPI created",           sub: "discontinued on-hand",  c: "#FCD34D" },
-    { v: `${avgNpiPct.toFixed(1)}%`,         l: "Avg NPI %",             sub: "of total on-hand",      c: avgNpiPct >= NPI_THRESHOLD ? "#FCA5A5" : "#6EEDB8" },
-    { v: aboveWaterline,                     l: "Drops above waterline", sub: `>${WATERLINE} sqft/wk/st`, c: "#FCA5A5" },
-    { v: openPushbacks || "—",               l: "Open pushbacks",        sub: "merchant comments",     c: openPushbacks ? "#FCD34D" : "#4A7A4A" },
+    { v: MPI_DROPS.length.toLocaleString(), l: "Total drops",          sub: "this PLR cycle",          badge: "error"   },
+    { v: k$(totalNPI),                       l: "NPI created",           sub: "discontinued on-hand",    badge: "warning" },
+    { v: `${avgNpiPct.toFixed(1)}%`,         l: "Avg NPI %",             sub: "of total on-hand",        badge: avgNpiPct >= NPI_THRESHOLD ? "error" : "success" },
+    { v: aboveWaterline,                     l: "Drops above waterline", sub: `>${WATERLINE} sqft/wk/st`,badge: "error"   },
+    { v: openPushbacks || 0,                 l: "Open pushbacks",        sub: "merchant comments",       badge: openPushbacks ? "warning" : "neutral" },
+  ];
+
+  const tabNames = [
+    { label: "Store NPI",      value: 0 },
+    { label: "SKU Detail",     value: 1 },
+    { label: "Dropped Sales",  value: 2 },
+    { label: openPushbacks ? `Pushback (${openPushbacks})` : "Pushback", value: 3 },
+    { label: "Exit Pricing ✦", value: 4 },
   ];
 
   return (
-    <div className="mpi-root">
+    <Stack gap={4}>
 
-      {/* ── Dark navy page header ─────────────────────────────────────────── */}
-      <div className="mpi-page-header">
-        <div className="mpi-page-header-top">
-          <div>
-            <div className="mpi-page-title">NPI Reconciliation</div>
-            <div className="mpi-page-subtitle">
-              WOOD APRIL - 2026 &nbsp;·&nbsp; Drop window closes Apr 23 &nbsp;·&nbsp; Review and push back before final submission
-            </div>
-          </div>
-          <div className="mpi-alert-pills">
-            {aboveWaterline > 0 && (
-              <span className="mpi-alert-pill mpi-alert-pill--red">⚠ {aboveWaterline} drops above waterline</span>
-            )}
-            {flaggedStores > 0 && (
-              <span className="mpi-alert-pill mpi-alert-pill--amber">{flaggedStores} stores &gt;{NPI_THRESHOLD}% NPI</span>
-            )}
-          </div>
-        </div>
+      {/* ── Page header Card ──────────────────────────────────────────────── */}
+      <Card sx={panelSx}>
+        <Stack gap={3}>
+          <Stack direction="row" justify="space-between" align="flex-start" gap={3} wrap>
+            <Stack gap={1}>
+              <Text variant="title" style={{ fontWeight: 800, letterSpacing: "-0.3px" }}>
+                NPI Reconciliation
+              </Text>
+              <Text variant="caption" tone="muted">
+                WOOD APRIL · 2026 &nbsp;·&nbsp; Drop window closes Apr 23 &nbsp;·&nbsp; Review pushbacks before final submission
+              </Text>
+            </Stack>
+            <Stack direction="row" gap={2} align="center">
+              {aboveWaterline > 0 && (
+                <Badge variant="subtle" color="error" label={`⚠ ${aboveWaterline} drops above waterline`} />
+              )}
+              {flaggedStores > 0 && (
+                <Badge variant="subtle" color="warning" label={`${flaggedStores} stores >${NPI_THRESHOLD}% NPI`} />
+              )}
+            </Stack>
+          </Stack>
 
-        {/* Core / BG exclusion note */}
-        <div className="mpi-core-banner">
-          🔒 <strong>Core &amp; BG items excluded</strong> from all drop analysis — mandatory in all stores · cannot be dropped
-        </div>
+          {/* Core exclusion info */}
+          <Stack direction="row" align="center" gap={2} paddingX={3} paddingY={2}
+            style={{ background: "var(--color-success-soft)", border: "1px solid var(--color-success-border)", borderRadius: "var(--r2)" }}>
+            <Text variant="caption" tone="success">
+              🔒 <strong>Core &amp; BG items excluded</strong> from all drop analysis — mandatory in all stores · cannot be dropped
+            </Text>
+          </Stack>
 
-        {/* 5 KPI tiles */}
-        <div className="mpi-kpi-strip">
-          {headerMetrics.map((m) => (
-            <div key={m.l} className="mpi-kpi-tile">
-              <div className="mpi-kpi-value" style={{ color: m.c }}>{m.v}</div>
-              <div className="mpi-kpi-label">{m.l}</div>
-              <div className="mpi-kpi-sub">{m.sub}</div>
-            </div>
-          ))}
-        </div>
-      </div>
+          {/* KPI strip */}
+          <Grid columns={5} gap={3}>
+            {headerMetrics.map((m) => (
+              <Card key={m.l} sx={{ ...panelSx, padding: "var(--sp-3)", background: "var(--color-surface-alt)", boxShadow: "none" }}>
+                <Stack gap={1} align="center" style={{ textAlign: "center" }}>
+                  <Text variant="kpi" tone={m.badge === "error" ? "error" : m.badge === "warning" ? "warning" : m.badge === "success" ? "success" : "strong"}>
+                    {m.v}
+                  </Text>
+                  <Text variant="micro" tone="default" style={{ fontWeight: 700 }}>{m.l}</Text>
+                  <Text variant="micro" tone="subtle">{m.sub}</Text>
+                </Stack>
+              </Card>
+            ))}
+          </Grid>
+        </Stack>
+      </Card>
 
-      {/* ── Filter + Tab bar ─────────────────────────────────────────────── */}
-      <div className="mpi-filter-tab-bar">
-        <div className="mpi-filters">
-          <span className="mpi-filter-label">Region</span>
-          <FdSelect value={regionFilter} options={REGION_OPTIONS} onChange={setRegionFilter} width={160} />
-          <span className="mpi-filter-label">Dept</span>
-          <FdSelect value={deptFilter} options={DEPT_OPTIONS} onChange={setDeptFilter} width={180} />
-        </div>
-        <div className="mpi-tab-bar">
-          {TAB_LABELS.map((label, i) => (
-            <button
-              key={i}
-              type="button"
-              className={`mpi-tab-btn ${tab === i ? "mpi-tab-btn--active" : ""}`}
-              onClick={() => setTab(i)}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
+      {/* ── Filters strip ──────────────────────────────────────────────────── */}
+      <FiltersStrip
+        filterTags={mpiFilterTags}
+        filterButtonLabel="All Filters"
+        filterButtonClick={() => setFilterPanelOpen(true)}
+        hideSelectedFilterBadge
+        recentFilters={[]}
+        savedFiltersBadge={[]}
+        savedFilterLists={[]}
+        selectedFilter={null}
+        setSelectedFilter={() => {}}
+        handleBadgeChange={() => {}}
+        handleSavedRecentFilterDropdown={() => {}}
+      />
+      <FilterPanel
+        title="NPI Filters"
+        size="medium"
+        anchor="right"
+        isOpen={filterPanelOpen}
+        setIsOpen={setFilterPanelOpen}
+        active={activeFilterTab}
+        setActive={setActiveFilterTab}
+        filters={[
+          {
+            value: "region",
+            title: "Region",
+            numberOfFilter: regionFilter !== "all" ? 1 : 0,
+            children: (
+              <Stack direction="column" gap={3} style={{ padding: "var(--sp-4)" }}>
+                <FdSelect label="Region" value={regionFilter} options={REGION_OPTIONS} onChange={setRegionFilter} width={320} />
+              </Stack>
+            ),
+          },
+          {
+            value: "dept",
+            title: "Department",
+            numberOfFilter: deptFilter !== "all" ? 1 : 0,
+            children: (
+              <Stack direction="column" gap={3} style={{ padding: "var(--sp-4)" }}>
+                <FdSelect label="Department" value={deptFilter} options={DEPT_OPTIONS} onChange={setDeptFilter} width={320} />
+              </Stack>
+            ),
+          },
+        ]}
+        primaryButtonLabel="Apply"
+        onPrimaryButtonClick={() => setFilterPanelOpen(false)}
+        secondaryButtonLabel="Clear all"
+        onSecondaryButtonClick={() => { setRegionFilter("all"); setDeptFilter("all"); }}
+      />
 
-      {/* ── Scrollable tab content ────────────────────────────────────────── */}
-      <div className="mpi-content">
-        {TAB_PANELS[tab]}
-      </div>
+      {/* ── Tabs ────────────────────────────────────────────────────────────── */}
+      <Card sx={panelSx}>
+        <Tabs
+          tabNames={tabNames}
+          tabPanels={TAB_PANELS}
+          value={tab}
+          onChange={(val) => setTab(val)}
+        />
+      </Card>
 
-    </div>
+    </Stack>
   );
 }

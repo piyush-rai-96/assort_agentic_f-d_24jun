@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { Card, Button, Badge, Checkbox, Input } from "impact-ui";
+import { Card, Button, Badge, Checkbox, Input, Chips, FiltersStrip, FilterPanel } from "impact-ui";
+import { X, Pencil, ClipboardList } from "lucide-react";
 import Text from "../components/Text.jsx";
 import Stack from "../components/Stack.jsx";
 import Grid from "../components/Grid.jsx";
@@ -31,6 +32,8 @@ export default function PlrCalendar() {
   const [editDraft, setEditDraft] = useState(emptyFlow);
   const [addFor, setAddFor] = useState(null); // plrId
   const [addDraft, setAddDraft] = useState(emptyFlow);
+  const [filterPanelOpen, setFilterPanelOpen] = useState(false);
+  const [activeFilterTab, setActiveFilterTab] = useState("dept");
 
   const allItems = useMemo(() => Object.values(plrItems), [plrItems]);
   const filteredItems = useMemo(() => {
@@ -44,6 +47,16 @@ export default function PlrCalendar() {
 
   const openCount = allItems.filter((p) => p.status === "Open").length;
   const closedCount = allItems.filter((p) => p.status === "Closed").length;
+
+  const plrFilterTags = useMemo(() => {
+    const tags = [];
+    if (deptFilter !== "All") {
+      tags.push({ id: "dept", label: "Department", values: [{ id: 1, label: deptFilter }] });
+    }
+    return tags;
+  }, [deptFilter]);
+
+  const DEPT_FD_OPTIONS = PLR_DEPTS.map((d) => ({ value: d, label: d }));
 
   /* ── New-PLR form derived values ── */
   const calWeeks = useMemo(
@@ -121,34 +134,66 @@ export default function PlrCalendar() {
     <Stack direction="column" gap={4}>
       {/* Header */}
       <Card sx={panelSx}>
-        <Stack direction="column" gap={3}>
-          <Stack direction="row" justify="space-between" align="flex-start" gap={4} wrap>
-            <Stack direction="column" gap={1} flex="1 1 auto" style={{ minWidth: 0 }}>
-              <Text variant="title">PLR Calendar</Text>
-              <Text variant="caption" tone="muted">Each PLR = one assortment period · department · month · weekly planning windows</Text>
-            </Stack>
-            <Button variant="primary" size="medium" onClick={() => setShowForm((v) => !v)}>
-              {showForm ? "✕ Close" : "+ Create new PLR"}
-            </Button>
+        <Stack direction="row" justify="space-between" align="flex-start" gap={4} wrap>
+          <Stack direction="column" gap={1} flex="1 1 auto" style={{ minWidth: 0 }}>
+            <Text variant="title">PLR Calendar</Text>
+            <Text variant="caption" tone="muted" />
           </Stack>
-          <Stack direction="row" gap={3} wrap style={{ paddingTop: "var(--sp-2)", borderTop: "1px solid var(--color-border)" }}>
-            {DEPT_FILTERS.map((d) => {
-              const cnt = d === "All" ? allItems.length : allItems.filter((p) => p.dept === d).length;
-              return (
-                <Button key={d} variant={deptFilter === d ? "primary" : "secondary"} size="small" onClick={() => setDeptFilter(d)}>
-                  {d}{cnt ? ` (${cnt})` : ""}
-                </Button>
-              );
-            })}
-          </Stack>
+          <Button variant="primary" size="medium" onClick={() => setShowForm((v) => !v)}>
+            {showForm ? <><X size={13} aria-hidden="true" /> Close</> : "+ Create new PLR"}
+          </Button>
         </Stack>
       </Card>
+
+      {/* Filters strip */}
+      <FiltersStrip
+        filterTags={plrFilterTags}
+        filterButtonLabel="All Filters"
+        filterButtonClick={() => setFilterPanelOpen(true)}
+        hideSelectedFilterBadge
+        recentFilters={[]}
+        savedFiltersBadge={[]}
+        savedFilterLists={[]}
+        selectedFilter={null}
+        setSelectedFilter={() => {}}
+        handleBadgeChange={() => {}}
+        handleSavedRecentFilterDropdown={() => {}}
+      />
+      <FilterPanel
+        title="PLR Filters"
+        size="medium"
+        anchor="right"
+        isOpen={filterPanelOpen}
+        setIsOpen={setFilterPanelOpen}
+        active={activeFilterTab}
+        setActive={setActiveFilterTab}
+        filters={[
+          {
+            value: "dept",
+            title: "Department",
+            numberOfFilter: deptFilter !== "All" ? 1 : 0,
+            children: (
+              <Stack direction="column" gap={3} style={{ padding: "var(--sp-4)" }}>
+                <FdSelect
+                  label="Department"
+                  value={deptFilter === "All" ? "" : deptFilter}
+                  options={[{ value: "", label: "All" }, ...DEPT_FD_OPTIONS]}
+                  onChange={(v) => setDeptFilter(v || "All")}
+                  width={320}
+                />
+              </Stack>
+            ),
+          },
+        ]}
+        primaryButtonLabel="Apply"
+        onPrimaryButtonClick={() => setFilterPanelOpen(false)}
+      />
 
       {/* New PLR form */}
       {showForm ? (
         <Card sx={{ ...panelSx, background: "var(--color-surface-alt)" }}>
           <Stack direction="column" gap={3}>
-            <Text variant="overline" tone="primary">Define new PLR</Text>
+            <Text variant="overline" tone="primary" />
             <Grid columns="repeat(auto-fit, minmax(180px, 1fr))" gap={3} align="end">
               <FdSelect label="Department" value={draft.dept} options={PLR_DEPTS.map((d) => ({ value: d, label: d }))} onChange={(v) => setDraft((p) => ({ ...p, dept: v }))} />
               <FdSelect label="Month" value={draft.month} options={MONTHS.map((m) => ({ value: m, label: m }))} onChange={(v) => setDraft((p) => ({ ...p, month: v, startWk: 0, endWk: undefined }))} />
@@ -162,7 +207,7 @@ export default function PlrCalendar() {
                 {calWeeks.length ? (
                   <FdSelect value={draft.startWk} options={weekOptions} onChange={(v) => setDraft((p) => ({ ...p, startWk: v, endWk: p.endWk === undefined || p.endWk < v ? v : p.endWk }))} />
                 ) : (
-                  <div className="plr-summary"><Text variant="caption" tone="subtle">Select month &amp; year first</Text></div>
+                  <div className="plr-summary" />
                 )}
               </Stack>
               <Stack direction="column" gap={1}>
@@ -170,7 +215,7 @@ export default function PlrCalendar() {
                 {calWeeks.length ? (
                   <FdSelect value={draft.endWk} options={weekOptions} onChange={(v) => setDraft((p) => ({ ...p, endWk: v, startWk: v < p.startWk ? v : p.startWk }))} />
                 ) : (
-                  <div className="plr-summary"><Text variant="caption" tone="subtle">Select month &amp; year first</Text></div>
+                  <div className="plr-summary" />
                 )}
               </Stack>
               <Stack direction="column" gap={1}>
@@ -180,7 +225,7 @@ export default function PlrCalendar() {
                   {selStart && selEnd ? (
                     <Text variant="micro" tone="muted" mono>{selStart} → {selEnd}</Text>
                   ) : (
-                    <Text variant="micro" tone="subtle">Select start &amp; end week</Text>
+                  <Text variant="micro" tone="subtle" />
                   )}
                 </div>
               </Stack>
@@ -209,8 +254,8 @@ export default function PlrCalendar() {
 
             <Stack direction="row" gap={3} align="center" wrap>
               <Button variant="primary" size="medium" onClick={saveNew}>Save PLR</Button>
-              <Button variant="secondary" size="medium" onClick={() => { setShowForm(false); setDraft(emptyDraft); }}>✕ Cancel</Button>
-              <Text variant="micro" tone="subtle">One PLR = one row · phases are optional and added after saving</Text>
+              <Button variant="secondary" size="medium" onClick={() => { setShowForm(false); setDraft(emptyDraft); }}><X size={13} aria-hidden="true" /> Cancel</Button>
+              <Text variant="micro" tone="subtle" />
             </Stack>
           </Stack>
         </Card>
@@ -220,9 +265,9 @@ export default function PlrCalendar() {
       {!filteredItems.length ? (
         <Card sx={panelSx}>
           <Stack direction="column" gap={1} align="center" paddingY={6}>
-            <Text variant="heading" tone="subtle">📋</Text>
+            <ClipboardList size={24} aria-hidden="true" style={{ color: "var(--color-text-subtle)" }} />
             <Text variant="body-strong" tone="muted">No PLRs found</Text>
-            <Text variant="caption" tone="subtle">Try a different department filter or create a new PLR.</Text>
+            <Text variant="caption" tone="subtle" />
           </Stack>
         </Card>
       ) : (
@@ -256,7 +301,7 @@ export default function PlrCalendar() {
                       : <Badge variant="stroke" size="small" color="default" label="Closed" />}
                   </div>
                   <div onClick={(e) => e.stopPropagation()}>
-                    <Button variant="text" size="small" onClick={() => deleteItem(p.id)}>✕</Button>
+                            <Button variant="text" size="small" onClick={() => deleteItem(p.id)} aria-label="Delete PLR"><X size={13} aria-hidden="true" /></Button>
                   </div>
                 </Grid>
 
@@ -276,7 +321,7 @@ export default function PlrCalendar() {
                                 <Input label="End" type="date" value={editDraft.end} onChange={(e) => setEditDraft((d) => ({ ...d, end: e.target.value }))} size="small" fullWidth />
                                 <Stack direction="row" gap={2} align="flex-end" style={{ paddingBottom: 2 }}>
                                   <Button variant="primary" size="small" onClick={() => saveEditFlow(p.id, f.id)}>Save</Button>
-                                  <Button variant="secondary" size="small" onClick={() => setEditKey(null)}>✕</Button>
+                                  <Button variant="secondary" size="small" onClick={() => setEditKey(null)} aria-label="Cancel edit"><X size={13} aria-hidden="true" /></Button>
                                 </Stack>
                               </div>
                             </Stack>
@@ -300,7 +345,7 @@ export default function PlrCalendar() {
                             <Text variant="micro" tone={f.done ? "success" : "subtle"} style={{ fontWeight: f.done ? 700 : 400 }}>{f.done ? "Done" : "Pending"}</Text>
                           </Stack>
                           <Stack direction="row" gap={2}>
-                            <Button variant="text" size="small" onClick={() => startEditFlow(p.id, f)}>✎</Button>
+                            <Button variant="text" size="small" onClick={() => startEditFlow(p.id, f)} aria-label="Edit phase"><Pencil size={12} aria-hidden="true" /></Button>
                             <Button variant="text" size="small" onClick={() => deleteFlow(p.id, f.id)}>✕</Button>
                           </Stack>
                         </Grid>
@@ -343,7 +388,7 @@ export default function PlrCalendar() {
           <Text variant="caption" tone="success">{openCount} open</Text>
           <Text variant="caption" tone="subtle">·</Text>
           <Text variant="caption" tone="muted">{closedCount} closed</Text>
-          <Text variant="micro" tone="subtle" style={{ marginLeft: "auto" }}>Each PLR = one assortment period · department · month · weekly planning windows</Text>
+          <Text variant="micro" tone="subtle" style={{ marginLeft: "auto" }} />
         </Stack>
       </Card>
     </Stack>

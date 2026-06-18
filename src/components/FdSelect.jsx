@@ -7,12 +7,12 @@ import "./FdSelect.css";
  * Impact UI's Select is a fully controlled react-select variant that expects
  * several pieces of state (open, current options, selected options). This
  * wrapper hides that boilerplate behind a simple value/onChange contract so
- * views can drop in single-select dropdowns the same way they'd use a native
- * <select>.
+ * views can drop in single-select or multi-select dropdowns consistently.
  *
- *   options:  [{ value, label }]
- *   value:    the currently selected `value`
- *   onChange: (value) => void
+ *   options:   [{ value, label }]
+ *   value:     the currently selected `value` (string) — or string[] when isMulti
+ *   onChange:  (value) => void  — or (value[]) => void when isMulti
+ *   isMulti:   boolean (default false)
  */
 export default function FdSelect({
   label,
@@ -21,29 +21,59 @@ export default function FdSelect({
   onChange,
   width = 220,
   isWithSearch = false,
+  isMulti = false,
 }) {
   const findOption = (v) =>
     options.find((o) => String(o.value) === String(v)) || null;
 
   const [isOpen, setIsOpen] = useState(false);
   const [currentOptions, setCurrentOptions] = useState(options);
-  // Single-select Impact UI Select expects `selectedOptions` as an object
-  // ({ value, label }) — not an array — for both the trigger label and the
-  // option-click path.
-  const [selectedOptions, setSelectedOptionsRaw] = useState(() => findOption(value));
+  const [isSelectAll, setIsSelectAll] = useState(false);
+
+  // Multi-select: selectedOptions is an array; single: an object or null
+  const [selectedOptions, setSelectedOptionsRaw] = useState(() => {
+    if (isMulti) {
+      const vals = Array.isArray(value) ? value : value ? [value] : [];
+      return vals.map(findOption).filter(Boolean);
+    }
+    return findOption(value);
+  });
 
   useEffect(() => {
     setCurrentOptions(options);
   }, [options]);
 
   useEffect(() => {
-    setSelectedOptionsRaw(findOption(value));
+    if (isMulti) {
+      const vals = Array.isArray(value) ? value : value ? [value] : [];
+      setSelectedOptionsRaw(vals.map(findOption).filter(Boolean));
+    } else {
+      setSelectedOptionsRaw(findOption(value));
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value, options]);
 
-  // Normalize whatever the component hands back (object on click) into an object.
+  const handleChange = (sel) => {
+    if (isMulti) {
+      const arr = Array.isArray(sel) ? sel : sel ? [sel] : [];
+      setSelectedOptionsRaw(arr);
+      setIsSelectAll(arr.length === options.length);
+      onChange(arr.map((o) => o.value));
+    } else {
+      const obj = Array.isArray(sel) ? sel[sel.length - 1] || null : sel;
+      setSelectedOptionsRaw(obj);
+      if (obj && obj.value !== undefined) onChange(obj.value);
+    }
+  };
+
   const setSelectedOptions = (next) => {
-    const obj = Array.isArray(next) ? next[next.length - 1] || null : next;
-    setSelectedOptionsRaw(obj);
+    if (isMulti) {
+      const arr = Array.isArray(next) ? next : next ? [next] : [];
+      setSelectedOptionsRaw(arr);
+    } else {
+      const obj = Array.isArray(next) ? next[next.length - 1] || null : next;
+      setSelectedOptionsRaw(obj);
+    }
   };
 
   return (
@@ -59,7 +89,7 @@ export default function FdSelect({
         label={label}
         labelOrientation="top"
         placeholder="Select…"
-        isMulti={false}
+        isMulti={isMulti}
         isWithSearch={isWithSearch}
         searchPlaceholder="Search…"
         isOpen={isOpen}
@@ -71,10 +101,9 @@ export default function FdSelect({
         setCurrentOptions={setCurrentOptions}
         selectedOptions={selectedOptions}
         setSelectedOptions={setSelectedOptions}
-        handleChange={(sel) => {
-          const next = Array.isArray(sel) ? sel[sel.length - 1] : sel;
-          if (next && next.value !== undefined) onChange(next.value);
-        }}
+        handleChange={handleChange}
+        isSelectAll={isSelectAll}
+        setIsSelectAll={setIsSelectAll}
         customPlaceholderAfterSelect={null}
       />
     </div>

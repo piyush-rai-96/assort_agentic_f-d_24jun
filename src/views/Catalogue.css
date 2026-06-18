@@ -4,96 +4,12 @@
  * now lives in Workspace.css where the agent section renders.
  * ─────────────────────────────────────────────────────────────────────────── */
 
-/* ── Active PLR Review banner ─────────────────────────────────────────────── */
-.cat-plr-banner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--sp-3);
-  flex-wrap: wrap;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-left: 3px solid var(--color-success);
-  border-radius: var(--r2);
-  padding: var(--sp-3) var(--sp-4);
-}
-.cat-plr-banner__left {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-.cat-plr-banner__label {
-  font-size: var(--fs-micro);
-  font-weight: var(--fw-bold);
-  color: var(--color-success);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-.cat-plr-banner__name {
-  font-size: var(--fs-caption);
-  font-weight: var(--fw-bold);
-  color: var(--color-text-strong);
-}
-.cat-plr-banner__meta {
-  font-size: var(--fs-micro);
-  color: var(--color-text-muted);
-}
-.cat-plr-banner__actions {
-  display: flex;
-  gap: var(--sp-2);
-  flex-wrap: wrap;
-  flex-shrink: 0;
-}
-
-/* ── Tier strip ───────────────────────────────────────────────────────────── */
-.cat-tier-strip {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: var(--sp-3);
-}
-@media (max-width: 700px) {
-  .cat-tier-strip { grid-template-columns: repeat(2, 1fr); }
-}
-
-.cat-tier-chip {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  padding: var(--sp-3) var(--sp-4);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-top: 3px solid var(--tc, var(--color-border));
-  border-radius: var(--r2);
-  transition: box-shadow 0.15s;
-}
-.cat-tier-chip:hover {
-  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
-}
-.cat-tier-icon {
-  font-size: 18px;
-  line-height: 1;
-  margin-bottom: var(--sp-1);
-}
-.cat-tier-n {
-  font-size: 28px;
-  font-weight: var(--fw-black, 900);
-  color: var(--tc, var(--color-text-strong));
-  line-height: 1;
-}
-.cat-tier-lbl {
-  font-size: var(--fs-micro);
-  color: var(--color-text-muted);
-  font-weight: var(--fw-medium);
-}
-
 /* ── SKU table cell ───────────────────────────────────────────────────────── */
 .cat-sku-cell {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
-  padding: 6px 0;
+  gap: var(--sp-2);
+  padding: var(--sp-1) 0;
 }
 .cat-sku-swatch {
   flex-shrink: 0;
@@ -119,33 +35,9 @@
 }
 .cat-sku-signals {
   display: flex;
-  gap: 4px;
+  gap: var(--sp-1);
   flex-wrap: wrap;
   margin-top: 2px;
-}
-
-/* Opportunity / threat inline badges */
-.cat-signal {
-  display: inline-block;
-  padding: 1px 6px;
-  border-radius: 4px;
-  font-size: 9px;
-  font-weight: 700;
-  white-space: nowrap;
-  max-width: 200px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  border: 1px solid transparent;
-}
-.cat-signal--opportunity {
-  background: rgba(16,185,129,0.09);
-  color: var(--color-success);
-  border-color: rgba(16,185,129,0.3);
-}
-.cat-signal--threat {
-  background: rgba(239,68,68,0.09);
-  color: var(--color-error);
-  border-color: rgba(239,68,68,0.25);
 }
 
 /* AG-Grid global cell centering (for this view's simple columns) */

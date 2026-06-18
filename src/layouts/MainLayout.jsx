@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Header, Sidebar } from "impact-ui";
+import { Header, Sidebar, Breadcrumbs, Button, Chips } from "impact-ui";
 import {
   routes,
   actionRoutes,
@@ -138,19 +138,14 @@ export default function MainLayout({
     setIsChatBotOpen(true);
   }, []);
 
-  const breadcrumb = (
-    <nav className="fd-breadcrumb" aria-label="Breadcrumb">
-      <span className="crumb-group">Floor &amp; Decor</span>
-      <span className="sep">/</span>
-      {groupLabel && (
-        <>
-          <span className="crumb-group">{groupLabel}</span>
-          <span className="sep">/</span>
-        </>
-      )}
-      <span className="crumb-active">{moduleLabel}</span>
-    </nav>
-  );
+  const homeMod = user?.defaultModule ?? user?.landing ?? "today";
+  const breadcrumbList = [
+    { label: "Home", onClick: () => navigate(homeMod) },
+    ...(groupLabel ? [{ label: groupLabel, disabled: true }] : []),
+    { label: moduleLabel },
+  ];
+
+  const breadcrumb = <Breadcrumbs list={breadcrumbList} />;
 
   return (
     <div className="fd-shell">
@@ -187,23 +182,30 @@ export default function MainLayout({
           <div className="override-bar-header">
             <span className="override-bar-title"><span aria-hidden="true">🔴</span> Override Mode</span>
             <div className="override-dept-tabs">
-              {OVERRIDE_DEPTS.map((d) => (
-                <button
-                  key={d}
-                  className={`override-dept-tab ${overrideDept === d ? "active" : ""}`}
-                  onClick={() => setOverrideDept(d)}
-                >
-                  {d}
-                </button>
-              ))}
+              <Chips
+                options={OVERRIDE_DEPTS.map((d) => ({ label: d, value: d }))}
+                selected={overrideDept}
+                onChange={(val) => setOverrideDept(val)}
+                size="small"
+              />
             </div>
             <div className="override-bar-actions">
-              <button className="override-btn-ghost" onClick={() => { setOverrideMode(false); setOverridePrices({}); setOverrideReasons({}); }}>
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={() => { setOverrideMode(false); setOverridePrices({}); setOverrideReasons({}); }}
+                sx={{ borderColor: "rgba(255,255,255,.4)", color: "rgba(255,255,255,.85)", "&:hover": { borderColor: "white", color: "white" } }}
+              >
                 Discard
-              </button>
-              <button className="override-btn-submit" onClick={() => setOverrideMode(false)}>
+              </Button>
+              <Button
+                variant="contained"
+                size="small"
+                onClick={() => setOverrideMode(false)}
+                sx={{ background: "white", color: "var(--color-accent)", fontWeight: 700, "&:hover": { background: "rgba(255,255,255,.9)" } }}
+              >
                 Submit overrides ({Object.keys(overridePrices).length})
-              </button>
+              </Button>
             </div>
           </div>
           <div className="override-grid">
@@ -239,13 +241,19 @@ export default function MainLayout({
       )}
 
       {/* Override Mode topnav button — injected via portal into fixed header */}
-      <button
-        className={`override-topnav-btn ${overrideMode ? "active" : ""}`}
+      <Button
+        variant={overrideMode ? "contained" : "outlined"}
+        size="small"
         onClick={() => setOverrideMode((v) => !v)}
         title="Toggle Override Mode"
+        className="override-topnav-btn"
+        sx={overrideMode
+          ? { background: "var(--color-accent)", borderColor: "var(--color-accent)", color: "white", "&:hover": { background: "var(--color-primary-strong)" } }
+          : { borderColor: "var(--color-border)", color: "var(--color-text-muted)", "&:hover": { borderColor: "var(--color-accent)", color: "var(--color-accent)" } }
+        }
       >
         {overrideMode ? "🔴 Override On" : "Override Mode"}
-      </button>
+      </Button>
 
       <div className="fd-body">
         <main className="fd-content" role="main" aria-live="polite">

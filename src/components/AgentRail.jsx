@@ -4,15 +4,16 @@ import {
   AGENT_SIGNALS, PIPELINE_STEPS, AUDIT_LOG,
   SUGGESTED_QUESTIONS, AGENT_KPIS,
 } from "../data/agentActivity.js";
+import "./AgentRail.css";
 
 const TABS = ["Signals", "Pipeline", "Log", "Ask"];
 
 const SEV_COLORS = {
-  error:   "var(--red)",
-  warning: "var(--amber)",
-  success: "var(--mint)",
-  info:    "var(--blue)",
-  violet:  "var(--violet)",
+  error:   "var(--color-error)",
+  warning: "var(--color-warning)",
+  success: "var(--color-success)",
+  info:    "var(--color-info)",
+  violet:  "var(--color-accent)",
 };
 
 /* ── Pipeline step row ─────────────────────────────────────────────── */
@@ -93,13 +94,13 @@ export default function AgentRail({ onOpenChat, onNavigate }) {
         {/* Mini KPI strip */}
         <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
           {[
-            { val: `${AGENT_KPIS.confidence}%`, lbl: "Confidence", c: "var(--green)"  },
-            { val: `${AGENT_KPIS.overrideRate}%`, lbl: "Override",  c: "var(--teal)"   },
-            { val: `${AGENT_KPIS.storesSubmitted}/${AGENT_KPIS.storesTotal}`, lbl: "Curated", c: "var(--blue)" },
+            { val: `${AGENT_KPIS.confidence}%`, lbl: "Confidence", c: "var(--color-primary)"  },
+            { val: `${AGENT_KPIS.overrideRate}%`, lbl: "Override",  c: "var(--color-teal)"   },
+            { val: `${AGENT_KPIS.storesSubmitted}/${AGENT_KPIS.storesTotal}`, lbl: "Curated", c: "var(--color-info)" },
           ].map((k) => (
-            <div key={k.lbl} style={{ flex: 1, background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 6, padding: "4px 6px", textAlign: "center" }}>
-              <div style={{ fontSize: 12, fontWeight: 800, color: k.c, lineHeight: 1 }}>{k.val}</div>
-              <div style={{ fontSize: 8, color: "var(--text4)", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em", marginTop: 2 }}>{k.lbl}</div>
+            <div key={k.lbl} style={{ flex: 1, background: "var(--color-surface-alt)", border: "1px solid var(--color-border)", borderRadius: 6, padding: "4px 6px", textAlign: "center" }}>
+              <div style={{ fontSize: "var(--fs-caption)", fontWeight: 800, color: k.c, lineHeight: 1 }}>{k.val}</div>
+              <div style={{ fontSize: "var(--fs-xs)", color: "var(--color-text-subtle)", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em", marginTop: 2 }}>{k.lbl}</div>
             </div>
           ))}
         </div>
@@ -113,7 +114,7 @@ export default function AgentRail({ onOpenChat, onNavigate }) {
             onClick={() => setTab(t)}>
             {t}
             {t === "Signals" && errorSigs > 0 && (
-              <span style={{ marginLeft: 3, fontSize: 8, fontWeight: 800, padding: "0 4px", background: "var(--red)", color: "white", borderRadius: 8, lineHeight: "14px" }}>{errorSigs}</span>
+              <span style={{ marginLeft: 3, fontSize: "var(--fs-xs)", fontWeight: 800, padding: "0 4px", background: "var(--color-error)", color: "white", borderRadius: 8, lineHeight: "14px" }}>{errorSigs}</span>
             )}
           </button>
         ))}
@@ -126,7 +127,7 @@ export default function AgentRail({ onOpenChat, onNavigate }) {
         {tab === "Signals" && (
           <>
             <div className="ar-tab-header">
-              <span style={{ fontSize: 10, fontWeight: 700, color: "var(--text3)" }}>
+              <span style={{ fontSize: "var(--fs-xs)", fontWeight: 700, color: "var(--color-text-muted)" }}>
                 {AGENT_SIGNALS.length} signals · {errorSigs} need action
               </span>
               <span className={`ar-tab-count${errorSigs === 0 ? " green" : ""}`}>{errorSigs} urgent</span>
@@ -152,13 +153,13 @@ export default function AgentRail({ onOpenChat, onNavigate }) {
           <>
             <div className="ar-pipeline-header">
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ fontSize: 10, fontWeight: 700, color: "var(--text3)" }}>FW 2025 progress</span>
-                <span style={{ fontSize: 11, fontWeight: 800, color: "var(--green)" }}>{donePct}%</span>
+                <span style={{ fontSize: "var(--fs-xs)", fontWeight: 700, color: "var(--color-text-muted)" }}>FW 2025 progress</span>
+                <span style={{ fontSize: "var(--fs-micro)", fontWeight: 800, color: "var(--color-primary)" }}>{donePct}%</span>
               </div>
               <div className="ar-pipeline-progress-track">
                 <div className="ar-pipeline-progress-fill" style={{ width: `${donePct}%` }} />
               </div>
-              <div style={{ fontSize: 9, color: "var(--text4)", marginTop: 3 }}>
+              <div style={{ fontSize: "var(--fs-xs)", color: "var(--color-text-subtle)", marginTop: 3 }}>
                 {PIPELINE_STEPS.filter((s) => s.status === "done").length} of {PIPELINE_STEPS.length} steps complete
               </div>
             </div>
@@ -174,7 +175,7 @@ export default function AgentRail({ onOpenChat, onNavigate }) {
         {tab === "Log" && (
           <>
             <div className="ar-tab-header">
-              <span style={{ fontSize: 10, fontWeight: 700, color: "var(--text3)" }}>Recent activity</span>
+              <span style={{ fontSize: "var(--fs-xs)", fontWeight: 700, color: "var(--color-text-muted)" }}>Recent activity</span>
               <span className="ar-tab-count green">{AUDIT_LOG.length} entries</span>
             </div>
             {AUDIT_LOG.map((entry) => (
@@ -194,7 +195,7 @@ export default function AgentRail({ onOpenChat, onNavigate }) {
             {/* Agent hero card */}
             <div className="ar-agent-hero">
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                <div style={{ width: 28, height: 28, borderRadius: "50%", background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, flexShrink: 0 }}>🤖</div>
+                <div style={{ width: 28, height: 28, borderRadius: "50%", background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "var(--fs-body-lg)", flexShrink: 0 }}>🤖</div>
                 <div>
                   <div className="ar-agent-hero-title">FD Assortment Agent</div>
                   <div className="ar-agent-hero-sub">FW 2025 · 21 stores · ready to assist</div>

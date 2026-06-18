@@ -1,84 +1,106 @@
 /* ──────────────────────────────────────────────────────────────────────────
-   Floor & Decor · Design Tokens — single source of truth.
+   Floor & Decor · Agentic Assortment — Design Tokens
+   Impact UI blue theme. Single source of truth.
 
-   Structure & typography follow Impact UI (Manrope typeface, 8px spacing
-   system, 8/12px radii, neutral/semantic roles). Brand color stays Floor &
-   Decor green rather than Impact UI's indigo so the product keeps its
-   identity. Everything below is a NAMED token — no view should hardcode a
-   hex, px size, or font weight.
+   Primary brand = Impact UI blue (#2563eb) throughout.
+   All views should consume --color-* semantic tokens, never raw hex.
    ────────────────────────────────────────────────────────────────────────── */
 :root {
-  /* ── Raw palette (brand source values) ─────────────────────────────────── */
-  --ice: #f5f7f0;
-  --ice2: #eaefde;
-  --ice3: #d8e4c4;
-  --surface: #ffffff;
-  --surface2: #f2f6ee;
-  --surface3: #eaeee4;
+  /* ── Raw palette ─────────────────────────────────────────────────────────── */
 
-  --green: #2d6a2d;
-  --green2: #1e5020;
-  --green-pale: #edfaed;
-  --navy: #0a2210;
-  --navy2: #0d2813;
+  /* Blue primary (Impact UI brand) */
+  --indigo:       #2563eb;
+  --indigo2:      #1d4ed8;
+  --indigo3:      #1e40af;
+  --indigo-pale:  #eff6ff;
 
-  --teal: #0b7a6c;
-  --teal-pale: #e6f7f4;
-  --violet: #6d28d9;
+  /* App surfaces — blue-slate tinted */
+  --slate-bg:        #f0f4ff;
+  --slate-surface2:  #eef2ff;
+  --slate-surface3:  #e2e8ff;
+  --surface:         #ffffff;
+
+  /* Text — blue-ink scale */
+  --navy-blue:   #0a1640;
+  --navy-blue2:  #0f1e52;
+  --ink:         #0d1422;
+  --ink2:        #1e2a5e;
+  --slate3:      #475569;
+  --slate4:      #94a3b8;
+
+  /* Borders */
+  --slate-border:  #cbd5e1;
+  --slate-border2: #94a3b8;
+
+  /* Legacy raw names — kept for backward compat; prefer --color-* in views */
+  --ice:         var(--slate-bg);
+  --ice2:        var(--slate-surface2);
+  --ice3:        var(--slate-surface3);
+  --surface2:    var(--slate-surface2);
+  --surface3:    var(--slate-surface3);
+  --green:       #2d6a2d;
+  --green2:      #1e5020;
+  --green-pale:  #edfaed;
+  --navy:        var(--navy-blue);
+  --navy2:       var(--navy-blue2);
+  --text:        var(--ink);
+  --text2:       var(--ink2);
+  --text3:       var(--slate3);
+  --text4:       var(--slate4);
+  --border:      var(--slate-border);
+  --border2:     var(--slate-border2);
+
+  /* Accent / semantic palette (unchanged) */
+  --teal:        #0b7a6c;
+  --teal-pale:   #e6f7f4;
+  --violet:      #6d28d9;
   --violet-pale: #f5f3ff;
-  --amber: #d97706;
-  --amber-pale: #fffbeb;
-  --red: #dc2626;
-  --red-pale: #fef2f2;
-  --blue: #2563eb;
-  --blue-pale: #eff6ff;
-  --mint: #059669;
-  --mint-pale: #ecfdf5;
-  --wood: #b45309;
-  --wood-pale: #fef3c7;
+  --amber:       #d97706;
+  --amber-pale:  #fffbeb;
+  --red:         #dc2626;
+  --red-pale:    #fef2f2;
+  --blue:        #2563eb;
+  --blue-pale:   #eff6ff;
+  --mint:        #059669;
+  --mint-pale:   #ecfdf5;
+  --wood:        #b45309;
+  --wood-pale:   #fef3c7;
 
-  --text: #0a1a0a;
-  --text2: #1e3a1e;
-  --text3: #456845;
-  --text4: #7a9a7a;
-  --border: #c8dcbc;
-  --border2: #b4c8a0;
+  /* ── Semantic color roles — use THESE everywhere ────────────────────────── */
+  --color-bg:              var(--slate-bg);
+  --color-surface:         var(--surface);
+  --color-surface-alt:     var(--slate-surface2);
+  --color-surface-sunken:  var(--slate-surface3);
 
-  /* ── Semantic color roles (use THESE in views) ─────────────────────────── */
-  --color-bg: var(--ice);
-  --color-surface: var(--surface);
-  --color-surface-alt: var(--surface2);
-  --color-surface-sunken: var(--surface3);
+  --color-primary:        var(--indigo);
+  --color-primary-strong: var(--indigo2);
+  --color-primary-soft:   var(--indigo-pale);
 
-  --color-primary: var(--green);
-  --color-primary-strong: var(--green2);
-  --color-primary-soft: var(--green-pale);
+  --color-text:          var(--ink);
+  --color-text-strong:   var(--navy-blue);
+  --color-text-muted:    var(--slate3);
+  --color-text-subtle:   var(--slate4);
+  --color-on-surface-2:  var(--ink2);
 
-  --color-text: var(--text);
-  --color-text-strong: var(--navy);
-  --color-text-muted: var(--text3);
-  --color-text-subtle: var(--text4);
-  --color-on-surface-2: var(--text2);
+  --color-border:         var(--slate-border);
+  --color-border-strong:  var(--slate-border2);
 
-  --color-border: var(--border);
-  --color-border-strong: var(--border2);
+  --color-error:           var(--red);
+  --color-error-soft:      var(--red-pale);
+  --color-success:         var(--mint);
+  --color-success-soft:    var(--mint-pale);
+  --color-warning:         var(--amber);
+  --color-warning-soft:    var(--amber-pale);
+  --color-info:            var(--blue);
+  --color-info-soft:       var(--blue-pale);
+  --color-accent:          var(--violet);
+  --color-accent-soft:     var(--violet-pale);
+  --color-teal:            var(--teal);
+  --color-teal-soft:       var(--teal-pale);
+  --color-wood:            var(--wood);
+  --color-wood-soft:       var(--wood-pale);
 
-  --color-error: var(--red);
-  --color-error-soft: var(--red-pale);
-  --color-success: var(--mint);
-  --color-success-soft: var(--mint-pale);
-  --color-warning: var(--amber);
-  --color-warning-soft: var(--amber-pale);
-  --color-info: var(--blue);
-  --color-info-soft: var(--blue-pale);
-  --color-accent: var(--violet);
-  --color-accent-soft: var(--violet-pale);
-  --color-teal: var(--teal);
-  --color-teal-soft: var(--teal-pale);
-  --color-wood: var(--wood);
-  --color-wood-soft: var(--wood-pale);
-
-  /* ── AgentChatBot palette — matches Impact UI ChatBot component's indigo/lavender theme ── */
+  /* ── AgentChatBot palette — ChatBot uses indigo/lavender brand context ──── */
   --cb-grad-start:   #ec7550;
   --cb-grad-end:     #a0508f;
   --cb-blue:         #6366f1;
@@ -96,77 +118,91 @@
   --cb-text-muted:   #4b5563;
   --cb-text-subtle:  #9ca3af;
 
-  /* ── Typography (Manrope — Impact UI's typeface) ───────────────────────── */
+  /* ── Typography (Manrope — Impact UI typeface) ──────────────────────────── */
   --font-sans: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: "DM Mono", ui-monospace, "SF Mono", monospace;
 
-  --fs-display: 28px;
-  --fs-title: 20px;
-  --fs-heading: 16px;
-  --fs-subheading: 14px;
-  --fs-body: 13px;
-  --fs-body-lg: 14px;
-  --fs-caption: 12px;
-  --fs-micro: 11px;
-  --fs-xs: 10px;
-  --fs-kpi: 28px;
+  --fs-hero:        30px;
+  --fs-hero-count:  32px;
+  --fs-display:     28px;
+  --fs-title:       20px;
+  --fs-heading:     16px;
+  --fs-subheading:  14px;
+  --fs-body:        13px;
+  --fs-body-lg:     14px;
+  --fs-caption:     12px;
+  --fs-micro:       11px;
+  --fs-xs:          10px;
+  --fs-kpi:         28px;
 
-  --fw-regular: 400;
-  --fw-medium: 500;
-  --fw-semibold: 600;
-  --fw-bold: 700;
+  --fw-light:     300;
+  --fw-regular:   400;
+  --fw-medium:    500;
+  --fw-semibold:  600;
+  --fw-bold:      700;
   --fw-extrabold: 800;
-  --fw-black: 900;
+  --fw-black:     900;
 
-  --lh-tight: 1.1;
-  --lh-snug: 1.3;
+  --lh-tight:  1.1;
+  --lh-snug:   1.3;
   --lh-normal: 1.45;
 
   --tracking-tight: -0.3px;
-  --tracking-wide: 0.06em;
+  --tracking-wide:  0.06em;
 
-  /* ── Spacing (8px system, 4px base step) ───────────────────────────────── */
-  --sp-1: 4px;
-  --sp-2: 8px;
-  --sp-3: 12px;
-  --sp-4: 16px;
-  --sp-5: 20px;
-  --sp-6: 24px;
-  --sp-7: 28px;
-  --sp-8: 32px;
+  /* ── Spacing (8px system, 4px step) ─────────────────────────────────────── */
+  --sp-1:  4px;
+  --sp-2:  8px;
+  --sp-3:  12px;
+  --sp-4:  16px;
+  --sp-5:  20px;
+  --sp-6:  24px;
+  --sp-7:  28px;
+  --sp-8:  32px;
   --sp-10: 40px;
 
-  /* ── Elevation + radius ────────────────────────────────────────────────── */
-  --sh: 0 1px 3px rgba(10, 34, 10, 0.08), 0 4px 12px rgba(10, 34, 10, 0.06);
-  --sh2: 0 4px 20px rgba(10, 34, 10, 0.12);
-  --r: 12px;
-  --r2: 8px;
+  /* ── Elevation — blue-tinted shadows ────────────────────────────────────── */
+  --sh:   0 1px 3px rgba(10, 22, 64, 0.07), 0 4px 12px rgba(10, 22, 64, 0.05);
+  --sh2:  0 4px 20px rgba(10, 22, 64, 0.10);
+  --sh3:  0 8px 32px rgba(37, 99, 235, 0.10);
+
+  /* ── Border radius ───────────────────────────────────────────────────────── */
+  --r:      12px;
+  --r2:     8px;
+  --r-xs:   2px;
   --r-pill: 999px;
 
-  /* ── Impact UI shell metrics (Sidebar rail + Header height) ────────────── */
-  --rail-w: 64px;
-  --header-h: 56px;
+  /* ── Shell metrics ───────────────────────────────────────────────────────── */
+  --rail-w:         64px;
+  --header-h:       56px;
+  --sidebar-col-w:  340px;
 
-  /* ── Spacing gap (fills the jump from --sp-6 to --sp-8) ────────────────── */
-  --sp-7: 28px;
-
-  /* ── Z-index scale ─────────────────────────────────────────────────────── */
-  --z-header: 100;
+  /* ── Z-index scale ───────────────────────────────────────────────────────── */
+  --z-header:  100;
   --z-overlay: 200;
-  --z-modal: 300;
+  --z-modal:   300;
 
-  /* ── Additional semantic aliases (for legacy token names used in views) ── */
-  --text1: var(--color-text);
+  /* ── Extended semantic tokens ────────────────────────────────────────────── */
+  --color-info-border:     #bfdbfe;
+  --color-error-border:    #fca5a5;
+  --color-warning-border:  #fcd34d;
+  --color-success-border:  #6ee7b7;
+  --color-neutral:         #9ca3af;
+  --color-accent-dark:     #4c1d95;
+
+  /* ── Interaction tints ───────────────────────────────────────────────────── */
+  --color-primary-tint-12: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  --color-primary-tint-20: color-mix(in srgb, var(--color-primary) 20%, transparent);
+  --color-primary-tint-28: color-mix(in srgb, var(--color-primary) 28%, transparent);
+  --color-teal-tint-15:    color-mix(in srgb, var(--color-teal) 15%, transparent);
+  --color-text-tint-10:    color-mix(in srgb, var(--color-text) 10%, transparent);
+
+  /* ── Legacy aliases (backward compat for AgentRail and older code) ───────── */
+  --text1:              var(--color-text);
   --color-text-primary: var(--color-text);
-  --surface-alt: var(--color-surface-alt);
-
-  /* ── Extended semantic tokens ──────────────────────────────────────────── */
-  --color-info-border: #bfdbfe;
-  --color-error-border: #fca5a5;
-  --color-warning-border: #fcd34d;
-  --color-success-border: #6ee7b7;
-  --color-neutral: #9ca3af;
-  --color-accent-dark: #4c1d95;
+  --surface-alt:        var(--color-surface-alt);
+  --border-accent-width: 3px;
+  --color-on-dark-subtle: rgba(255, 255, 255, 0.65);
 }
 
 * {
@@ -197,31 +233,30 @@ select {
   font-family: inherit;
 }
 
-/* Accessible focus ring — visible only for keyboard navigation */
+/* Accessible focus ring — keyboard only */
 :focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
-/* Suppress outline for mouse/touch interactions only */
 :focus:not(:focus-visible) {
   outline: none;
 }
 
-/* Slim, on-brand scrollbars */
+/* Slim blue-slate scrollbars */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--ice3);
+  background: var(--slate-border);
   border-radius: 10px;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-border-strong);
 }
 
-/* ── Utility: truncate long text in flex/grid context ───────────────────── */
+/* ── Utility ─────────────────────────────────────────────────────────────── */
 .fd-truncate {
   min-width: 0;
   white-space: nowrap;

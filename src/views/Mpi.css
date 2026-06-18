@@ -4,182 +4,13 @@
    layout but uses a green-navy accent (brand colour for NPI).
 ════════════════════════════════════════════════════════════════════════ */
 
-/* ── Root layout ──────────────────────────────────────────────────────── */
-.mpi-root {
-  display: flex;
-  flex-direction: column;
-  margin: -24px -28px -40px;
-  min-height: calc(100vh - var(--header-h, 56px));
-  background: #F1F5F9;
-  overflow: hidden;
-}
+/* ── Root layout — removed, now uses Stack gap={4} ──────────────────────── */
 
-/* ── Dark navy page header ────────────────────────────────────────────── */
-.mpi-page-header {
-  background: #1A2B1A;
-  flex-shrink: 0;
-}
-
-.mpi-page-header-top {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 14px 20px 8px;
-  flex-wrap: wrap;
-}
-
-.mpi-page-title {
-  font-size: 15px;
-  font-weight: 800;
-  color: #fff;
-  letter-spacing: -0.01em;
-}
-
-.mpi-page-subtitle {
-  font-size: 11px;
-  color: #4A7A4A;
-  margin-top: 2px;
-}
-
-.mpi-alert-pills {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-.mpi-alert-pill {
-  border-radius: 20px;
-  padding: 4px 12px;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-}
-
-.mpi-alert-pill--red {
-  background: rgba(220, 38, 38, .15);
-  border: 1px solid rgba(220, 38, 38, .3);
-  color: #FCA5A5;
-}
-
-.mpi-alert-pill--amber {
-  background: rgba(217, 119, 6, .15);
-  border: 1px solid rgba(217, 119, 6, .3);
-  color: #FCD34D;
-}
-
-/* Core / BG exclusion banner */
-.mpi-core-banner {
-  background: rgba(5, 150, 105, .08);
-  border-top: 1px solid rgba(5, 150, 105, .2);
-  border-bottom: 1px solid rgba(5, 150, 105, .2);
-  color: #6EEDB8;
-  font-size: 11px;
-  padding: 7px 20px;
-}
-
-/* 5 KPI tiles */
-.mpi-kpi-strip {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 8px;
-  padding: 10px 20px 14px;
-}
-
-.mpi-kpi-tile {
-  background: rgba(255, 255, 255, .05);
-  border: 1px solid rgba(255, 255, 255, .08);
-  border-radius: 8px;
-  padding: 10px 12px;
-  text-align: center;
-}
-
-.mpi-kpi-value {
-  font-size: 20px;
-  font-weight: 800;
-  line-height: 1.1;
-  font-variant-numeric: tabular-nums;
-}
-
-.mpi-kpi-label {
-  font-size: 10px;
-  font-weight: 600;
-  color: #fff;
-  margin-top: 4px;
-}
-
-.mpi-kpi-sub {
-  font-size: 9px;
-  color: rgba(255, 255, 255, .35);
-  margin-top: 2px;
-}
-
-/* ── Filter + Tab bar ─────────────────────────────────────────────────── */
-.mpi-filter-tab-bar {
-  background: #fff;
-  border-bottom: 1px solid var(--color-border);
-  flex-shrink: 0;
-  padding: 0 20px;
-}
-
-.mpi-filters {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 0 6px;
-}
-
-.mpi-filter-label {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--color-text-subtle);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.mpi-tab-bar {
-  display: flex;
-  gap: 2px;
-  border-top: 1px solid var(--color-border);
-}
-
-.mpi-tab-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--color-text-subtle);
-  padding: 10px 14px;
-  border-bottom: 2px solid transparent;
-  white-space: nowrap;
-  transition: color 0.15s, border-color 0.15s;
-}
-
-.mpi-tab-btn:hover {
-  color: var(--color-text);
-}
-
-.mpi-tab-btn--active {
-  color: var(--color-primary, #16a34a);
-  border-bottom-color: var(--color-primary, #16a34a);
-}
-
-/* ── Scrollable content ───────────────────────────────────────────────── */
-.mpi-content {
-  flex: 1 1 0;
-  overflow-y: auto;
-  padding: 20px;
-}
-
-/* ════════════════════════════════════════════════════════════════════════
-   TAB 1 — Regional grouping table
-════════════════════════════════════════════════════════════════════════ */
+/* ── Store table (Tab 1) ─────────────────────────────────────────────────── */
 .mpi-store-table {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--r, 8px);
+  border-radius: var(--r);
   overflow: hidden;
 }
 
@@ -194,27 +25,26 @@
 }
 
 .mpi-table-header {
-  padding: 8px 14px;
-  background: #1A2B1A;
-  font-size: 10px;
-  font-weight: 700;
-  color: rgba(255, 255, 255, .55);
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--color-text-strong);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
+  color: rgba(255, 255, 255, 0.65);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
-/* Region summary row */
 .mpi-region-row {
-  padding: 9px 14px;
-  background: #F0F4F0;
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--color-surface-alt);
   border-top: 1px solid var(--color-border);
   border-bottom: 1px solid var(--color-border);
 }
 
 .mpi-region-label {
-  font-size: 11px;
-  font-weight: 700;
-  color: #1A2B1A;
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-bold);
+  color: var(--color-text-strong);
   letter-spacing: 0.01em;
 }
 
@@ -230,13 +60,13 @@
 }
 
 .mpi-pct-badge--red {
-  background: #FEE2E2;
-  color: #DC2626;
+  background: var(--color-error-soft);
+  color: var(--color-error);
 }
 
 .mpi-pct-badge--green {
-  background: #DCFCE7;
-  color: #16A34A;
+  background: var(--color-success-soft);
+  color: var(--color-success);
 }
 
 /* Store rows */
@@ -254,12 +84,12 @@
 }
 
 .mpi-store-row--flagged {
-  background: #FFF8F8;
-  border-left: 3px solid var(--color-error, #DC2626);
+  background: var(--color-error-soft);
+  border-left: 3px solid var(--color-error);
 }
 
 .mpi-store-row--flagged:hover {
-  background: #FFF2F2;
+  background: color-mix(in srgb, var(--color-error-soft) 80%, var(--color-surface));
 }
 
 .mpi-store-name {
@@ -299,11 +129,11 @@
   display: inline-flex;
   align-items: center;
   padding: 1px 6px;
-  border-radius: 4px;
-  font-size: 9px;
-  font-weight: 700;
-  background: #FEE2E2;
-  color: #DC2626;
+  border-radius: var(--r2);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
+  background: var(--color-error-soft);
+  color: var(--color-error);
   white-space: nowrap;
 }
 

@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from "react";
-import { Card, Badge, Text } from "impact-ui";
+import { Card, Badge, Button, Chips } from "impact-ui";
+import Text from "../components/Text.jsx";
 import Stack from "../components/Stack.jsx";
 import { AgGridReact } from "ag-grid-react";
 import "ag-grid-community/styles/ag-grid.css";
@@ -156,8 +157,8 @@ function DetailPanel({ score, onNavigate, onClose }) {
 
       {/* Actions */}
       <div className="ai-detail-actions">
-        <button type="button" className="ai-action-btn" onClick={() => onNavigate("catalogue")}>Open in Catalogue →</button>
-        <button type="button" className="ai-action-btn ai-action-btn--ghost" onClick={() => onNavigate("forecast")}>View Forecast →</button>
+        <Button variant="primary" size="small" onClick={() => onNavigate("catalogue")}>Open in Catalogue →</Button>
+        <Button variant="ghost" size="small" onClick={() => onNavigate("forecast")}>View Forecast →</Button>
       </div>
     </div>
   );
@@ -246,26 +247,16 @@ export default function AssortmentIntelligence({ onNavigate }) {
 
       {/* Filters */}
       <div className="ai-filters">
-        <div className="ai-filter-group" role="tablist" aria-label="Filter by department">
+        <Stack direction="row" align="center" gap={2} wrap>
           {DEPT_OPTS.map((d) => (
-            <button key={d} type="button" role="tab" aria-selected={deptFilter === d}
-              className={`ai-filter-tab ${deptFilter === d ? "active" : ""}`}
-              onClick={() => setDeptFilter(d)}>
-              {d}
-            </button>
+            <Chips key={d} label={d} isActive={deptFilter === d} onClick={() => setDeptFilter(d)} />
           ))}
-        </div>
-        <div className="ai-filter-divider" />
-        <div className="ai-filter-group" role="tablist" aria-label="Filter by signal">
+          <div className="ai-filter-divider" />
           {SIGNAL_TABS.map((t) => (
-            <button key={t} type="button" role="tab" aria-selected={signalTab === t}
-              className={`ai-filter-tab ai-filter-tab--outline ${signalTab === t ? "active" : ""}`}
-              onClick={() => setSignalTab(t)}>
-              {t}
-            </button>
+            <Chips key={t} label={t} isActive={signalTab === t} onClick={() => setSignalTab(t)} />
           ))}
-        </div>
-        <span className="ai-result-count">{filtered.length} SKUs</span>
+          <Text variant="micro" tone="subtle" style={{ marginLeft: "auto" }}>{filtered.length} SKUs</Text>
+        </Stack>
       </div>
 
       {/* Two-panel layout — detail panel only renders when a row is selected */}

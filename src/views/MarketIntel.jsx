@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect, useRef } from "react";
-import { Card, Button, Badge, Input, TextArea, EmptyState } from "impact-ui";
+import { Card, Button, Badge, Input, TextArea, EmptyState, Chips, FiltersStrip, FilterPanel } from "impact-ui";
+import { Bot, ClipboardList, Lock } from "lucide-react";
 import FdSelect from "../components/FdSelect.jsx";
 import Text from "../components/Text.jsx";
 import Stack from "../components/Stack.jsx";
@@ -83,6 +84,10 @@ export default function MarketIntel() {
   const [fromPortfolio, setFromPortfolio] = useState(null); // id that arrived via Portfolio Build chip
   const highlightedRowRef = useRef(null);
 
+  /* ── Filter panel state ───────────────────────────────────────────────── */
+  const [filterPanelOpen, setFilterPanelOpen] = useState(false);
+  const [activeFilterTab, setActiveFilterTab] = useState("status");
+
   /* On mount: check if we were navigated here from Portfolio Build with a
      specific intel item to highlight. popIntelHighlight() clears the store
      after reading so the highlight is one-shot only. */
@@ -126,11 +131,11 @@ export default function MarketIntel() {
   const opps = intel.filter((i) => i.direction === "opportunity").length;
   const feedModel = intel.filter((i) => i.feedsModel).length;
   const metrics = [
-    { v: total, l: "Total signals", sub: "logged", tone: "strong" },
-    { v: newCount, l: "Awaiting review", sub: "needs action", tone: "error" },
-    { v: threats, l: "Threat signals", sub: "risk to sales", tone: "error" },
-    { v: opps, l: "Opportunities", sub: "to sell more", tone: "success" },
-    { v: feedModel, l: "Feed model", sub: "structured tags", tone: "accent" },
+    { v: total, l: "Total signals", tone: "strong" },
+    { v: newCount, l: "Awaiting review", tone: "error" },
+    { v: threats, l: "Threat signals", tone: "error" },
+    { v: opps, l: "Opportunities", tone: "success" },
+    { v: feedModel, l: "Feed model", tone: "accent" },
   ];
 
   /* ── Mutations ────────────────────────────────────────────────────────── */
@@ -161,42 +166,96 @@ export default function MarketIntel() {
     setLog({ ...EMPTY_LOG, submitted: true });
   };
 
-  /* ── Chip (filter / tab) ──────────────────────────────────────────────── */
-  const Chip = ({ active, onClick, children }) => (
-    <Button variant={active ? "primary" : "secondary"} size="small" onClick={onClick}>{children}</Button>
-  );
+  /* ── Chip (filter / tab) — removed; now using Impact UI Chips directly ── */
 
   const countBy = (pred) => intel.filter(pred).length;
+
+  /* ── Derived filter tags for FiltersStrip ─────────────────────────────── */
+  const miFilterTags = useMemo(() => {
+    const tags = [];
+    if (statusTab !== "all") tags.push({ id: "status", label: "Status", values: [{ id: 1, label: statusTab }] });
+    if (dirFilter) tags.push({ id: "dir", label: "Direction", values: [{ id: 1, label: dirFilter }] });
+    if (typeFilter) {
+      const opt = TYPE_OPTIONS.find((t) => t.id === typeFilter);
+      tags.push({ id: "type", label: "Type", values: [{ id: 1, label: opt?.label || typeFilter }] });
+    }
+    return tags;
+  }, [statusTab, dirFilter, typeFilter]);
+
+  /* ── FilterPanel tabs ─────────────────────────────────────────────────── */
+  const STATUS_FD_OPTIONS = [
+    { value: "all", label: `All (${intel.length})` },
+    { value: "new", label: `New (${newCount})` },
+    { value: "reviewed", label: `Reviewed (${countBy((i) => i.status === "reviewed")})` },
+    { value: "actioned", label: `Actioned (${countBy((i) => i.status === "actioned")})` },
+  ];
+  const DIR_FD_OPTIONS = [
+    { value: "threat", label: `Threats (${threats})` },
+    { value: "opportunity", label: `Opps (${opps})` },
+  ];
+  const TYPE_FD_OPTIONS = TYPE_OPTIONS.map((t) => ({ value: t.id, label: t.label }));
+
+  const miFilterPanelTabs = [
+    {
+      value: "status",
+      title: "Status",
+      numberOfFilter: statusTab !== "all" ? 1 : 0,
+      children: (
+        <Stack direction="column" gap={3} style={{ padding: "var(--sp-4)" }}>
+          <FdSelect
+            label="Signal Status"
+            value={statusTab}
+            options={STATUS_FD_OPTIONS}
+            onChange={(v) => setStatus(v)}
+            width={320}
+          />
+        </Stack>
+      ),
+    },
+    {
+      value: "direction",
+      title: "Direction",
+      numberOfFilter: dirFilter ? 1 : 0,
+      children: (
+        <Stack direction="column" gap={3} style={{ padding: "var(--sp-4)" }}>
+          <FdSelect
+            label="Direction"
+            value={dirFilter || ""}
+            options={[{ value: "", label: "All directions" }, ...DIR_FD_OPTIONS]}
+            onChange={(v) => { if (v === "") setDirFilter(null); else setDirFilter(v); }}
+            width={320}
+          />
+        </Stack>
+      ),
+    },
+    {
+      value: "type",
+      title: "Type",
+      numberOfFilter: typeFilter ? 1 : 0,
+      children: (
+        <Stack direction="column" gap={3} style={{ padding: "var(--sp-4)" }}>
+          <FdSelect
+            label="Signal Type"
+            value={typeFilter || ""}
+            options={[{ value: "", label: "All types" }, ...TYPE_FD_OPTIONS]}
+            onChange={(v) => { if (v === "") setTypeFilter(null); else setTypeFilter(v); }}
+            width={320}
+          />
+        </Stack>
+      ),
+    },
+  ];
 
   /* ═══════════════ SIDEBAR ═══════════════ */
   const sidebar = (
     <Card sx={sidebarSx} className="mi-sidebar">
       <Stack direction="column" style={{ height: "100%" }}>
-        <Stack direction="column" gap={2} paddingX={3} paddingY={3} style={{ borderBottom: "1px solid var(--color-border)" }}>
-          <Text variant="overline" tone="muted">Filters</Text>
-          <Stack direction="row" gap={2} wrap>
-            <Chip active={statusTab === "all" && !dirFilter && !typeFilter} onClick={() => setStatus("all")}>All {total}</Chip>
-            <Chip active={statusTab === "new"} onClick={() => setStatus("new")}>New {newCount}</Chip>
-            <Chip active={statusTab === "reviewed"} onClick={() => setStatus("reviewed")}>Reviewed {countBy((i) => i.status === "reviewed")}</Chip>
-            <Chip active={statusTab === "actioned"} onClick={() => setStatus("actioned")}>Actioned {countBy((i) => i.status === "actioned")}</Chip>
-          </Stack>
-          <Stack direction="row" gap={2} wrap>
-            <Chip active={dirFilter === "threat"} onClick={() => toggleDir("threat")}>Threats {threats}</Chip>
-            <Chip active={dirFilter === "opportunity"} onClick={() => toggleDir("opportunity")}>Opps {opps}</Chip>
-          </Stack>
-          <Stack direction="row" gap={1} wrap>
-            {TYPE_OPTIONS.map((t) => (
-              <Chip key={t.id} active={typeFilter === t.id} onClick={() => toggleType(t.id)}>{t.label.split(" ")[0]}</Chip>
-            ))}
-          </Stack>
-        </Stack>
 
         <div className="mi-list" style={{ flex: 1, padding: "8px 8px" }}>
           {filtered.length === 0 ? (
             <Stack paddingY={5} align="center"><Text variant="caption" tone="subtle">No signals match current filters.</Text></Stack>
           ) : (
             <Stack direction="column" gap={1}>
-              <Text variant="micro" tone="subtle" style={{ padding: "0 4px" }}>{filtered.length} signal{filtered.length !== 1 ? "s" : ""}</Text>
               {filtered.map((i) => (
                 <Stack
                   key={i.id}
@@ -263,10 +322,10 @@ export default function MarketIntel() {
                 <Tag tint={TYPE_TINT[i.type]}>{i.type}</Tag>
                 <Tag tint={isThreat ? TYPE_TINT.competitive : TYPE_TINT.customer}>{i.direction}</Tag>
                 {i.urgency !== "watch" ? <span className="mi-tag mi-tag--gap" style={i.urgency === "immediate" ? { background: "var(--color-error-soft)", color: "var(--color-error)" } : undefined}>{i.urgency}</span> : null}
-                {i.feedsModel ? <span className="mi-tag mi-tag--model">🤖 feeds model</span> : null}
+                {i.feedsModel ? <span className="mi-tag mi-tag--model"><Bot size={11} aria-hidden="true" style={{ verticalAlign: "middle", marginRight: 3 }} />feeds model</span> : null}
                 {i.catalogueGap ? <span className="mi-tag mi-tag--gap">catalogue gap</span> : null}
                 {i.id === fromPortfolio && (
-                  <span className="mi-tag mi-tag--portfolio">📋 via Portfolio Build</span>
+                  <span className="mi-tag mi-tag--portfolio"><ClipboardList size={11} aria-hidden="true" style={{ verticalAlign: "middle", marginRight: 3 }} />via Portfolio Build</span>
                 )}
               </Stack>
             </Stack>
@@ -277,10 +336,7 @@ export default function MarketIntel() {
           <div className="mi-detail-grid">
             <Stack direction="column" gap={3} style={{ minWidth: 0 }}>
               <Text variant="body" tone="default" className="mi-body-measure">{i.body}</Text>
-              <Stack direction="column" gap={1}>
-                <Text variant="overline" tone="muted">Add merchant note</Text>
-                <TextArea placeholder="Note for tracking — visible to merchant team only…" value={noteDraft} onChange={(e) => setNoteDraft(e.target.value)} width="100%" height="72px" />
-              </Stack>
+              <TextArea placeholder="Merchant note…" value={noteDraft} onChange={(e) => setNoteDraft(e.target.value)} width="100%" height="72px" />
             </Stack>
 
             <Stack direction="column" gap={3} className="mi-detail-aside">
@@ -293,13 +349,10 @@ export default function MarketIntel() {
                 ))}
               </div>
               {i.skus.length ? (
-                <Stack direction="column" gap={1}>
-                  <Text variant="overline" tone="muted">Affected SKUs</Text>
-                  <Stack direction="row" gap={1} wrap>{i.skus.map((s) => <SkuChip key={s}>{s}</SkuChip>)}</Stack>
-                </Stack>
+                <Stack direction="row" gap={1} wrap>{i.skus.map((s) => <SkuChip key={s}>{s}</SkuChip>)}</Stack>
               ) : null}
-              {i.feedsModel && i.modelInstruction ? <NoteBox tone="accent" label="🤖 Agent model instruction">{i.modelInstruction}</NoteBox> : null}
-              {i.catalogueGap ? <NoteBox tone="warning" label="🔒 Catalogue gap">{i.catalogueRequest}</NoteBox> : null}
+              {i.feedsModel && i.modelInstruction ? <NoteBox tone="accent" label="Model instruction">{i.modelInstruction}</NoteBox> : null}
+              {i.catalogueGap ? <NoteBox tone="warning" label="Catalogue gap">{i.catalogueRequest}</NoteBox> : null}
               {i.merchantNote ? <NoteBox tone="teal" label="Merchant note">{i.merchantNote}</NoteBox> : null}
             </Stack>
           </div>
@@ -326,7 +379,7 @@ export default function MarketIntel() {
         signalDetail(selected)
       ) : (
         <Card sx={softSx}>
-          <EmptyState heading="Select a signal" description="Pick a signal from the list to see the full report, model impact, and actions." />
+          <EmptyState heading="No signal selected" />
         </Card>
       )}
     </Stack>
@@ -389,7 +442,7 @@ export default function MarketIntel() {
               <FdSelect value={log.skuPick} options={[{ value: "", label: "Select a catalogue SKU…" }, ...CATALOGUE_SKUS.filter((s) => !log.skus.includes(s.id)).map((s) => ({ value: s.id, label: s.name }))]} onChange={(v) => setLog((p) => ({ ...p, skuPick: v }))} width={360} />
               <Button variant="secondary" size="medium" onClick={addSku}>Add</Button>
             </Stack>
-            <Text variant="micro" tone="subtle">SKU references let the agent update confidence scores for specific products. Leave blank for general market/trend signals.</Text>
+            <Text variant="micro" tone="subtle">SKU references enable per-product confidence updates.</Text>
           </FormSection>
           <FormSection label="Confidence level"><ChoiceGrid field="confidence" options={CONFIDENCE_OPTIONS} columns={3} /></FormSection>
           <Stack direction="row" gap={2}>
@@ -401,10 +454,7 @@ export default function MarketIntel() {
 
       <Card sx={softSx}>
         <Stack direction="column" gap={3}>
-          <Text variant="caption" tone="muted" style={{ fontWeight: 600 }}>📋 Entry preview</Text>
-          {!log.type && !log.direction ? (
-            <Text variant="caption" tone="subtle" style={{ textAlign: "center", padding: "16px 0" }}>Start filling in the form to preview your entry</Text>
-          ) : (
+          {!log.type && !log.direction ? null : (
             <Stack direction="column" gap={2}>
               <Stack direction="row" gap={1} wrap>
                 {log.type ? <Badge variant="subtle" size="small" color={TYPE_BADGE[log.type]} label={log.type} /> : null}
@@ -417,20 +467,11 @@ export default function MarketIntel() {
               {log.skus.length ? <Stack direction="row" gap={1} wrap>{log.skus.map((s) => <SkuChip key={s}>{s}</SkuChip>)}</Stack> : null}
             </Stack>
           )}
-          <Stack direction="column" gap={2} style={{ borderTop: "1px solid var(--color-border)", paddingTop: "var(--sp-3)" }}>
-            <Text variant="micro" tone="muted" style={{ fontWeight: 600 }}>🤖 MODEL IMPACT</Text>
-            {feedsModelPreview ? (
-              <NoteBox tone="accent" label="Structured tags will feed model">
-                {log.direction === "threat" ? "Reduce" : "Boost"} confidence for {log.skus.join(", ")} at {log.scope || "specified"} level. Signal type: {log.type}. Urgency: {log.urgency || "unset"}.
-              </NoteBox>
-            ) : (
-              <Stack direction="column" gap={1} paddingX={3} paddingY={2} style={{ background: "var(--color-surface-sunken)", borderRadius: "var(--r2)" }}>
-                {!log.type ? <Text variant="micro" tone="subtle">• Select a signal type to enable model tagging</Text> : null}
-                {!log.skus.length ? <Text variant="micro" tone="subtle">• Add at least one SKU to enable confidence score updates</Text> : null}
-                {log.type && log.skus.length ? <Text variant="micro" tone="success">✓ Free text stays human-read. Structured tags will feed model on submit.</Text> : null}
-              </Stack>
-            )}
-          </Stack>
+          {feedsModelPreview ? (
+            <NoteBox tone="accent" label="Model tags">
+              {log.direction === "threat" ? "Reduce" : "Boost"} confidence for {log.skus.join(", ")} at {log.scope || "specified"} level.
+            </NoteBox>
+          ) : null}
         </Stack>
       </Card>
     </Grid>
@@ -449,13 +490,10 @@ export default function MarketIntel() {
 
   const mapView = (
     <Stack direction="column" gap={3}>
-      <Stack direction="row" justify="space-between" align="center" wrap gap={2}>
-        <Text variant="heading" tone="strong">Signal map — by cluster</Text>
-        <Stack direction="row" gap={3}>
-          <Badge variant="subtle" size="small" color="error" label="Threat" />
-          <Badge variant="subtle" size="small" color="success" label="Opportunity" />
-          <Badge variant="subtle" size="small" color="info" label="Feeds model" />
-        </Stack>
+      <Stack direction="row" justify="flex-end" align="center" wrap gap={2}>
+        <Badge variant="subtle" size="small" color="error" label="Threat" />
+        <Badge variant="subtle" size="small" color="success" label="Opportunity" />
+        <Badge variant="subtle" size="small" color="info" label="Feeds model" />
       </Stack>
       <Grid columns={2} gap={3}>
         {CLUSTER_NAMES.map((cn) => {
@@ -476,11 +514,11 @@ export default function MarketIntel() {
                 <Stack direction="row" gap={2}>
                   <Stack direction="column" align="center" paddingX={3} paddingY={1} style={{ background: "var(--color-error-soft)", borderRadius: "var(--r2)", minWidth: 56 }}>
                     <Text variant="kpi" tone="error">{cd.threats}</Text>
-                    <Text variant="micro" tone="error">threats</Text>
+                    <Text variant="micro" tone="error">T</Text>
                   </Stack>
                   <Stack direction="column" align="center" paddingX={3} paddingY={1} style={{ background: "var(--color-success-soft)", borderRadius: "var(--r2)", minWidth: 56 }}>
                     <Text variant="kpi" tone="success">{cd.opps}</Text>
-                    <Text variant="micro" tone="success">opps</Text>
+                    <Text variant="micro" tone="success">O</Text>
                   </Stack>
                   <Stack direction="column" gap={1} flex="1 1 auto" style={{ minWidth: 0 }}>
                     {cd.signals.slice(0, 2).map((s) => (
@@ -510,14 +548,41 @@ export default function MarketIntel() {
         <Stack direction="row" justify="space-between" align="center" gap={4} wrap>
           <Stack direction="column" gap={1} flex="1 1 auto" style={{ minWidth: 0 }}>
             <Text variant="title">Market Intelligence</Text>
-            <Text variant="caption" tone="muted">Field signals that train the recommendation agent</Text>
           </Stack>
-          <Stack direction="row" gap={3} wrap>
-            <Button variant={view === "inbox" ? "primary" : "secondary"} size="medium" onClick={() => setView("inbox")}>Inbox</Button>
-            <Button variant={view === "map" ? "primary" : "secondary"} size="medium" onClick={() => setView("map")}>Signal map</Button>
+          <Stack direction="row" gap={2} wrap>
+            <Chips label="Inbox" isActive={view === "inbox"} onClick={() => setView("inbox")} />
+            <Chips label="Signal map" isActive={view === "map"} onClick={() => setView("map")} />
           </Stack>
         </Stack>
       </Card>
+
+      <FiltersStrip
+        filterTags={miFilterTags}
+        filterButtonLabel="All Filters"
+        filterButtonClick={() => setFilterPanelOpen(true)}
+        hideSelectedFilterBadge
+        recentFilters={[]}
+        savedFiltersBadge={[]}
+        savedFilterLists={[]}
+        selectedFilter={null}
+        setSelectedFilter={() => {}}
+        handleBadgeChange={() => {}}
+        handleSavedRecentFilterDropdown={() => {}}
+      />
+      <FilterPanel
+        title="Signal Filters"
+        size="medium"
+        anchor="right"
+        isOpen={filterPanelOpen}
+        setIsOpen={setFilterPanelOpen}
+        active={activeFilterTab}
+        setActive={setActiveFilterTab}
+        filters={miFilterPanelTabs}
+        primaryButtonLabel="Apply"
+        onPrimaryButtonClick={() => setFilterPanelOpen(false)}
+        secondaryButtonLabel="Clear all"
+        onSecondaryButtonClick={() => { setStatus("all"); setDirFilter(null); setTypeFilter(null); }}
+      />
 
       <Stack direction="row" gap={3} align="flex-start" wrap>
         {view !== "log" ? sidebar : null}

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { Card, Button, Badge, Table, Tabs, Checkbox, Input } from "impact-ui";
+import { Card, Button, Badge, Table, Tabs, Checkbox, Input, Chips } from "impact-ui";
 import Text from "../components/Text.jsx";
 import StepIndicator from "../components/StepIndicator.jsx";
 import Stack from "../components/Stack.jsx";
@@ -229,8 +229,8 @@ export default function PlanningAdmin() {
             onChange={(e) => setExSearch(e.target.value)}
             size="medium"
           />
-          <Button variant={exView === "attr-store" ? "primary" : "secondary"} size="small" onClick={() => { setExView("attr-store"); setExSearch(""); }}>🏷 Attribute × Store</Button>
-          <Button variant={exView === "item-store" ? "primary" : "secondary"} size="small" onClick={() => { setExView("item-store"); setExSearch(""); }}>📦 Item × Store</Button>
+          <Chips label="🏷 Attribute × Store" isActive={exView === "attr-store"} onClick={() => { setExView("attr-store"); setExSearch(""); }} />
+          <Chips label="📦 Item × Store" isActive={exView === "item-store"} onClick={() => { setExView("item-store"); setExSearch(""); }} />
         </Stack>
       </Stack>
 

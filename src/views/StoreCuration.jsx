@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { Card, Button, Badge, EmptyState, Alert } from "impact-ui";
+import { Card, Button, Badge, EmptyState, Alert, Chips, Input, FiltersStrip, FilterPanel } from "impact-ui";
 import FdSelect from "../components/FdSelect.jsx";
 import Text from "../components/Text.jsx";
 import Stack from "../components/Stack.jsx";
@@ -64,10 +64,11 @@ function CurationRow({ sku, assocRow, locked, decision, localPrice, onDecision, 
       {/* Right: local price override + decision */}
       <div className="sc-row-actions">
         <div className={`sc-price-field${lpEdited ? " sc-price-field--edited" : ""}`}>
-          <span className="sc-price-prefix">$</span>
-          <input
-            className="sc-price-input"
+          <Input
+            id={`sc-price-${sku.sku}`}
             type="number"
+            size="small"
+            prefix="$"
             step="0.01"
             value={lp.toFixed(2)}
             aria-label={`Local price for ${sku.sku}`}
@@ -77,21 +78,23 @@ function CurationRow({ sku, assocRow, locked, decision, localPrice, onDecision, 
         </div>
 
         {locked ? (
-          <span className="sc-locked-badge" title="Mandatory — cannot change">Locked</span>
+          <Badge variant="subtle" color="neutral" label="Locked" />
         ) : isActive ? (
-          <button
-            className={`sc-decision-btn sc-decision-btn--drop${decision === "drop" ? " active" : ""}`}
+          <Button
+            variant={decision === "drop" ? "danger" : "ghost"}
+            size="small"
             onClick={() => onDecision("drop")}
           >
             {decision === "drop" ? "Dropped" : "Drop"}
-          </button>
+          </Button>
         ) : (
-          <button
-            className={`sc-decision-btn sc-decision-btn--add${decision === "add" ? " active" : ""}`}
+          <Button
+            variant={decision === "add" ? "primary" : "ghost"}
+            size="small"
             onClick={() => onDecision("add")}
           >
             {decision === "add" ? "Added" : "+ Add"}
-          </button>
+          </Button>
         )}
       </div>
     </div>
@@ -171,6 +174,8 @@ export default function StoreCuration({ onNavigate, user }) {
   const [decisions, setDecisions] = useState({});
   const [localPrices, setLocalPrices] = useState({});
   const [submitted, setSubmitted] = useState(false);
+  const [filterPanelOpen, setFilterPanelOpen] = useState(false);
+  const [activeFilterTab, setActiveFilterTab] = useState("store");
 
   const key = (sid, skuId) => `${sid}:${skuId}`;
   const setDecision = (skuId, val) =>
@@ -206,6 +211,39 @@ export default function StoreCuration({ onNavigate, user }) {
   const totalAdds  = Object.entries(decisions).filter(([k, v]) => k.startsWith(`${storeId}:`) && v === "add").length;
   const totalDrops = Object.entries(decisions).filter(([k, v]) => k.startsWith(`${storeId}:`) && v === "drop").length;
 
+  /* ── Filter strip tags ────────────────────────────────────────────────── */
+  const scFilterTags = React.useMemo(() => {
+    const tags = [];
+    const storeName = STORE_OPTIONS.find((o) => o.value === String(storeId))?.label || String(storeId);
+    tags.push({ id: "store", label: "Store", values: [{ id: 1, label: storeName }] });
+    if (deptFilter !== "All") tags.push({ id: "dept", label: "Dept", values: [{ id: 1, label: deptFilter }] });
+    return tags;
+  }, [storeId, deptFilter]);
+
+  const DEPT_FD_OPTIONS = DEPT_FILTERS.map((d) => ({ value: d, label: d }));
+  const scFilterPanelTabs = [
+    {
+      value: "store",
+      title: "Store",
+      numberOfFilter: 1,
+      children: (
+        <Stack direction="column" gap={3} style={{ padding: "var(--sp-4)" }}>
+          <FdSelect label="Store" value={String(storeId)} options={STORE_OPTIONS} onChange={(v) => setStoreId(parseInt(v, 10))} width={320} isWithSearch />
+        </Stack>
+      ),
+    },
+    {
+      value: "dept",
+      title: "Department",
+      numberOfFilter: deptFilter !== "All" ? 1 : 0,
+      children: (
+        <Stack direction="column" gap={3} style={{ padding: "var(--sp-4)" }}>
+          <FdSelect label="Department" value={deptFilter} options={DEPT_FD_OPTIONS} onChange={setDeptFilter} width={320} />
+        </Stack>
+      ),
+    },
+  ];
+
   const renderRow = (r) => (
     <CurationRow
       key={r.sku.sku}
@@ -221,8 +259,8 @@ export default function StoreCuration({ onNavigate, user }) {
 
   const ViewToggle = (
     <Stack direction="row" gap={2}>
-      <Button variant={view === "form"    ? "primary" : "secondary"} size="small" onClick={() => setView("form")}>Store Form</Button>
-      <Button variant={view === "summary" ? "primary" : "secondary"} size="small" onClick={() => setView("summary")}>Summary Roll-up</Button>
+      <Chips label="Store Form" isActive={view === "form"} onClick={() => setView("form")} />
+      <Chips label="Summary Roll-up" isActive={view === "summary"} onClick={() => setView("summary")} />
     </Stack>
   );
 
@@ -264,15 +302,10 @@ export default function StoreCuration({ onNavigate, user }) {
           </div>
         </div>
 
-        {/* Store selector + status + counters */}
+        {/* Store status — contextual info for selected store */}
         <div className="sc-header-middle">
-          <div className="sc-store-selector">
-            <FdSelect label="Store" value={String(storeId)} options={STORE_OPTIONS} onChange={(v) => setStoreId(parseInt(v, 10))} width={280} isWithSearch />
-          </div>
           <div className="sc-store-status">
-            <span className="sc-status-label">Status</span>
             <Badge variant="subtle" size="small" color={VEL_BADGE[store.velocity] || "default"} label={`Vel ${store.velocity}`} />
-            <span className="sc-store-region">{store.region} · DC{store.dc}</span>
           </div>
           <div className="sc-decision-counters">
             <div className="sc-counter sc-counter--drop">
@@ -285,23 +318,36 @@ export default function StoreCuration({ onNavigate, user }) {
             </div>
           </div>
         </div>
-
-        {/* Dept filter */}
-        <div className="sc-dept-filter">
-          <span className="sc-dept-filter-label">Department</span>
-          <div className="sc-dept-tabs">
-            {DEPT_FILTERS.map((d) => (
-              <button
-                key={d}
-                className={`sc-dept-tab${deptFilter === d ? " active" : ""}`}
-                onClick={() => setDeptFilter(d)}
-              >
-                {d}
-              </button>
-            ))}
-          </div>
-        </div>
       </Card>
+
+      {/* ── Filters strip ──────────────────────────────────────────────────── */}
+      <FiltersStrip
+        filterTags={scFilterTags}
+        filterButtonLabel="All Filters"
+        filterButtonClick={() => setFilterPanelOpen(true)}
+        hideSelectedFilterBadge
+        recentFilters={[]}
+        savedFiltersBadge={[]}
+        savedFilterLists={[]}
+        selectedFilter={null}
+        setSelectedFilter={() => {}}
+        handleBadgeChange={() => {}}
+        handleSavedRecentFilterDropdown={() => {}}
+      />
+      <FilterPanel
+        title="Store Curation Filters"
+        size="medium"
+        anchor="right"
+        isOpen={filterPanelOpen}
+        setIsOpen={setFilterPanelOpen}
+        active={activeFilterTab}
+        setActive={setActiveFilterTab}
+        filters={scFilterPanelTabs}
+        primaryButtonLabel="Apply"
+        onPrimaryButtonClick={() => setFilterPanelOpen(false)}
+        secondaryButtonLabel="Clear dept"
+        onSecondaryButtonClick={() => setDeptFilter("All")}
+      />
 
       {/* ── OTB Budget bar ──────────────────────────────────────────────── */}
       <OtbBanner storeId={storeId} store={store} decisions={decisions} lists={lists} />
@@ -399,7 +445,7 @@ function SummaryRollup({ decisions, localPrices, deptFilter, viewToggle, onEdit,
                         const lpEdited = lpOverride != null && lpOverride !== sku.price;
                         return (
                           <div key={k} className={`sc-row ${dec === "drop" ? "is-drop" : "is-add"}`} style={{ padding: "var(--sp-2) var(--sp-4)", display: "flex", alignItems: "center", gap: "var(--sp-3)", flexWrap: "wrap" }}>
-                            <span style={{ fontWeight: 800, fontSize: 16, color: dec === "drop" ? color.error : color.success, width: 20, flexShrink: 0 }}>{dec === "drop" ? "−" : "+"}</span>
+                            <span style={{ fontWeight: 800, fontSize: "var(--fs-heading)", color: dec === "drop" ? color.error : color.success, width: 20, flexShrink: 0 }}>{dec === "drop" ? "−" : "+"}</span>
                             <div style={{ flex: "1 1 220px", minWidth: 0 }}>
                               <Text variant="caption" tone="strong">{sku.desc}</Text>
                               <Text variant="micro" tone="subtle" mono>{sku.sku} · {sku.vsn}</Text>

@@ -260,15 +260,14 @@ export default function National({ onNavigate }) {
                         <Text variant="body-strong" tone="strong">{rec.sku.desc}</Text>
                         <Badge variant="subtle" size="small" color={reason.color} label={reason.label} />
                         {intelMod.delta !== 0 && (
-                          <span className={`nat-intel-badge ${intelMod.delta > 0 ? "pos" : "neg"}`}>
-                            📡 Intel {intelMod.delta > 0 ? "+" : ""}{intelMod.delta}pts
-                          </span>
+                          <Badge variant="subtle" size="small" color={intelMod.delta > 0 ? "success" : "error"}
+                            label={`Intel ${intelMod.delta > 0 ? "+" : ""}${intelMod.delta}pts`} />
                         )}
                         {intelMod.flags.includes("supply-constrained") && (
-                          <span className="nat-flag-badge nat-flag--supply">⚠️ Supply risk</span>
+                          <Badge variant="subtle" size="small" color="warning" label="Supply risk" />
                         )}
                         {intelMod.flags.includes("quality-hold") && (
-                          <span className="nat-flag-badge nat-flag--quality">🔍 Quality hold</span>
+                          <Badge variant="subtle" size="small" color="error" label="Quality hold" />
                         )}
                       </Stack>
                       <Stack direction="row" align="center" gap={2} wrap>

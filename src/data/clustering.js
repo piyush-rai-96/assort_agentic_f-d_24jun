@@ -131,12 +131,16 @@ export const CLUSTER_ATTRIBUTES = [
 ];
 
 export const WIZARD_DEFAULTS = {
-  name: "Network 5-cluster (k-means)",
+  name: "",
   notes: "",
   scope: "network",
   method: "kmeans",
   k: 5,
   attrs: ["pro_split", "climate", "sales_velocity", "cat_mix"],
+  dept: "All",
+  channel: "All Stores",
+  season: "SS26",
+  params: { performance: true, demographics: false, attributes: false },
 };
 
 export const SCOPE_OPTIONS = [

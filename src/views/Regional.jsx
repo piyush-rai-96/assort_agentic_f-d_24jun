@@ -1,8 +1,9 @@
 import React, { useMemo, useState } from "react";
-import { Card, Button, Badge, Table, EmptyState } from "impact-ui";
+import { Card, Button, Badge, Table, EmptyState, FiltersStrip, FilterPanel } from "impact-ui";
 import Text from "../components/Text.jsx";
 import Stack from "../components/Stack.jsx";
 import Grid from "../components/Grid.jsx";
+import FdSelect from "../components/FdSelect.jsx";
 import { color } from "../styles/tokens.js";
 import SkuSwatch from "../components/SkuSwatch.jsx";
 import { FD_STORES } from "../data/stores.js";
@@ -91,9 +92,39 @@ function SectionHeader({ icon, title, count, tone, sub }) {
 
 export default function Regional({ onNavigate }) {
   const [deptFilter, setDeptFilter] = useState("All");
+  const [filterPanelOpen, setFilterPanelOpen] = useState(false);
+  const [activeFilterTab, setActiveFilterTab] = useState("dept");
   const [activeCluster, setActiveCluster] = useState(null);
   const [activeStore, setActiveStore] = useState(null);
   const [clusterAdds, setClusterAdds] = useState({});
+
+  /* Derived filter tag for the strip */
+  const filterTags = useMemo(() => {
+    if (deptFilter === "All") return [];
+    return [{ id: "dept", label: "Department", values: [{ id: 1, label: deptFilter }] }];
+  }, [deptFilter]);
+
+  /* FilterPanel tab config */
+  const DEPT_FD_OPTIONS = DEPT_OPTIONS.map((d) => ({ value: d, label: d }));
+
+  const filterPanelTabs = [
+    {
+      value: "dept",
+      title: "Department",
+      numberOfFilter: deptFilter !== "All" ? 1 : 0,
+      children: (
+        <Stack direction="column" gap={3} style={{ padding: "var(--sp-4)" }}>
+          <FdSelect
+            label="Department"
+            value={deptFilter}
+            options={DEPT_FD_OPTIONS}
+            onChange={(v) => setDeptFilter(v)}
+            width={320}
+          />
+        </Stack>
+      ),
+    },
+  ];
 
   const byDept = (skus) => (deptFilter === "All" ? skus : skus.filter((s) => s.dept === deptFilter));
 
@@ -142,7 +173,7 @@ export default function Regional({ onNavigate }) {
             ) : null}
           </Stack>
 
-          <Stack direction="column" gap={3}>
+            <Stack direction="column" gap={3}>
             <Stack direction="row" gap={2} wrap>
               {TIERS.map((t) => (
                 <Stack
@@ -162,23 +193,38 @@ export default function Regional({ onNavigate }) {
                 </Stack>
               ))}
             </Stack>
-
-            <Stack direction="row" gap={2} wrap align="center" style={{ paddingTop: "var(--sp-2)", borderTop: "1px solid var(--color-border)" }}>
-              <Text variant="micro" tone="subtle">Department</Text>
-              {DEPT_OPTIONS.map((d) => (
-                <Button
-                  key={d}
-                  variant={deptFilter === d ? "primary" : "secondary"}
-                  size="small"
-                  onClick={() => setDeptFilter(d)}
-                >
-                  {d}
-                </Button>
-              ))}
-            </Stack>
           </Stack>
         </Stack>
       </Card>
+
+      {/* ── Filters strip ──────────────────────────────────────────────────── */}
+      <FiltersStrip
+        filterTags={filterTags}
+        filterButtonLabel="All Filters"
+        filterButtonClick={() => setFilterPanelOpen(true)}
+        hideSelectedFilterBadge
+        recentFilters={[]}
+        savedFiltersBadge={[]}
+        savedFilterLists={[]}
+        selectedFilter={null}
+        setSelectedFilter={() => {}}
+        handleBadgeChange={() => {}}
+        handleSavedRecentFilterDropdown={() => {}}
+      />
+      <FilterPanel
+        title="Regional Filters"
+        size="medium"
+        anchor="right"
+        isOpen={filterPanelOpen}
+        setIsOpen={setFilterPanelOpen}
+        active={activeFilterTab}
+        setActive={setActiveFilterTab}
+        filters={filterPanelTabs}
+        primaryButtonLabel="Apply"
+        onPrimaryButtonClick={() => setFilterPanelOpen(false)}
+        secondaryButtonLabel="Clear all"
+        onSecondaryButtonClick={() => setDeptFilter("All")}
+      />
 
       {/* ── Body: National Core sidebar + main panel ───────────────────────── */}
       <Stack direction="row" gap={4} align="flex-start" wrap>

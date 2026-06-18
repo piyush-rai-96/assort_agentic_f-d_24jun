@@ -9,7 +9,7 @@
   margin-top: var(--header-h);
   height: calc(100vh - var(--header-h));
   display: flex;
-  background: var(--ice);
+  background: var(--color-bg);
   overflow: hidden;
 }
 
@@ -17,33 +17,14 @@
   flex: 1;
   min-width: 0;
   overflow: auto;
+  /* Subtle inset shadow at the top for depth */
+  box-shadow: inset 0 2px 0 0 rgba(37, 99, 235, 0.04);
 }
 
 .fd-content-inner {
-  padding: 24px 28px 40px;
-  max-width: 1320px;
+  padding: 28px 32px 48px;
+  max-width: 1380px;
   margin: 0 auto;
-}
-
-/* ── Header center breadcrumb ─────────────────────────────────────────────── */
-.fd-breadcrumb {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  color: var(--text4);
-  white-space: nowrap;
-}
-.fd-breadcrumb .sep {
-  color: var(--border2);
-}
-.fd-breadcrumb .crumb-group {
-  color: var(--text3);
-  font-weight: 500;
-}
-.fd-breadcrumb .crumb-active {
-  color: var(--text);
-  font-weight: 700;
 }
 
 @media (max-width: 760px) {
@@ -54,22 +35,11 @@
 
 /* ── Override Mode ───────────────────────────────────────────────────────── */
 .override-topnav-btn {
-  position: fixed;
-  top: 12px;
-  right: var(--sp-4);
-  z-index: var(--z-overlay);
-  padding: var(--sp-1) var(--sp-3);
-  border-radius: var(--r2);
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
-  font-size: var(--fs-caption);
-  font-weight: var(--fw-bold);
-  cursor: pointer;
-  color: var(--color-text-muted);
-  transition: all .12s;
+  position: fixed !important;
+  top: 12px !important;
+  right: var(--sp-4) !important;
+  z-index: var(--z-overlay) !important;
 }
-.override-topnav-btn:hover { border-color: var(--color-accent); color: var(--color-accent); }
-.override-topnav-btn.active { background: var(--color-accent); color: white; border-color: var(--color-accent); }
 
 .override-bar {
   position: fixed;
@@ -90,20 +60,7 @@
 }
 .override-bar-title { font-size: var(--fs-body); font-weight: var(--fw-extrabold); flex-shrink: 0; }
 .override-dept-tabs { display: flex; gap: var(--sp-1); flex: 1; flex-wrap: wrap; }
-.override-dept-tab {
-  padding: 3px 10px; border-radius: var(--r); font-size: var(--fs-micro); font-weight: var(--fw-bold);
-  border: 1px solid rgba(255,255,255,.3); background: transparent; color: rgba(255,255,255,.7); cursor: pointer;
-}
-.override-dept-tab.active { background: var(--color-surface); color: var(--color-accent); border-color: var(--color-surface); }
 .override-bar-actions { display: flex; gap: var(--sp-2); flex-shrink: 0; }
-.override-btn-ghost {
-  padding: 5px 12px; border-radius: var(--r2); border: 1px solid rgba(255,255,255,.3);
-  background: transparent; color: rgba(255,255,255,.7); font-size: var(--fs-caption); font-weight: var(--fw-bold); cursor: pointer;
-}
-.override-btn-submit {
-  padding: 5px 14px; border-radius: var(--r2); border: none;
-  background: var(--color-surface); color: var(--color-accent); font-size: var(--fs-caption); font-weight: var(--fw-extrabold); cursor: pointer;
-}
 
 .override-grid { padding: var(--sp-2) var(--sp-5) var(--sp-3); display: flex; flex-direction: column; gap: var(--sp-2); }
 .override-row {

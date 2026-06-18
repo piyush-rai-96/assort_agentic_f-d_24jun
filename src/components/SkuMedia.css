@@ -1,0 +1,328 @@
+/* ───────────────────────────────────────────────────────────────────────────
+ * SkuMedia — table thumbnail + portal preview (gallery / 3D).
+ * The popover is portalled to <body>, so its styles are global (not nested
+ * under the table) and rely only on the app's design tokens.
+ * ─────────────────────────────────────────────────────────────────────────── */
+
+/* ── Thumbnail (lives in the Images column) ──────────────────────────────── */
+.media-cell-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.media-thumb {
+  position: relative;
+  display: inline-flex;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 7px;
+  background: var(--color-surface);
+  cursor: pointer;
+  line-height: 0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+}
+.media-thumb:hover,
+.media-thumb.is-active {
+  transform: scale(1.12);
+  border-color: var(--color-primary);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.16);
+}
+.media-thumb:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+.media-thumb svg {
+  border-radius: 6px;
+}
+
+/* Tiny corner affordance (expand / pinned) */
+.media-thumb-hint {
+  position: absolute;
+  right: -5px;
+  bottom: -5px;
+  width: 15px;
+  height: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--fs-xs);
+  line-height: 1;
+  color: #fff;
+  background: var(--color-primary);
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  transform: scale(0.6);
+  transition: opacity 0.16s ease, transform 0.16s ease;
+}
+.media-thumb:hover .media-thumb-hint,
+.media-thumb.is-active .media-thumb-hint {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Let the scaled thumbnail breathe inside the AG-Grid cell. */
+.ag-cell.media-cell {
+  overflow: visible;
+}
+
+/* ── Preview popover ─────────────────────────────────────────────────────── */
+.media-pop {
+  position: fixed;
+  z-index: 4000;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong, var(--color-border));
+  border-radius: var(--r2);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.22), 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transform-origin: left center;
+  animation: media-pop-in 0.16s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+.media-pop--left {
+  transform-origin: right center;
+}
+@keyframes media-pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Header */
+.media-pop-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-3);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface-alt, var(--color-surface));
+}
+.media-pop-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.media-pop-titletext {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.media-pop-name {
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-bold);
+  color: var(--color-text-strong);
+  line-height: 1.2;
+}
+.media-pop-sku {
+  font-family: var(--font-mono, monospace);
+  font-size: var(--fs-micro);
+  color: var(--color-text-subtle);
+}
+.media-pop-modes {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.media-pop-close {
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-size: var(--fs-heading);
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.14s ease, color 0.14s ease;
+}
+.media-pop-close:hover {
+  background: var(--color-error-soft, #fef2f2);
+  color: var(--color-error);
+}
+
+/* Stage (image area) */
+.media-pop-stage {
+  position: relative;
+  height: 240px;
+  background:
+    repeating-conic-gradient(#f4f4f2 0% 25%, #ececea 0% 50%) 0 / 22px 22px;
+}
+
+/* Footer */
+.media-pop-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface-alt, var(--color-surface));
+}
+.media-foot-hint {
+  font-size: var(--fs-micro);
+  color: var(--color-text-subtle);
+}
+.media-foot-reset {
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-size: var(--fs-micro);
+  font-weight: var(--fw-semibold);
+  padding: 3px 9px;
+  cursor: pointer;
+  transition: border-color 0.14s ease, color 0.14s ease;
+}
+.media-foot-reset:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+/* ── Gallery ─────────────────────────────────────────────────────────────── */
+.media-gallery {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  cursor: grab;
+  touch-action: pan-y;
+}
+.media-gallery:active {
+  cursor: grabbing;
+}
+.media-gallery-track {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.34s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.media-gallery-slide {
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
+}
+.media-scene-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.media-gallery-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.86);
+  color: #1a1a1a;
+  font-size: var(--fs-title);
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
+  opacity: 0;
+  transition: opacity 0.16s ease, background 0.14s ease;
+}
+.media-gallery:hover .media-gallery-arrow {
+  opacity: 1;
+}
+.media-gallery-arrow:hover {
+  background: #fff;
+}
+.media-gallery-arrow--prev {
+  left: 8px;
+}
+.media-gallery-arrow--next {
+  right: 8px;
+}
+.media-gallery-tag {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  padding: 3px 9px;
+  font-size: var(--fs-micro);
+  font-weight: var(--fw-bold);
+  color: #fff;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(2px);
+  border-radius: 5px;
+  letter-spacing: 0.02em;
+}
+
+/* Dots */
+.media-dots {
+  display: flex;
+  gap: 6px;
+}
+.media-dot {
+  width: 7px;
+  height: 7px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--color-border-strong, #b4c8a0);
+  cursor: pointer;
+  transition: background 0.14s ease, transform 0.14s ease;
+}
+.media-dot:hover {
+  transform: scale(1.25);
+}
+.media-dot.is-active {
+  background: var(--color-primary);
+  transform: scale(1.25);
+}
+
+/* ── 3D stage ────────────────────────────────────────────────────────────── */
+.media-3d-stage {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  perspective: 760px;
+  cursor: grab;
+  touch-action: none;
+  background:
+    radial-gradient(120% 90% at 50% 18%, rgba(255, 255, 255, 0.7), rgba(0, 0, 0, 0.05) 70%);
+}
+.media-3d-stage.is-dragging {
+  cursor: grabbing;
+}
+.media-3d-cube {
+  position: relative;
+  transform-style: preserve-3d;
+  transform: rotateX(-16deg) rotateY(28deg);
+  will-change: transform;
+}
+/* Floor shadow under the chip for grounding */
+.media-3d-cube::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  width: 150px;
+  height: 26px;
+  margin-left: -75px;
+  margin-top: 28px;
+  background: radial-gradient(closest-side, rgba(0, 0, 0, 0.28), rgba(0, 0, 0, 0));
+  transform: rotateX(90deg);
+}
+.media-3d-cube svg {
+  display: block;
+}

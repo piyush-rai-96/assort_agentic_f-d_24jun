@@ -7,53 +7,17 @@
 .today-shell {
   flex: 1;
   overflow-y: auto;
-  background: var(--color-surface-sunken);
   display: flex;
   flex-direction: column;
+  gap: var(--sp-4);
 }
 
-/* ── 1. Hero banner ───────────────────────────────────────────────────────── */
-.today-hero {
-  background: var(--color-text-strong);
-  padding: var(--sp-8) var(--sp-8) var(--sp-7);
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--sp-6);
-  flex-shrink: 0;
-}
+/* ── 1. Page header — notification widget (Card handles the container) ───── */
 
-.today-hero-left { flex: 1; min-width: 0; }
-
-.today-hero-date {
-  font-size: var(--fs-micro);
-  font-weight: var(--fw-semibold);
-  color: var(--color-success);
-  margin-bottom: var(--sp-2);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.today-hero-greeting {
-  font-size: 30px;
-  font-weight: var(--fw-extrabold);
-  color: var(--color-surface);
-  letter-spacing: -0.5px;
-  line-height: 1.15;
-  margin-bottom: var(--sp-1);
-}
-
-.today-hero-sub {
-  font-size: var(--fs-caption);
-  color: var(--color-teal);
-  max-width: 480px;
-  line-height: var(--lh-normal);
-}
-
-/* Notification widget top-right */
+/* Notification widget — displayed inside the light page-header Card */
 .today-hero-notifs {
-  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
-  border: 1px solid color-mix(in srgb, var(--color-primary) 28%, transparent);
+  background: var(--color-primary-tint-12);
+  border: 1px solid var(--color-primary-tint-28);
   border-radius: var(--r);
   padding: var(--sp-3) var(--sp-5);
   text-align: center;
@@ -61,34 +25,35 @@
   cursor: pointer;
   transition: opacity 0.15s, background 0.15s;
   flex-shrink: 0;
+  /* reset button defaults */
+  font-family: inherit;
+  color: inherit;
 }
 .today-hero-notifs:hover {
-  background: color-mix(in srgb, var(--color-primary) 20%, transparent);
+  background: var(--color-primary-tint-20);
 }
 
 .today-hero-notifs-count {
-  font-size: 32px;
-  font-weight: 300;
-  color: var(--color-teal);
+  font-size: var(--fs-kpi);
+  font-weight: var(--fw-bold);
+  color: var(--color-primary);
   line-height: 1;
-  margin-bottom: 5px;
+  margin-bottom: var(--sp-1);
 }
 
 .today-hero-notifs-label {
-  font-size: var(--fs-xs);
-  color: rgba(255, 255, 255, 0.65);
-  font-weight: var(--fw-semibold);
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
+  color: var(--color-text-subtle);
 }
 
 /* ── 2. Quick-stat strip ─────────────────────────────────────────────────── */
 .today-stat-strip {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  border-bottom: 1px solid var(--color-border);
+  border: 1px solid var(--color-border);
+  border-radius: var(--r2);
   flex-shrink: 0;
   background: var(--color-surface);
+  overflow: hidden;
 }
 
 .today-stat-cell {
@@ -99,6 +64,14 @@
   display: flex;
   flex-direction: column;
   gap: var(--sp-2);
+  /* reset button defaults */
+  background: transparent;
+  border-top: none;
+  border-bottom: none;
+  border-left: none;
+  text-align: left;
+  font-family: inherit;
+  color: inherit;
 }
 .today-stat-cell:last-child { border-right: none; }
 .today-stat-cell:hover {
@@ -118,17 +91,14 @@
 }
 
 .today-stat-val {
-  font-size: 28px;
+  font-size: var(--fs-kpi);
   font-weight: var(--fw-bold);
   line-height: 1;
 }
 
 .today-stat-label {
-  font-size: var(--fs-xs);
+  /* typography handled by <Text variant="overline"> */
   color: var(--color-text-subtle);
-  font-weight: var(--fw-semibold);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
 }
 
 /* ── 3. Cluster model panel ──────────────────────────────────────────────── */
@@ -159,21 +129,17 @@
 }
 
 .today-cluster-label {
-  font-size: var(--fs-caption);
+  /* font-size + color handled by <Text variant="caption"> */
   font-weight: var(--fw-bold);
-  color: var(--color-text);
 }
 
 .today-cluster-meta {
-  font-size: var(--fs-xs);
-  color: var(--color-text-subtle);
+  /* font-size + color handled by <Text variant="micro" tone="subtle"> */
   line-height: 1.4;
 }
 
 .today-cluster-signal {
-  font-size: var(--fs-xs);
-  color: var(--color-text-muted);
-  line-height: var(--lh-snug);
+  /* font-size + color handled by <Text variant="micro" tone="muted"> */
   margin-top: var(--sp-2);
   font-style: italic;
 }
@@ -184,28 +150,18 @@
   box-shadow: var(--sh) !important;
 }
 
-/* ── Section labels ──────────────────────────────────────────────────────── */
-.today-section-label {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-2);
-  font-size: var(--fs-caption);
-  font-weight: var(--fw-bold);
-  color: var(--color-text);
-  margin-bottom: var(--sp-3);
-  padding-bottom: var(--sp-2);
-  border-bottom: 1px solid var(--color-border);
-}
 
-.today-section-label-icon {
-  font-size: var(--fs-body);
-  line-height: 1;
+/* ── Section divider ─────────────────────────────────────────────────────── */
+.today-section-divider {
+  height: 1px;
+  background: var(--color-border);
+  margin: var(--sp-4) 0 var(--sp-3);
 }
 
 /* ── 4. Two-column body ──────────────────────────────────────────────────── */
 .today-body {
   display: grid;
-  grid-template-columns: 1fr 340px;
+  grid-template-columns: 1fr var(--sidebar-col-w);
   gap: var(--sp-5);
   padding: var(--sp-6);
   flex: 1;
@@ -225,27 +181,27 @@
 }
 .today-plan-card:hover {
   border-color: var(--color-primary) !important;
-  box-shadow: 0 4px 16px color-mix(in srgb, var(--color-primary) 12%, transparent) !important;
+  box-shadow: 0 4px 16px var(--color-primary-tint-12) !important;
 }
 
 /* Segmented pipeline progress */
 .today-plan-pipe {
   display: flex;
-  gap: 3px;
+  gap: var(--sp-1);
   margin: var(--sp-3) 0 var(--sp-2);
 }
 
 .today-plan-pipe-seg {
   flex: 1;
   height: 4px;
-  border-radius: 3px;
+  border-radius: var(--r-xs);
   transition: background 0.2s;
 }
 
 /* ── PLR cards hover ─────────────────────────────────────────────────────── */
 .today-plr-card:hover {
   border-color: var(--color-teal) !important;
-  box-shadow: 0 2px 8px color-mix(in srgb, var(--color-teal) 15%, transparent) !important;
+  box-shadow: 0 2px 8px var(--color-teal-tint-15) !important;
 }
 
 /* ── Quick access grid ───────────────────────────────────────────────────── */
@@ -270,31 +226,11 @@
 
 /* ── Intel signal cards ──────────────────────────────────────────────────── */
 .today-intel-card:hover {
-  box-shadow: 0 2px 10px color-mix(in srgb, var(--color-text) 10%, transparent) !important;
+  box-shadow: 0 2px 10px var(--color-text-tint-10) !important;
 }
 
 .today-intel-meta { display: block; }
 
-/* "View all signals →" */
-.today-intel-all {
-  width: 100%;
-  background: transparent;
-  border: 1px solid var(--color-border);
-  color: var(--color-primary);
-  border-radius: var(--r2);
-  padding: var(--sp-2) var(--sp-3);
-  font-size: var(--fs-caption);
-  font-weight: var(--fw-semibold);
-  cursor: pointer;
-  font-family: inherit;
-  margin-top: var(--sp-2);
-  transition: background 0.12s, border-color 0.12s;
-  text-align: center;
-}
-.today-intel-all:hover {
-  background: var(--color-primary-soft);
-  border-color: var(--color-primary);
-}
 
 /* ── Responsive ──────────────────────────────────────────────────────────── */
 @media (max-width: 900px) {
@@ -302,7 +238,6 @@
     padding: var(--sp-6) var(--sp-5) var(--sp-5);
     flex-wrap: wrap;
   }
-  .today-hero-greeting { font-size: 24px; }
   .today-hero-notifs { min-width: 110px; }
   .today-stat-strip { grid-template-columns: repeat(3, 1fr); }
   .today-stat-cell:nth-child(4),
@@ -323,5 +258,4 @@
   .today-cluster-cards { grid-template-columns: 1fr 1fr !important; }
   .today-stat-strip { grid-template-columns: 1fr 1fr; }
   .today-stat-cell:last-child { grid-column: span 2; border-right: none; }
-  .today-hero-greeting { font-size: 22px; }
 }

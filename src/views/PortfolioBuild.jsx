@@ -1,5 +1,9 @@
 import React, { useMemo, useState, useEffect } from "react";
-import { Card, Button, Badge, Tabs, Table, ProgressBar, EmptyState, Input, TextArea } from "impact-ui";
+import { Card, Button, Badge, Tabs, Table, ProgressBar, EmptyState, Input, TextArea, Chips } from "impact-ui";
+import {
+  Check, X, Lock, Clock, Zap, Satellite, ExternalLink,
+  DollarSign, Folder, CheckCircle2, Inbox, Factory, ClipboardList,
+} from "lucide-react";
 import FdSelect from "../components/FdSelect.jsx";
 import Text from "../components/Text.jsx";
 import Stack from "../components/Stack.jsx";
@@ -66,26 +70,20 @@ function GapForm({ onSave, onCancel }) {
   };
   return (
     <Stack direction="column" gap={4}>
-      <Stack direction="column" gap={1}>
-        <Text variant="subheading" tone="strong">Log a new line gap</Text>
-        <Text variant="caption" tone="muted">
-          Gaps are product types starting to perform without enough depth — missing price points,
-          materials, looks, or formats. Each gap becomes a brief for vendor &amp; trade-show sourcing.
-        </Text>
-      </Stack>
+      <Text variant="subheading" tone="strong">Log a new line gap</Text>
       <Grid columns={2} gap={4}>
         <FdSelect label="Gap type" value={type} options={GAP_TYPE_OPTIONS} onChange={setType} width={600} />
         <FdSelect label="Priority" value={priority} options={PRIORITY_OPTIONS} onChange={setPriority} width={600} />
       </Grid>
       <Grid columns={2} gap={4}>
         <FdSelect label="Category / Department" value={category} options={DEPT_OPTIONS} onChange={setCategory} width={600} />
-        <Stack direction="column" gap={1}>
-          <Text variant="micro" tone="muted">Target price range</Text>
-          <Input placeholder="e.g. $1.99–$2.49/sqft" value={priceRange} onChange={(e) => setPriceRange(e.target.value)} fullWidth size="medium" />
-        </Stack>
+      <Stack direction="column" gap={1}>
+        <Text variant="caption" tone="muted">Target price range</Text>
+        <Input placeholder="e.g. $1.99–$2.49/sqft" value={priceRange} onChange={(e) => setPriceRange(e.target.value)} fullWidth size="medium" />
+      </Stack>
       </Grid>
       <Stack direction="column" gap={1}>
-        <Text variant="micro" tone="muted">Description <span style={{ color: color.error }}>*</span></Text>
+        <Text variant="caption" tone="muted">Description <span style={{ color: "var(--color-error)" }}>*</span></Text>
         <TextArea
           placeholder={"Describe the gap clearly — what's missing, why it matters, what evidence supports it."}
           value={desc}
@@ -114,16 +112,10 @@ function WishForm({ onSave, onCancel }) {
   };
   return (
     <Stack direction="column" gap={4}>
-      <Stack direction="column" gap={1}>
-        <Text variant="subheading" tone="strong">Submit a field wishlist item</Text>
-        <Text variant="caption" tone="muted">
-          A product you&apos;re seeing demand for that&apos;s not in the current catalogue. Include the
-          evidence — the more specific, the stronger the case to the merchant team.
-        </Text>
-      </Stack>
+      <Text variant="subheading" tone="strong">Submit a field wishlist item</Text>
       <FdSelect label="Store" value={store} options={STORE_OPTIONS} onChange={setStore} width={600} isWithSearch />
       <Stack direction="column" gap={1}>
-        <Text variant="micro" tone="muted">Product / item request <span style={{ color: color.error }}>*</span></Text>
+        <Text variant="caption" tone="muted">Product / item request <span style={{ color: "var(--color-error)" }}>*</span></Text>
         <Input placeholder="e.g. Wide-plank white oak engineered, farmhouse look" value={item} onChange={(e) => setItem(e.target.value)} fullWidth size="medium" />
       </Stack>
       <Grid columns={2} gap={4}>
@@ -131,7 +123,7 @@ function WishForm({ onSave, onCancel }) {
         <FdSelect label="Urgency" value={urgency} options={URGENCY_OPTIONS} onChange={setUrgency} width={600} />
       </Grid>
       <Stack direction="column" gap={1}>
-        <Text variant="micro" tone="muted">Supporting detail</Text>
+        <Text variant="caption" tone="muted">Supporting detail</Text>
         <TextArea
           placeholder="How many customers asking? Any specific projects? Price they're willing to pay?"
           value={note}
@@ -168,35 +160,29 @@ function VendorForm({ onSave, onCancel }) {
   };
   return (
     <Stack direction="column" gap={4}>
+      <Text variant="subheading" tone="strong">Add a vendor SKU</Text>
       <Stack direction="column" gap={1}>
-        <Text variant="subheading" tone="strong">Add a vendor SKU</Text>
-        <Text variant="caption" tone="muted">
-          Log a SKU seen at a trade show, sourced direct, or submitted by a vendor. Shortlisted items
-          are reviewed by the merchant team before PLR approval.
-        </Text>
-      </Stack>
-      <Stack direction="column" gap={1}>
-        <Text variant="micro" tone="muted">SKU / Product name <span style={{ color: color.error }}>*</span></Text>
+        <Text variant="caption" tone="muted">SKU / Product name <span style={{ color: "var(--color-error)" }}>*</span></Text>
         <Input placeholder="e.g. Marazzi Calacatta Statuarietto 24×48 Polished" value={name} onChange={(e) => setName(e.target.value)} fullWidth size="medium" />
       </Stack>
       <Grid columns={2} gap={4}>
         <Stack direction="column" gap={1}>
-          <Text variant="micro" tone="muted">Vendor <span style={{ color: color.error }}>*</span></Text>
+          <Text variant="caption" tone="muted">Vendor <span style={{ color: "var(--color-error)" }}>*</span></Text>
           <Input placeholder="e.g. Marazzi" value={vendor} onChange={(e) => setVendor(e.target.value)} fullWidth size="medium" />
         </Stack>
         <FdSelect label="Department" value={dept} options={DEPT_OPTIONS} onChange={setDept} width={600} />
       </Grid>
       <Grid columns={3} gap={4}>
         <Stack direction="column" gap={1}>
-          <Text variant="micro" tone="muted">Trade show / source</Text>
+          <Text variant="caption" tone="muted">Trade show / source</Text>
           <Input placeholder="e.g. Coverings 2026" value={show} onChange={(e) => setShow(e.target.value)} fullWidth size="medium" />
         </Stack>
         <Stack direction="column" gap={1}>
-          <Text variant="micro" tone="muted">Landed cost ($/sqft)</Text>
+          <Text variant="caption" tone="muted">Landed cost ($/sqft)</Text>
           <Input type="number" placeholder="0.00" value={cost} onChange={(e) => setCost(e.target.value)} fullWidth size="medium" />
         </Stack>
         <Stack direction="column" gap={1}>
-          <Text variant="micro" tone="muted">Est. margin %</Text>
+          <Text variant="caption" tone="muted">Est. margin %</Text>
           <Input type="number" placeholder="0" value={margin} onChange={(e) => setMargin(e.target.value)} fullWidth size="medium" />
         </Stack>
       </Grid>
@@ -393,13 +379,16 @@ export default function PortfolioBuild({ onNavigate }) {
           <div className="pf-inline-cell">
             <span className="pf-inline-cell__name">{p.data.addedBy}</span>
             {isIntel && (
-              <span
-                className="pf-intel-chip pf-intel-chip--amber pf-intel-chip--link"
-                title="View in Market Intelligence"
+              <button
+                type="button"
+                className="pf-intel-link"
+                aria-label="View in Market Intelligence"
                 onClick={handleIntelClick}
               >
-                ⚡ Intel ↗
-              </span>
+                <Zap size={10} aria-hidden="true" />
+                Intel
+                <ExternalLink size={9} aria-hidden="true" />
+              </button>
             )}
           </div>
         );
@@ -421,7 +410,7 @@ export default function PortfolioBuild({ onNavigate }) {
       headerName: "Store",
       width: 150,
       filter: "agTextColumnFilter",
-      cellStyle: () => ({ color: color.teal, fontWeight: 600 }),
+      cellStyle: () => ({ color: "var(--color-teal)", fontWeight: "var(--fw-semibold)" }),
     },
     { field: "region", headerName: "Region", width: 120, filter: "agSetColumnFilter" },
     {
@@ -450,7 +439,7 @@ export default function PortfolioBuild({ onNavigate }) {
               {displayText}
             </span>
             {isIntel && (
-              <span className="pf-intel-chip pf-intel-chip--teal">📡 Intel</span>
+              <Badge variant="subtle" size="small" color="info" isIcon icon={<Satellite size={11} />} label="Intel" />
             )}
           </div>
         );
@@ -529,56 +518,61 @@ export default function PortfolioBuild({ onNavigate }) {
       cellRenderer: (p) => {
         /* Mandatory / Core / BG — locked, not editable */
         if (p.data.tag === "Core" || p.data.tag === "BG") {
-          return <span className="pf-action-chip pf-action-chip--mandatory">🔒 Mandatory</span>;
+          return <Badge variant="subtle" size="small" color="default" isIcon icon={<Lock size={11} />} label="Mandatory" />;
         }
         /* Shortlisted — Approve + Decline pill buttons */
         if (p.data.status === "Shortlisted") {
           return (
             <div className="pf-action-btns">
-              <button
-                className="pf-action-btn pf-action-btn--approve"
-                title="Approve for PLR"
+              <Button
+                variant="primary"
+                size="small"
+                aria-label={`Approve ${p.data.name} for PLR`}
                 onClick={(e) => { e.stopPropagation(); setVendorStatus(p.data.id, "Approved"); }}
-              >✓ Approve</button>
-              <button
-                className="pf-action-btn pf-action-btn--decline"
-                title="Decline"
+              ><Check size={12} aria-hidden="true" /> Approve</Button>
+              <Button
+                variant="secondary"
+                size="small"
+                type="destructive"
+                aria-label={`Decline ${p.data.name}`}
                 onClick={(e) => { e.stopPropagation(); setVendorStatus(p.data.id, "Declined"); }}
-              >✕</button>
+              ><X size={12} aria-hidden="true" /></Button>
             </div>
           );
         }
         /* Approved */
         if (p.data.status === "Approved") {
-          return <span className="pf-action-chip pf-action-chip--approved">✓ Approved</span>;
+          return <Badge variant="subtle" size="small" color={STATUS_BADGE["Approved"]} isIcon icon={<Check size={11} />} label="Approved" />;
         }
         /* Declined */
         if (p.data.status === "Declined") {
-          return <span className="pf-action-chip pf-action-chip--declined">✕ Declined</span>;
+          return <Badge variant="subtle" size="small" color={STATUS_BADGE["Declined"]} isIcon icon={<X size={11} />} label="Declined" />;
         }
         /* Under review */
         if (p.data.status === "Under review") {
-          return <span className="pf-action-chip pf-action-chip--review">⏳ In Review</span>;
+          return <Badge variant="subtle" size="small" color={STATUS_BADGE["Under review"]} isIcon icon={<Clock size={11} />} label="In Review" />;
         }
         /* Fallback */
-        return <span style={{ fontSize: "var(--fs-xs)", color: "var(--color-text-subtle)" }}>{p.data.status}</span>;
+        return <Badge variant="subtle" size="small" color="default" label={p.data.status} />;
       },
     },
   ], []); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* ── Gap list (left panel, selectable rows) ─────────────────────────────── */
   const GapList = (
-    <Card sx={paneSx}>
+    <Card size="small" sx={paneSx}>
       <div className="pf-list">
         {gaps.length === 0 ? (
           <Stack direction="column" gap={1} padding={5} align="center">
             <Text variant="body-strong" tone="muted">No gaps logged yet</Text>
-            <Text variant="caption" tone="subtle">Click "+ Add Gap" to start.</Text>
+            <Text variant="caption" tone="subtle" />
           </Stack>
         ) : (
           gaps.map((g) => (
             <Stack
               key={g.id}
+              role="button"
+              tabIndex={0}
               className={`pf-list-row${activeGapId === g.id ? " is-active" : ""}`}
               direction="column"
               gap={1}
@@ -586,12 +580,13 @@ export default function PortfolioBuild({ onNavigate }) {
               paddingY={3}
               style={{ "--pf-accent": color[PRIORITY_BADGE[g.priority]] || "var(--color-primary)" }}
               onClick={() => { setActiveGapId(activeGapId === g.id ? null : g.id); setShowAdd(false); }}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setActiveGapId(activeGapId === g.id ? null : g.id); setShowAdd(false); } }}
             >
               <Stack direction="row" gap={2} align="center" wrap>
                 <Badge variant="subtle" size="small" color={PRIORITY_BADGE[g.priority]} label={PRIORITY_LABEL[g.priority] || g.priority} />
                 <Text variant="micro" tone="muted">{g.type}</Text>
                 {(g.source === "intel" || g.source === "market-intel") && (
-                  <span className="pf-intel-chip pf-intel-chip--amber">⚡ Intel</span>
+                  <Badge variant="subtle" size="small" color="warning" isIcon icon={<Zap size={11} />} label="Intel" />
                 )}
               </Stack>
               <Text variant="caption" tone="default">{g.desc}</Text>
@@ -605,7 +600,7 @@ export default function PortfolioBuild({ onNavigate }) {
 
   /* ── Wishlist list (left panel, selectable rows) ─────────────────────────── */
   const WishList = (
-    <Card sx={paneSx}>
+    <Card size="small" sx={paneSx}>
       <div className="pf-list">
         {wishlists.length === 0 ? (
           <Stack direction="column" gap={1} padding={5} align="center">
@@ -615,6 +610,8 @@ export default function PortfolioBuild({ onNavigate }) {
           wishlists.map((w) => (
             <Stack
               key={w.id}
+              role="button"
+              tabIndex={0}
               className={`pf-list-row${activeWishId === w.id ? " is-active" : ""}`}
               direction="column"
               gap={1}
@@ -622,12 +619,13 @@ export default function PortfolioBuild({ onNavigate }) {
               paddingY={3}
               style={{ "--pf-accent": "var(--color-teal)" }}
               onClick={() => { setActiveWishId(activeWishId === w.id ? null : w.id); setShowAdd(false); }}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setActiveWishId(activeWishId === w.id ? null : w.id); setShowAdd(false); } }}
             >
               <Stack direction="row" gap={2} align="center" justify="space-between" wrap>
                 <Stack direction="row" gap={1} align="center">
                   <Text variant="caption" tone="teal">{w.store}</Text>
                   {(w.source === "intel" || w.source === "market-intel") && (
-                    <span className="pf-intel-chip pf-intel-chip--teal">📡 Intel</span>
+                    <Badge variant="subtle" size="small" color="info" isIcon icon={<Satellite size={11} />} label="Intel" />
                   )}
                 </Stack>
                 {w.region ? <Badge variant="subtle" size="small" color="info" label={w.region} /> : null}
@@ -646,21 +644,19 @@ export default function PortfolioBuild({ onNavigate }) {
   const filteredVendors = vendorFilter === "All" ? vendorSkus : vendorSkus.filter((v) => v.status === vendorFilter);
 
   const VendorListPanel = (
-    <Card sx={paneSx}>
+    <Card size="small" sx={paneSx}>
       {/* Filter chips */}
       <Stack direction="row" gap={2} wrap paddingX={3} paddingY={3} style={{ borderBottom: "1px solid var(--color-border)" }}>
         {VENDOR_FILTERS.map((f) => {
           const count = f === "All" ? vendorSkus.length : vendorSkus.filter((v) => v.status === f).length;
           if (count === 0 && f !== "All") return null;
           return (
-            <Button
+            <Chips
               key={f}
-              variant={vendorFilter === f ? "primary" : "secondary"}
-              size="small"
+              label={`${f} (${count})`}
+              isActive={vendorFilter === f}
               onClick={() => setVendorFilter(f)}
-            >
-              {f} ({count})
-            </Button>
+            />
           );
         })}
       </Stack>
@@ -669,6 +665,8 @@ export default function PortfolioBuild({ onNavigate }) {
         {filteredVendors.map((v) => (
           <Stack
             key={v.id}
+            role="button"
+            tabIndex={0}
             className={`pf-list-row${activeVendorId === v.id ? " is-active" : ""}`}
             direction="row"
             gap={2}
@@ -677,6 +675,7 @@ export default function PortfolioBuild({ onNavigate }) {
             align="flex-start"
             style={{ "--pf-accent": "var(--color-accent)" }}
             onClick={() => { setActiveVendorId(activeVendorId === v.id ? null : v.id); setShowAdd(false); }}
+            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setActiveVendorId(activeVendorId === v.id ? null : v.id); setShowAdd(false); } }}
           >
             {/* SKU thumbnail — 36px */}
             <div style={{ flexShrink: 0, marginTop: 2 }}>
@@ -711,7 +710,7 @@ export default function PortfolioBuild({ onNavigate }) {
       activeGap.desc.toLowerCase().includes(w.item.toLowerCase().slice(0, 12))
     );
     return (
-      <Card sx={formCardSx}>
+      <Card size="small" sx={formCardSx}>
         <Stack direction="column" gap={3}>
           {/* Priority + type badges + delete button */}
           <Stack direction="row" justify="space-between" align="flex-start" gap={3} wrap>
@@ -723,21 +722,21 @@ export default function PortfolioBuild({ onNavigate }) {
           </Stack>
 
           <Text variant="heading" tone="strong">{activeGap.desc}</Text>
-          {activeGap.priceRange ? <Text variant="caption" tone="muted">💰 Target price: {activeGap.priceRange}</Text> : null}
-          {activeGap.category   ? <Text variant="caption" tone="muted">📁 Category: {activeGap.category}</Text>   : null}
+            {activeGap.priceRange ? <Text variant="caption" tone="muted"><DollarSign size={12} aria-hidden="true" style={{ verticalAlign: "middle", marginRight: 2 }} />{activeGap.priceRange}</Text> : null}
+          {activeGap.category   ? <Text variant="caption" tone="muted"><Folder size={12} aria-hidden="true" style={{ verticalAlign: "middle", marginRight: 2 }} />{activeGap.category}</Text>   : null}
 
           {/* Market Intelligence source callout */}
           {(activeGap.source === "intel" || activeGap.source === "market-intel") && (
-            <Card sx={{ ...panelSx, background: "var(--color-warning-soft)", border: "1.5px solid var(--color-warning)", boxShadow: "none", padding: "var(--sp-3) var(--sp-4)" }}>
+            <Card size="small" sx={{ ...panelSx, background: "var(--color-warning-soft)", border: "1px solid var(--color-warning)", boxShadow: "none", padding: "var(--sp-3) var(--sp-4)" }}>
               <Stack direction="row" align="flex-start" gap={2}>
-                <span style={{ fontSize: 18, flexShrink: 0 }}>💡</span>
+                <Zap size={18} aria-hidden="true" style={{ flexShrink: 0, color: "var(--color-warning)" }} />
                 <Stack direction="column" gap={0} flex="1" style={{ minWidth: 0 }}>
-                  <Text variant="caption" tone="warning" style={{ fontWeight: "var(--fw-bold)" }}>Raised via Market Intelligence</Text>
+                  <Text variant="caption" tone="warning" style={{ fontWeight: "var(--fw-bold)" }}>Intel signal</Text>
                   {activeGap.intelTitle && (
-                    <Text variant="micro" tone="muted" style={{ marginTop: 2, lineHeight: 1.4 }}>{activeGap.intelTitle}</Text>
+                    <Text variant="micro" tone="muted" style={{ marginTop: "var(--sp-1)", lineHeight: "var(--lh-normal)" }}>{activeGap.intelTitle}</Text>
                   )}
                   {activeGap.cluster && (
-                    <Text variant="micro" tone="subtle" style={{ marginTop: 2 }}>{activeGap.cluster}</Text>
+                    <Text variant="micro" tone="subtle" style={{ marginTop: "var(--sp-1)" }}>{activeGap.cluster}</Text>
                   )}
                 </Stack>
                 <Button variant="ghost" size="small" onClick={() => onNavigate?.("intel")}>View in Intel →</Button>
@@ -749,10 +748,7 @@ export default function PortfolioBuild({ onNavigate }) {
 
           {/* Related field wishlists cross-link */}
           {related.length > 0 && (
-            <Card sx={{ ...panelSx, background: "var(--color-surface-alt)", boxShadow: "none" }}>
-              <Text variant="micro" tone="muted" style={{ marginBottom: "var(--sp-2)", fontWeight: "var(--fw-bold)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                📬 Related field wishlists
-              </Text>
+            <Card size="small" sx={{ ...panelSx, background: "var(--color-surface-alt)", boxShadow: "none" }}>
               <Stack direction="column" gap={0}>
                 {related.map((w) => (
                   <Stack
@@ -772,10 +768,7 @@ export default function PortfolioBuild({ onNavigate }) {
           )}
 
           {/* Linked vendor SKUs */}
-          <Card sx={{ ...panelSx, background: "var(--color-surface-alt)", boxShadow: "none" }}>
-            <Text variant="micro" tone="muted" style={{ marginBottom: "var(--sp-2)", fontWeight: "var(--fw-bold)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-              🏭 Vendor SKUs that may address this gap
-            </Text>
+          <Card size="small" sx={{ ...panelSx, background: "var(--color-surface-alt)", boxShadow: "none" }}>
             <Stack direction="column" gap={0}>
               {vendorSkus.filter((v) => v.status !== "Declined").slice(0, 3).map((v) => (
                 <Stack key={v.id} direction="row" justify="space-between" align="center" gap={2} paddingY={2} style={{ borderTop: "1px solid var(--color-border)" }}>
@@ -793,7 +786,7 @@ export default function PortfolioBuild({ onNavigate }) {
   })();
 
   const WishDetail = activeWish && (
-    <Card sx={formCardSx}>
+    <Card size="small" sx={formCardSx}>
       <Stack direction="column" gap={3}>
         <Stack direction="column" gap={1}>
           <Text variant="caption" tone="teal">{activeWish.store}{activeWish.region ? ` · ${activeWish.region}` : ""}</Text>
@@ -802,16 +795,16 @@ export default function PortfolioBuild({ onNavigate }) {
 
         {/* Market Intelligence source callout */}
         {(activeWish.source === "intel" || activeWish.source === "market-intel") && (
-          <Card sx={{ ...panelSx, background: "var(--color-success-soft)", border: "1.5px solid var(--color-teal)", boxShadow: "none", padding: "var(--sp-3) var(--sp-4)" }}>
+          <Card size="small" sx={{ ...panelSx, background: "var(--color-success-soft)", border: "1px solid var(--color-teal)", boxShadow: "none", padding: "var(--sp-3) var(--sp-4)" }}>
             <Stack direction="row" align="flex-start" gap={2}>
-              <span style={{ fontSize: 18, flexShrink: 0 }}>📡</span>
+              <Satellite size={18} aria-hidden="true" style={{ flexShrink: 0, color: "var(--color-teal)" }} />
               <Stack direction="column" gap={0} flex="1" style={{ minWidth: 0 }}>
-                <Text variant="caption" tone="success" style={{ fontWeight: "var(--fw-bold)" }}>Field request raised via Market Intelligence</Text>
+                <Text variant="caption" tone="success" style={{ fontWeight: "var(--fw-bold)" }}>Intel signal</Text>
                 {activeWish.intelTitle && (
-                  <Text variant="micro" tone="muted" style={{ marginTop: 2, lineHeight: 1.4 }}>{activeWish.intelTitle}</Text>
-                )}
-                {activeWish.author && (
-                  <Text variant="micro" tone="subtle" style={{ marginTop: 2 }}>{activeWish.author} · {activeWish.date}</Text>
+                  <Text variant="micro" tone="muted" style={{ marginTop: "var(--sp-1)", lineHeight: "var(--lh-normal)" }}>{activeWish.intelTitle}</Text>
+                  )}
+                  {activeWish.author && (
+                    <Text variant="micro" tone="subtle" style={{ marginTop: "var(--sp-1)" }}>{activeWish.author} · {activeWish.date}</Text>
                 )}
               </Stack>
               <Button variant="ghost" size="small" onClick={() => onNavigate?.("intel")}>View in Intel →</Button>
@@ -826,7 +819,7 @@ export default function PortfolioBuild({ onNavigate }) {
             { l: "Submitted",    v: activeWish.date },
             { l: "Submitted by", v: activeWish.store },
           ].map((f) => (
-            <Card key={f.l} sx={{ ...panelSx, background: "var(--color-surface-alt)", boxShadow: "none", padding: "var(--sp-3)" }}>
+            <Card size="small" key={f.l} sx={{ ...panelSx, background: "var(--color-surface-alt)", boxShadow: "none", padding: "var(--sp-3)" }}>
               <Stack direction="column" gap={1}>
                 <Text variant="micro" tone="muted">{f.l}</Text>
                 <Text variant="caption" tone="default">{f.v}</Text>
@@ -835,11 +828,8 @@ export default function PortfolioBuild({ onNavigate }) {
           ))}
         </Grid>
         {activeWish.note ? (
-          <Card sx={{ ...panelSx, background: "var(--color-surface-alt)", boxShadow: "none" }}>
-            <Stack direction="column" gap={1}>
-              <Text variant="micro" tone="muted">SUPPORTING DETAIL</Text>
-              <Text variant="caption" tone="default">{activeWish.note}</Text>
-            </Stack>
+          <Card size="small" sx={{ ...panelSx, background: "var(--color-surface-alt)", boxShadow: "none" }}>
+            <Text variant="caption" tone="default">{activeWish.note}</Text>
           </Card>
         ) : null}
         <Stack direction="row" gap={2} wrap>
@@ -851,7 +841,7 @@ export default function PortfolioBuild({ onNavigate }) {
   );
 
   const VendorDetail = activeVendor && (
-    <Card sx={formCardSx}>
+    <Card size="small" sx={formCardSx}>
       <Stack direction="column" gap={3}>
         {/* Header: SKU thumbnail (56px) + product name + status badge */}
         <Stack direction="row" align="flex-start" gap={3} wrap>
@@ -875,7 +865,7 @@ export default function PortfolioBuild({ onNavigate }) {
             { l: "Est. margin",  v: `${activeVendor.margin}%`,                    flag: activeVendor.margin >= 42 },
             { l: "Source",       v: activeVendor.show || "Direct",                 flag: false },
           ].map((m) => (
-            <Card key={m.l} sx={{ ...panelSx, background: "var(--color-surface-alt)", boxShadow: "none", padding: "var(--sp-3)" }}>
+            <Card size="small" key={m.l} sx={{ ...panelSx, background: "var(--color-surface-alt)", boxShadow: "none", padding: "var(--sp-3)" }}>
               <Stack direction="column" gap={1} align="center">
                 <Text variant="subheading" tone={m.flag ? "success" : "strong"}>{m.v}</Text>
                 <Text variant="micro" tone="muted">{m.l}</Text>
@@ -885,27 +875,24 @@ export default function PortfolioBuild({ onNavigate }) {
         </Grid>
 
         {/* Margin bar */}
-        <Card sx={{ ...panelSx, background: "var(--color-surface-alt)", boxShadow: "none" }}>
+        <Card size="small" sx={{ ...panelSx, background: "var(--color-surface-alt)", boxShadow: "none" }}>
           <Stack direction="row" justify="space-between" align="center" style={{ marginBottom: "var(--sp-2)" }}>
-            <Text variant="caption" tone="strong">Margin vs target (42%)</Text>
+            <Text variant="caption" tone="strong">Margin</Text>
             <Text variant="caption" mono tone={activeVendor.margin >= 42 ? "success" : "error"}>{activeVendor.margin}%</Text>
           </Stack>
           <ProgressBar value={Math.min(activeVendor.margin, 100)} status={activeVendor.margin >= 42 ? "completed" : "remaining"} showTime={false} customLabel=" " />
-          <Text variant="micro" tone="subtle" style={{ marginTop: "var(--sp-2)" }}>
-            {activeVendor.margin >= 42 ? "Above 42% threshold — eligible for approval" : "Below 42% threshold — needs renegotiation or decline"}
-          </Text>
         </Card>
 
         {/* Approve / Decline / Approved state */}
         {activeVendor.status === "Shortlisted" ? (
           <Stack direction="row" gap={3} wrap>
-            <Button variant="primary" size="medium" onClick={() => setVendorStatus(activeVendor.id, "Approved")} style={{ flex: 1 }}>✓ Approve for PLR</Button>
-            <Button variant="secondary" size="medium" type="destructive" onClick={() => setVendorStatus(activeVendor.id, "Declined")} style={{ flex: 1 }}>✕ Decline</Button>
+            <Button variant="primary" size="medium" onClick={() => setVendorStatus(activeVendor.id, "Approved")} style={{ flex: 1 }}><Check size={14} aria-hidden="true" /> Approve for PLR</Button>
+            <Button variant="secondary" size="medium" type="destructive" onClick={() => setVendorStatus(activeVendor.id, "Declined")} style={{ flex: 1 }}><X size={14} aria-hidden="true" /> Decline</Button>
           </Stack>
         ) : activeVendor.status === "Approved" ? (
-          <Card sx={{ ...panelSx, background: "var(--color-success-soft)", boxShadow: "none" }}>
+          <Card size="small" sx={{ ...panelSx, background: "var(--color-success-soft)", boxShadow: "none" }}>
             <Stack direction="row" justify="space-between" align="center" gap={2} wrap>
-              <Text variant="caption" tone="success">✅ Approved — ready for Like-Item Forecast</Text>
+              <Text variant="caption" tone="success"><CheckCircle2 size={13} aria-hidden="true" style={{ verticalAlign: "middle", marginRight: 4 }} />Approved — ready for Like-Item Forecast</Text>
               <Button variant="primary" size="small" onClick={() => onNavigate?.("forecast")}>Go to forecast →</Button>
             </Stack>
           </Card>
@@ -916,24 +903,21 @@ export default function PortfolioBuild({ onNavigate }) {
 
   /* ── Vendor right panel when nothing is selected ─────────────────────────── */
   const VendorEmptyPanel = (
-    <Card sx={formCardSx}>
+    <Card size="small" sx={formCardSx}>
       <Stack direction="column" gap={3}>
         {/* Approved SKUs banner shown above empty state when relevant */}
         {approved > 0 && (
-          <Card sx={{ ...panelSx, background: "var(--color-success-soft)", boxShadow: "none", padding: "var(--sp-3) var(--sp-4)" }}>
+          <Card size="small" sx={{ ...panelSx, background: "var(--color-success-soft)", boxShadow: "none", padding: "var(--sp-3) var(--sp-4)" }}>
             <Stack direction="row" justify="space-between" align="center" gap={2} wrap>
               <Text variant="caption" tone="success">
-                ✅ <strong>{approved} SKU{approved > 1 ? "s" : ""} approved</strong> and ready for Like-Item Forecasting
+                <CheckCircle2 size={13} aria-hidden="true" style={{ verticalAlign: "middle", marginRight: 4 }} /><strong>{approved} SKU{approved > 1 ? "s" : ""} approved</strong> and ready for Like-Item Forecasting
               </Text>
               <Button variant="primary" size="small" onClick={() => onNavigate?.("forecast")}>Advance to Forecast →</Button>
             </Stack>
           </Card>
         )}
         <Stack direction="column" gap={2} align="center" justify="center" style={{ minHeight: 260, textAlign: "center" }}>
-          <EmptyState
-            heading="Select a vendor SKU to review"
-            description={'Or click "+ Add Vendor SKU" to log one from a trade show or direct source.'}
-          />
+          <EmptyState heading="Select a vendor SKU to review" />
         </Stack>
       </Stack>
     </Card>
@@ -944,12 +928,12 @@ export default function PortfolioBuild({ onNavigate }) {
     <Stack direction="column" gap={3}>
       <Stack direction="row" justify="flex-end">
         <Button variant={showAdd ? "secondary" : "primary"} size="medium" onClick={onToggleAdd}>
-          {showAdd ? "✕ Cancel" : addLabel}
+          {showAdd ? <><X size={13} aria-hidden="true" /> Cancel</> : addLabel}
         </Button>
       </Stack>
       <Grid columns="320px minmax(0, 1fr)" gap={4} align="start">
         {list}
-        {showAdd ? <Card sx={formCardSx}>{form}</Card> : detail || emptyPanel}
+        {showAdd ? <Card size="small" sx={formCardSx}>{form}</Card> : detail || emptyPanel}
       </Grid>
     </Stack>
   );
@@ -966,7 +950,7 @@ export default function PortfolioBuild({ onNavigate }) {
       {intelGapsInState.length > 0 && (
         <Card sx={intelAmberSx}>
           <Stack direction="row" align="center" gap={3}>
-            <span style={{ fontSize: 18, flexShrink: 0 }}>💡</span>
+            <Zap size={18} aria-hidden="true" style={{ flexShrink: 0, color: "var(--color-warning)" }} />
             <Stack direction="column" gap={0} flex="1" style={{ minWidth: 0 }}>
               <Text variant="caption" tone="warning" style={{ fontWeight: "var(--fw-bold)" }}>
                 {intelGapsInState.length} line gap{intelGapsInState.length > 1 ? "s" : ""} raised from Market Intelligence
@@ -986,9 +970,9 @@ export default function PortfolioBuild({ onNavigate }) {
         form={<GapForm onSave={saveGap} onCancel={() => setShowAdd(false)} />}
         detail={GapDetail}
         emptyPanel={
-          <Card sx={{ ...panelSx }}>
+          <Card size="small" sx={{ ...panelSx }}>
             <Stack direction="column" gap={2} align="center" justify="center" style={{ minHeight: 320, textAlign: "center" }}>
-              <EmptyState heading="Select a gap to view details" description={'Or click "+ Add Gap" to log a new one. Gaps feed vendor briefs and trade-show targets.'} />
+              <EmptyState heading="Select a gap to view details" />
             </Stack>
           </Card>
         }
@@ -1002,7 +986,7 @@ export default function PortfolioBuild({ onNavigate }) {
       {intelWishInState.length > 0 && (
         <Card sx={intelTealSx}>
           <Stack direction="row" align="center" gap={3}>
-            <span style={{ fontSize: 18, flexShrink: 0 }}>📡</span>
+            <Satellite size={18} aria-hidden="true" style={{ flexShrink: 0, color: "var(--color-teal)" }} />
             <Stack direction="column" gap={0} flex="1" style={{ minWidth: 0 }}>
               <Text variant="caption" tone="success" style={{ fontWeight: "var(--fw-bold)" }}>
                 {intelWishInState.length} field request{intelWishInState.length > 1 ? "s" : ""} raised from Market Intelligence
@@ -1022,9 +1006,9 @@ export default function PortfolioBuild({ onNavigate }) {
         form={<WishForm onSave={saveWish} onCancel={() => setShowAdd(false)} />}
         detail={WishDetail}
         emptyPanel={
-          <Card sx={{ ...panelSx }}>
+          <Card size="small" sx={{ ...panelSx }}>
             <Stack direction="column" gap={2} align="center" justify="center" style={{ minHeight: 320, textAlign: "center" }}>
-              <EmptyState heading="Select a wishlist to view details" description={'Or click "+ Submit Wishlist" to add a field request from a store or DMM.'} />
+              <EmptyState heading="Select a wishlist to view details" />
             </Stack>
           </Card>
         }
@@ -1058,10 +1042,10 @@ export default function PortfolioBuild({ onNavigate }) {
           <Text variant="body-strong" tone="strong">{title}</Text>
           <Badge variant="subtle" size="small" color="info" label={String(count)} />
         </Stack>
-        <Button variant="tertiary" size="small" onClick={onViewAll}>View all →</Button>
+        <Button variant="ghost" size="small" onClick={onViewAll}>View all →</Button>
       </Stack>
       {count > 0 ? table : (
-        <Card sx={{ ...panelSx, background: "var(--color-surface-alt)" }}>
+        <Card size="small" sx={{ ...panelSx, background: "var(--color-surface-alt)" }}>
           <Text variant="caption" tone="subtle">{empty}</Text>
         </Card>
       )}
@@ -1087,11 +1071,10 @@ export default function PortfolioBuild({ onNavigate }) {
   const panelSummary = (
     <Stack direction="column" gap={4}>
       {/* PLR cycle progress card */}
-      <Card sx={panelSx}>
+      <Card size="small" sx={panelSx}>
         <Stack direction="row" justify="space-between" align="center" gap={2} wrap>
-          <Text variant="subheading" tone="strong">PLR cycle progress</Text>
           <Text variant="caption" tone="muted">
-            <strong style={{ color: color.primary }}>{approved}</strong> approved of <strong>50</strong> SKU target
+            <strong style={{ color: "var(--color-primary)" }}>{approved}</strong> / 50 SKU target
           </Text>
         </Stack>
         <div style={{ marginTop: "var(--sp-2)" }}>
@@ -1100,7 +1083,9 @@ export default function PortfolioBuild({ onNavigate }) {
         <Grid columns={4} gap={3} style={{ marginTop: "var(--sp-3)" }}>
           {summaryMini.map((m) => (
             <Card
+              size="small"
               key={m.l}
+              tabIndex={0}
               sx={{ ...panelSx, background: "var(--color-surface-alt)", boxShadow: "none", padding: "var(--sp-3)", cursor: "pointer" }}
               onClick={() => goTab(m.tab)}
             >
@@ -1114,7 +1099,7 @@ export default function PortfolioBuild({ onNavigate }) {
       </Card>
 
       <SummarySection
-        title="📋 Line Gaps"
+        title={<><ClipboardList size={14} aria-hidden="true" style={{ verticalAlign: "middle", marginRight: 4 }} />Line Gaps</>}
         count={gaps.length}
         onViewAll={() => goTab(1)}
         empty="No gaps logged yet."
@@ -1142,14 +1127,14 @@ export default function PortfolioBuild({ onNavigate }) {
         />}
       />
       <SummarySection
-        title="📬 Field Wishlists"
+        title={<><Inbox size={14} aria-hidden="true" style={{ verticalAlign: "middle", marginRight: 4 }} />Field Wishlists</>}
         count={wishlists.length}
         onViewAll={() => goTab(2)}
         empty="No wishlists yet."
         table={<Table {...tableProps} tableHeader="Field wishlists" columnDefs={wishColumns} rowData={wishlists} onRowClicked={(e) => openSummaryWish(e.data.id)} />}
       />
       <SummarySection
-        title="🏭 Vendor SKUs"
+        title={<><Factory size={14} aria-hidden="true" style={{ verticalAlign: "middle", marginRight: 4 }} />Vendor SKUs</>}
         count={vendorSkus.length}
         onViewAll={() => goTab(3)}
         empty="No vendor SKUs yet."
@@ -1157,7 +1142,7 @@ export default function PortfolioBuild({ onNavigate }) {
       />
 
       {approved > 0 ? (
-        <Card sx={{ ...panelSx, background: "var(--color-primary-soft)" }}>
+        <Card size="small" sx={{ ...panelSx, background: "var(--color-primary-soft)" }}>
           <Stack direction="row" justify="space-between" align="center" gap={3} wrap>
             <Text variant="caption" tone="primary">
               <strong>{approved} SKU{approved > 1 ? "s" : ""} approved</strong> and ready to advance to Like-Item Forecasting
@@ -1172,21 +1157,18 @@ export default function PortfolioBuild({ onNavigate }) {
   /* ── Tab configuration — emoji icons matching HTML ──────────────────────── */
   const TAB_NAMES = [
     { value: 0, label: `All Items (${gaps.length + wishlists.length + vendorSkus.length})` },
-    { value: 1, label: `📋 Line Gaps (${gaps.length})` },
-    { value: 2, label: `📬 Field Wishlist (${wishlists.length})` },
-    { value: 3, label: `🏭 Vendor SKUs (${vendorSkus.length})` },
+  { value: 1, label: <><ClipboardList size={13} aria-hidden="true" style={{ verticalAlign: "middle", marginRight: 4 }} />{`Line Gaps (${gaps.length})`}</> },
+  { value: 2, label: <><Inbox size={13} aria-hidden="true" style={{ verticalAlign: "middle", marginRight: 4 }} />{`Field Wishlist (${wishlists.length})`}</> },
+  { value: 3, label: <><Factory size={13} aria-hidden="true" style={{ verticalAlign: "middle", marginRight: 4 }} />{`Vendor SKUs (${vendorSkus.length})`}</> },
   ];
 
   return (
     <Stack direction="column" gap={4}>
       {/* ── Header card ─────────────────────────────────────────────────────── */}
-      <Card sx={panelSx}>
+      <Card size="small" sx={panelSx}>
         <Stack direction="row" justify="space-between" align="center" gap={4} wrap>
           <Stack direction="column" gap={1} flex="1 1 auto" style={{ minWidth: 0 }}>
             <Text variant="title">Phase 1 — Portfolio Build</Text>
-            <Text variant="caption" tone="muted">
-              Merchant-owned · Gap identification · Field wishlists · Vendor &amp; trade-show sourcing · Target: 30–50 new SKUs
-            </Text>
           </Stack>
           <Stack direction="row" gap={2} align="center" wrap justify="flex-end">
             <Badge variant="subtle" size="small" color="success" label="SS 2026 · TILE PLR" />
@@ -1199,7 +1181,9 @@ export default function PortfolioBuild({ onNavigate }) {
       <Grid min={170} gap={3}>
         {kpis.map((k) => (
           <Card
+            size="small"
             key={k.label}
+            tabIndex={k.tab != null ? 0 : undefined}
             sx={{ ...panelSx, padding: "var(--sp-3)", cursor: k.tab != null ? "pointer" : "default" }}
             onClick={k.tab != null ? () => goTab(k.tab) : undefined}
           >

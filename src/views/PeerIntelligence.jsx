@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
-import { Card, Button, Badge, Modal } from "impact-ui";
+import { Card, Button, Badge, Modal, Chips, FiltersStrip, FilterPanel } from "impact-ui";
+import FdSelect from "../components/FdSelect.jsx";
 import Text from "../components/Text.jsx";
 import Stack from "../components/Stack.jsx";
 import Grid from "../components/Grid.jsx";
@@ -48,6 +49,16 @@ export default function PeerIntelligence() {
   const [exitFlags, setExitFlags] = useState(() => new Set());
   const [selectedSku, setSelectedSku] = useState(null);
   const [exportDone, setExportDone] = useState(false);
+  const [filterPanelOpen, setFilterPanelOpen] = useState(false);
+  const [activeFilterTab, setActiveFilterTab] = useState("category");
+
+  const piFilterTags = useMemo(() => {
+    if (category === "all") return [];
+    const cat = CATEGORIES.find((c) => c.id === category);
+    return [{ id: "category", label: "Category", values: [{ id: 1, label: cat ? `${cat.name}${cat.skuCount ? ` ${cat.skuCount.toLocaleString()}` : ""}` : category }] }];
+  }, [category]);
+
+  const CATEGORY_FD_OPTIONS = [{ value: "all", label: "All" }, ...CATEGORIES.map((c) => ({ value: c.id, label: `${c.name}${c.skuCount ? ` ${c.skuCount.toLocaleString()}` : ""}` }))];
 
   const catName = category === "all" ? null : CATEGORIES.find((c) => c.id === category)?.name;
   const inCategory = (s) => !catName || s.cat === catName;
@@ -99,23 +110,48 @@ export default function PeerIntelligence() {
             </Stack>
           </Stack>
 
-          {/* Category chips */}
-          <Stack direction="row" align="center" gap={2} wrap style={{ paddingTop: "var(--sp-2)", borderTop: "1px solid var(--color-border)" }}>
-            <Text variant="overline" tone="subtle">Category</Text>
-            {chips.map((c) => (
-              <Button
-                key={c.id}
-                size="small"
-                variant={(category || "all") === c.id ? "primary" : "secondary"}
-                onClick={() => setCategory(c.id)}
-              >
-                {c.name}
-                {c.skuCount ? `  ${c.skuCount.toLocaleString()}` : ""}
-              </Button>
-            ))}
-          </Stack>
+          {/* Category chips moved to FiltersStrip below */}
         </Stack>
       </Card>
+
+      <FiltersStrip
+        filterTags={piFilterTags}
+        filterButtonLabel="All Filters"
+        filterButtonClick={() => setFilterPanelOpen(true)}
+        hideSelectedFilterBadge
+        recentFilters={[]}
+        savedFiltersBadge={[]}
+        savedFilterLists={[]}
+        selectedFilter={null}
+        setSelectedFilter={() => {}}
+        handleBadgeChange={() => {}}
+        handleSavedRecentFilterDropdown={() => {}}
+      />
+      <FilterPanel
+        title="Peer Intelligence Filters"
+        size="medium"
+        anchor="right"
+        isOpen={filterPanelOpen}
+        setIsOpen={setFilterPanelOpen}
+        active={activeFilterTab}
+        setActive={setActiveFilterTab}
+        filters={[
+          {
+            value: "category",
+            title: "Category",
+            numberOfFilter: category !== "all" ? 1 : 0,
+            children: (
+              <Stack direction="column" gap={3} style={{ padding: "var(--sp-4)" }}>
+                <FdSelect label="Category" value={category} options={CATEGORY_FD_OPTIONS} onChange={setCategory} width={320} />
+              </Stack>
+            ),
+          },
+        ]}
+        primaryButtonLabel="Apply"
+        onPrimaryButtonClick={() => setFilterPanelOpen(false)}
+        secondaryButtonLabel="Clear all"
+        onSecondaryButtonClick={() => setCategory("all")}
+      />
 
       {/* My Store vs Cluster comparison */}
       <div className="pi-card">
