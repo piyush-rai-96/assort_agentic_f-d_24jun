@@ -5,6 +5,7 @@ import Text from "../components/Text.jsx";
 import Stack from "../components/Stack.jsx";
 import Grid from "../components/Grid.jsx";
 import SkuSwatch from "../components/SkuSwatch.jsx";
+import SkuMedia from "../components/SkuMedia.jsx";
 import { color } from "../styles/tokens.js";
 import {
   MPI_DROPS,
@@ -293,11 +294,15 @@ export default function Mpi() {
   });
 
   const droppedColumns = useMemo(() => [
+    { headerName: "Image", colId: "image", width: 72, minWidth: 72, maxWidth: 72,
+      suppressSizeToFit: true, sortable: false, filter: false,
+      cellStyle: { display: "flex", alignItems: "center", justifyContent: "center" },
+      cellRenderer: (p) => <SkuMedia sku={p.data} size={40} />,
+    },
     {
       field: "desc", headerName: "SKU", minWidth: 220, flex: 1, filter: "agTextColumnFilter",
       cellRenderer: (p) => (
         <div style={{ display: "flex", alignItems: "center", gap: 8, height: "100%" }}>
-          <SkuSwatch sku={{ desc: p.data.desc, dept: p.data.dept, subDept: p.data.subDept }} size={22} />
           <span>{p.value}</span>
         </div>
       ),

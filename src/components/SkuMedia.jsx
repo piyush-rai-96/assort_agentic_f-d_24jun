@@ -27,6 +27,7 @@ import React, { useState, useRef, useEffect, useCallback, useId } from "react";
 import { createPortal } from "react-dom";
 import { Badge, Button } from "impact-ui";
 import SkuSwatch, { getSkuVisual, Pattern } from "./SkuSwatch.jsx";
+import { SKU_IMAGE_MAP } from "../data/skuImageMap";
 import "./SkuMedia.css";
 
 const POP_W = 384;
@@ -41,13 +42,26 @@ const GALLERY_VIEWS = [
 ];
 
 /* ── Synthetic scene renderer ─────────────────────────────────────────────
- * One SVG per gallery view. All three reuse the SKU's tiled material via an
- * SVG <pattern> built from the shared Pattern primitive, so they read as the
- * same product shown three different ways. */
-function SkuScene({ view, vis }) {
+ * One SVG per gallery view. "top" view uses the real product image when
+ * available; "room" and "macro" always use the SVG material synthesis so
+ * they add contextual value beyond just the product photo. */
+function SkuScene({ view, vis, realImgSrc }) {
   const uid = useId().replace(/[:]/g, "");
   const { baseColor, look, finishMeta, gloss } = vis;
   const pid = `mat-${uid}-${view}`;
+
+  /* Top / flat-lay: prefer real photo */
+  if (view === "top" && realImgSrc) {
+    return (
+      <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "#f5f3f0" }}>
+        <img
+          src={realImgSrc}
+          alt="Product"
+          style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
+        />
+      </div>
+    );
+  }
 
   const matPattern = (transform) => (
     <pattern
@@ -278,6 +292,7 @@ function Sku3D({ sku, vis, rot, dragging, onPointerDown }) {
 /* ── SkuMedia ─────────────────────────────────────────────────────────────*/
 export default function SkuMedia({ sku, size = 40 }) {
   const vis = getSkuVisual({ sku });
+  const realImgSrc = sku?.sku ? SKU_IMAGE_MAP[sku.sku] : null;
 
   const [open, setOpen] = useState(false);
   const [pinned, setPinned] = useState(false);
@@ -526,7 +541,7 @@ export default function SkuMedia({ sku, size = 40 }) {
               >
                 {GALLERY_VIEWS.map((v) => (
                   <div className="media-gallery-slide" key={v.id}>
-                    <SkuScene view={v.id} vis={vis} />
+                    <SkuScene view={v.id} vis={vis} realImgSrc={realImgSrc} />
                   </div>
                 ))}
               </div>

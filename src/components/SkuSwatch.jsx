@@ -1,14 +1,12 @@
 import React from "react";
+import { SKU_IMAGE_MAP } from "../data/skuImageMap";
 
 /*
- * SkuSwatch — a small product-representative thumbnail for a SKU.
+ * SkuSwatch — a small product thumbnail for a SKU.
  *
- * There are no real product photos in this prototype, so the swatch is a
- * deterministic SVG that *looks like the material*: tiles render as tile/subway/
- * hex/mosaic patterns, wood and wood-look vinyl render as plank grain, marble
- * gets veining, stone/concrete get mottling. Color is derived from the SKU's
- * color/finish (or inferred from its description) so the same SKU always renders
- * the same swatch.
+ * When a real product image is available in SKU_IMAGE_MAP it is rendered as an
+ * <img> tag (object-fit: cover). Otherwise the component falls back to a
+ * deterministic SVG that represents the material visually.
  *
  * Accepts either a structured `sku` object (dept/color/finish/cls/subDept/desc)
  * or loose props (`desc`, `dept`, `color`) for views that only have a name string.
@@ -232,6 +230,31 @@ export default function SkuSwatch({ sku, desc, dept, color, size = 32 }) {
   const hasInput = !!(sku || desc || dept || color);
   if (!hasInput) return null;
 
+  /* Use real product image when available */
+  const imgSrc = sku?.sku ? SKU_IMAGE_MAP[sku.sku] : null;
+  if (imgSrc) {
+    const borderRadius = 4;
+    return (
+      <img
+        src={imgSrc}
+        alt={sku.desc || "SKU"}
+        width={size}
+        height={size}
+        style={{
+          width: size,
+          height: size,
+          borderRadius,
+          objectFit: "cover",
+          flexShrink: 0,
+          display: "block",
+          border: "1px solid rgba(0,0,0,.10)",
+        }}
+        loading="lazy"
+      />
+    );
+  }
+
+  /* SVG fallback for SKUs without a real image */
   const { look, baseColor, finishMeta, deptDot, label } = getSkuVisual({ sku, desc, dept, color });
 
   return (

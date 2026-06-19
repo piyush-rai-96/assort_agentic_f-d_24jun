@@ -5,6 +5,7 @@ import Text from "../components/Text.jsx";
 import Stack from "../components/Stack.jsx";
 import Grid from "../components/Grid.jsx";
 import SkuSwatch from "../components/SkuSwatch.jsx";
+import SkuMedia from "../components/SkuMedia.jsx";
 import { color } from "../styles/tokens.js";
 import { FD_STORES } from "../data/stores.js";
 import { FD_SKUS } from "../data/skus.js";
@@ -74,13 +75,19 @@ export default function National({ onNavigate }) {
 
   const lockedColumns = useMemo(
     () => [
+      { headerName: "Image", colId: "image", width: 72, minWidth: 72, maxWidth: 72,
+        suppressSizeToFit: true, sortable: false, filter: false,
+        cellStyle: { display: "flex", alignItems: "center", justifyContent: "center" },
+        cellRenderer: ({ data }) => {
+          const skuObj = FD_SKUS.find((s) => String(s.sku) === data.sku);
+          return <SkuMedia sku={skuObj || { desc: data.name }} size={40} />;
+        },
+      },
       {
         field: "name", headerName: "SKU", minWidth: 280, flex: 1, filter: "agTextColumnFilter",
         cellRenderer: ({ data }) => {
-          const skuObj = FD_SKUS.find((s) => String(s.sku) === data.sku);
           return (
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              {skuObj && <SkuSwatch sku={skuObj} size={26} />}
               <span>{data.name}</span>
             </div>
           );

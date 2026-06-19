@@ -9,6 +9,7 @@ import Text from "../components/Text.jsx";
 import Stack from "../components/Stack.jsx";
 import Grid from "../components/Grid.jsx";
 import SkuSwatch from "../components/SkuSwatch.jsx";
+import SkuMedia from "../components/SkuMedia.jsx";
 import { color } from "../styles/tokens.js";
 import { FD_STORES } from "../data/stores.js";
 import { CURRENT_USER } from "../data/todaySeed.js";
@@ -456,6 +457,11 @@ export default function PortfolioBuild({ onNavigate }) {
   ], []);
 
   const vendorColumns = useMemo(() => [
+    { headerName: "Image", colId: "image", width: 72, minWidth: 72, maxWidth: 72,
+      suppressSizeToFit: true, sortable: false, filter: false,
+      cellStyle: { display: "flex", alignItems: "center", justifyContent: "center" },
+      cellRenderer: (p) => <SkuMedia sku={{ desc: p.data.name, dept: p.data.dept, cls: p.data.cls, subDept: p.data.subDept, sku: p.data.skuId }} size={40} />,
+    },
     {
       field: "name",
       headerName: "SKU / Vendor",
@@ -464,9 +470,6 @@ export default function PortfolioBuild({ onNavigate }) {
       filter: "agTextColumnFilter",
       cellRenderer: (p) => (
         <div className="pf-sku-cell">
-          <div className="pf-sku-cell__swatch">
-            <SkuSwatch sku={{ desc: p.data.name, dept: p.data.dept, cls: p.data.cls, subDept: p.data.subDept }} size={30} />
-          </div>
           <div className="pf-sku-cell__text">
             <span className="pf-sku-cell__name" title={p.value}>{p.value}</span>
             <span className="pf-sku-cell__vendor">{p.data.vendor}</span>

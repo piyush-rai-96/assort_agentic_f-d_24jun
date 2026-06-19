@@ -9,6 +9,7 @@ import Text from "../components/Text.jsx";
 import StepIndicator from "../components/StepIndicator.jsx";
 import Stack from "../components/Stack.jsx";
 import SkuSwatch from "../components/SkuSwatch.jsx";
+import SkuMedia from "../components/SkuMedia.jsx";
 import { color, deptColor } from "../styles/tokens.js";
 import {
   PRODUCTS, LOCATIONS, LOC_ATTRS, CORE_BG_OPTS, STATUS_OPTS, BAND_PCT,
@@ -137,11 +138,16 @@ export default function PlanningAdmin() {
   };
 
   const productColumns = useMemo(() => [
+    { headerName: "Image", colId: "image", width: 72, minWidth: 72, maxWidth: 72,
+      suppressSizeToFit: true, sortable: false, filter: false, pinned: "left",
+      cellStyle: { display: "flex", alignItems: "center", justifyContent: "center" },
+      cellRenderer: (p) => <SkuMedia sku={p.data} size={40} />,
+    },
     { field: "sku", headerName: "SKU", width: 156, pinned: "left", filter: "agTextColumnFilter",
       cellStyle: (p) => ({ fontFamily: "var(--font-mono)", color: color.teal, fontWeight: 700, borderLeft: `3px solid ${p.data._ov ? color.teal : "transparent"}` }),
       cellRenderer: (p) => (
         <div style={{ display: "flex", alignItems: "center", gap: 8, height: "100%" }}>
-          <SkuSwatch sku={p.data} size={20} /><span>{p.value}</span>
+          <span>{p.value}</span>
         </div>
       ),
     },
