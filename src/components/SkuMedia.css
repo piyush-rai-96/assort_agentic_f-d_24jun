@@ -276,7 +276,7 @@
   padding: 0;
   border: none;
   border-radius: 50%;
-  background: var(--color-border-strong, #b4c8a0);
+  background: var(--color-border-strong);
   cursor: pointer;
   transition: background 0.14s ease, transform 0.14s ease;
 }

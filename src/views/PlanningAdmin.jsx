@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import { Card, Button, Badge, Table, Tabs, Checkbox, Input } from "impact-ui";
 import {
   LayoutDashboard, CalendarRange, SlidersHorizontal, Users,
-  Plus, Trash2, ChevronLeft, Lock, Pencil, CheckCircle2
+  Plus, Trash2, ChevronLeft, Lock, Pencil, CheckCircle2, Tag, Package
 } from "lucide-react";
 import FdSelect from "../components/FdSelect.jsx";
 import Text from "../components/Text.jsx";
@@ -163,7 +163,7 @@ export default function PlanningAdmin() {
     { field: "coreBG", headerName: "Core / BG", width: 130,
       editable: (p) => !isLocked(p.value),
       cellEditor: "agSelectCellEditor", cellEditorParams: { values: CORE_BG_OPTS },
-      valueFormatter: (p) => (isLocked(p.value) ? `🔒 ${p.value}` : p.value || "—"),
+      valueFormatter: (p) => (isLocked(p.value) ? `${p.value} (locked)` : p.value || "—"),
       cellStyle: (p) => ({ color: isLocked(p.value) ? color.success : color.text, fontWeight: isLocked(p.value) ? 700 : 400 }),
     },
     { field: "status", headerName: "Status", width: 130,
@@ -243,7 +243,7 @@ export default function PlanningAdmin() {
         </Stack>
       </Stack>
       <Table defaultColDef={{ floatingFilter: true }} cardContainer rowHeight="compact" tableHeader="Store master" columnDefs={locationColumns} rowData={locationRows} domLayout="autoHeight" hideTableSetting hideTableActions pagination={false} onCellValueChanged={onLocCellChanged} stopEditingWhenCellsLoseFocus />
-      <Text variant="micro" tone="subtle">{LOCATIONS.length} stores · {locOvCount} edited · 🔁 ERP / Store Master</Text>
+      <Text variant="micro" tone="subtle">{LOCATIONS.length} stores · {locOvCount} edited · synced from ERP / Store Master</Text>
     </Stack>
   );
 
@@ -283,10 +283,10 @@ export default function PlanningAdmin() {
             value={exSearch} onChange={(e) => setExSearch(e.target.value)} size="medium"
           />
           <button className={`pa-ex-toggle${exView === "attr-store" ? " is-active" : ""}`} onClick={() => { setExView("attr-store"); setExSearch(""); }}>
-            🏷 Attribute × Store
+            <Tag size={13} /> Attribute × Store
           </button>
           <button className={`pa-ex-toggle${exView === "item-store" ? " is-active" : ""}`} onClick={() => { setExView("item-store"); setExSearch(""); }}>
-            📦 Item × Store
+            <Package size={13} /> Item × Store
           </button>
         </Stack>
       </Stack>
@@ -503,7 +503,7 @@ export default function PlanningAdmin() {
         ) : (
           <Stack direction="column" gap={3}>
             {assortPeriods.map((ap) => {
-              const dc = DEPT_COLORS[ap.dept] || { color: "#456845", bg: "#F2F6EE" };
+              const dc = DEPT_COLORS[ap.dept] || { color: color.textMuted, bg: color.surfaceAlt };
               const sc = AP_STATUS[ap.status] || AP_STATUS.draft;
               const totalWeeks = parseInt((ap.endWeek || "W26").replace("W", ""), 10) - parseInt((ap.startWeek || "W01").replace("W", ""), 10) + 1;
               return (

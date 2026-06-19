@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Button } from "impact-ui";
+import { Bot, MessageSquare } from "lucide-react";
 import {
   AGENT_SIGNALS, PIPELINE_STEPS, AUDIT_LOG,
   SUGGESTED_QUESTIONS, AGENT_KPIS,
@@ -180,7 +181,7 @@ export default function AgentRail({ onOpenChat, onNavigate }) {
             </div>
             {AUDIT_LOG.map((entry) => (
               <div key={entry.id} className="ar-log-entry">
-                <div className="ar-log-dot" style={{ background: SEV_COLORS[entry.severity] || "var(--border)" }} />
+                <div className="ar-log-dot" style={{ background: SEV_COLORS[entry.severity] || "var(--color-border)" }} />
                 <span className="ar-log-icon">{entry.icon}</span>
                 <span className="ar-log-text">{entry.text}</span>
                 <span className="ar-log-time">{entry.time}</span>
@@ -195,7 +196,7 @@ export default function AgentRail({ onOpenChat, onNavigate }) {
             {/* Agent hero card */}
             <div className="ar-agent-hero">
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                <div style={{ width: 28, height: 28, borderRadius: "50%", background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "var(--fs-body-lg)", flexShrink: 0 }}>🤖</div>
+                <div className="ar-agent-hero-avatar"><Bot size={16} /></div>
                 <div>
                   <div className="ar-agent-hero-title">FD Assortment Agent</div>
                   <div className="ar-agent-hero-sub">FW 2025 · 21 stores · ready to assist</div>
@@ -233,7 +234,7 @@ export default function AgentRail({ onOpenChat, onNavigate }) {
 
             {/* Open full chat button */}
             <Button variant="secondary" className="ar-open-chat-btn" onClick={() => onOpenChat?.("")}>
-              <span>💬</span> Open full chat assistant
+              <MessageSquare size={14} /> Open full chat assistant
             </Button>
           </>
         )}

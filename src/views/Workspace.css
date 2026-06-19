@@ -1,7 +1,6 @@
 /* Workspace.css — My Workspace module styles */
+/* Padding + max-width owned by shell (.fd-content-inner) */
 .ws-root {
-  padding: var(--sp-7) var(--sp-8);
-  max-width: 1240px;
   min-height: 100%;
 }
 

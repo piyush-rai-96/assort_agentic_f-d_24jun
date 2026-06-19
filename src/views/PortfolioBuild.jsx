@@ -566,10 +566,10 @@ export default function PortfolioBuild({ onNavigate }) {
     <Card size="small" sx={paneSx}>
       <div className="pf-list">
         {gaps.length === 0 ? (
-          <Stack direction="column" gap={1} padding={5} align="center">
-            <Text variant="body-strong" tone="muted">No gaps logged yet</Text>
-            <Text variant="caption" tone="subtle" />
-          </Stack>
+          <EmptyState
+            title="No gaps logged yet"
+            description="Log a line gap to start building the portfolio."
+          />
         ) : (
           gaps.map((g) => (
             <Stack
@@ -606,9 +606,10 @@ export default function PortfolioBuild({ onNavigate }) {
     <Card size="small" sx={paneSx}>
       <div className="pf-list">
         {wishlists.length === 0 ? (
-          <Stack direction="column" gap={1} padding={5} align="center">
-            <Text variant="body-strong" tone="muted">No wishlists submitted yet</Text>
-          </Stack>
+          <EmptyState
+            title="No wishlists submitted yet"
+            description="Submit a wishlist to capture vendor and merchant requests."
+          />
         ) : (
           wishlists.map((w) => (
             <Stack
@@ -1175,7 +1176,7 @@ export default function PortfolioBuild({ onNavigate }) {
           </Stack>
           <Stack direction="row" gap={2} align="center" wrap justify="flex-end">
             <Badge variant="subtle" size="small" color="success" label="SS 2026 · TILE PLR" />
-            <Badge variant="subtle" size="small" color="warning" label="⏱ Atlanta review: Jun 15" />
+            <Badge variant="subtle" size="small" color="warning" label="Atlanta review: Jun 15" />
           </Stack>
         </Stack>
       </Card>

@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect, useRef } from "react";
-import { Card, Button, Badge, Input, TextArea, Chips, FiltersStrip, FilterPanel } from "impact-ui";
+import { Card, Button, Badge, Input, TextArea, Chips, FiltersStrip, FilterPanel, EmptyState } from "impact-ui";
 import { Bot, ClipboardList, X, ArrowDownCircle, ArrowUpCircle } from "lucide-react";
 import FdSelect from "../components/FdSelect.jsx";
 import Text from "../components/Text.jsx";
@@ -453,7 +453,12 @@ export default function MarketIntel() {
         ))}
       </div>
       {filtered.length === 0 ? (
-        <div className="mi-cards-empty">No signals match current filters.</div>
+        <div className="mi-cards-empty">
+          <EmptyState
+            title="No signals match"
+            description="Try adjusting or clearing your filters to see more market intelligence."
+          />
+        </div>
       ) : (
         <div className="mi-cards-grid">
           {filtered.map((i) => (

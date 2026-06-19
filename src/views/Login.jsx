@@ -66,9 +66,9 @@ export default function Login() {
           <Card
             size="large"
             sx={{
-              borderRadius: "20px",
-              boxShadow: "0 8px 48px rgba(37,99,235,0.12), 0 2px 8px rgba(37,99,235,0.07)",
-              border: "1px solid rgba(37,99,235,0.08)",
+              borderRadius: "var(--r)",
+              boxShadow: "var(--sh3)",
+              border: "1px solid var(--color-border)",
               overflow: "hidden",
             }}
           >
@@ -153,8 +153,6 @@ export default function Login() {
                   ))}
                 </div>
               </div>
-
-              <div className="login-footer" />
 
             </div>
           </Card>

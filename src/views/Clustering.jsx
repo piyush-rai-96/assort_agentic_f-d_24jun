@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Card, Button, Badge, Table, Chips, Input, Checkbox } from "impact-ui";
-import { BarChart2, Users, Tag, Cpu, AlertTriangle, CheckCircle2, MapPin, TrendingUp, Building2, ChevronLeft, ChevronRight, Play, Bot, Database, Layers, Check, ScanLine } from "lucide-react";
+import { BarChart2, Users, Tag, Cpu, AlertTriangle, CheckCircle2, MapPin, TrendingUp, Building2, ChevronLeft, ChevronRight, Play, Bot, Database, Layers, Check, ScanLine, RefreshCw } from "lucide-react";
 import Text from "../components/Text.jsx";
 import StepIndicator from "../components/StepIndicator.jsx";
 import Stack from "../components/Stack.jsx";
@@ -484,7 +484,7 @@ function StoreManagerPanel({ managedClusters, setManagedClusters, availableStore
         {/* Change log banner */}
         {hasChanges && (
           <div className="cr-change-banner">
-            <span style={{ fontSize: "var(--fs-body-lg)" }}>🔄</span>
+            <RefreshCw size={15} style={{ color: color.info, flexShrink: 0 }} />
             <Stack direction="column" gap={0.5} flex="1 1 auto">
               <Text variant="caption" style={{ color: color.info, fontWeight: 700 }}>Unsaved changes</Text>
               <Text variant="micro" style={{ color: color.info }}>{changeLog[0]}</Text>
@@ -1849,8 +1849,9 @@ export default function Clustering({ onNavigate }) {
                 })}
                 {FD_OUTLIER_STORES.length > 0 && (
                   <>
-                    <Stack className="cl-section-label" direction="row">
-                      <Text variant="micro" tone="warning" style={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em" }}>⚠ Outliers</Text>
+                    <Stack className="cl-section-label" direction="row" align="center" gap={0.5}>
+                      <AlertTriangle size={12} style={{ color: color.warning }} />
+                      <Text variant="micro" tone="warning" style={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em" }}>Outliers</Text>
                     </Stack>
                     {FD_OUTLIER_STORES.map((o) => {
                       const dec = outlierDecisions[o.id];

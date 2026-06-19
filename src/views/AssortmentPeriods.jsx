@@ -248,7 +248,7 @@ export default function AssortmentPeriods() {
         ) : (
           <Stack direction="column" gap={3}>
             {visiblePeriods.map((ap) => {
-              const dc = DEPT_COLORS[ap.dept] || { color: "#456845", bg: "#F2F6EE" };
+              const dc = DEPT_COLORS[ap.dept] || { color: "#475569", bg: "#eef2ff" };
               const sc = AP_STATUS[ap.status] || AP_STATUS.draft;
               const tw = totalWks(ap.startWeek, ap.endWeek);
               return (

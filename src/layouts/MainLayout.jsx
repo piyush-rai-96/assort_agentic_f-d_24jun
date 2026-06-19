@@ -180,7 +180,7 @@ export default function MainLayout({
       {overrideMode && (
         <div className="override-bar" role="region" aria-label="Override Mode — price editor">
           <div className="override-bar-header">
-            <span className="override-bar-title"><span aria-hidden="true">🔴</span> Override Mode</span>
+            <span className="override-bar-title"><span className="override-dot" aria-hidden="true" /> Override Mode</span>
             <div className="override-dept-tabs">
               <Chips
                 options={OVERRIDE_DEPTS.map((d) => ({ label: d, value: d }))}
@@ -194,7 +194,7 @@ export default function MainLayout({
                 variant="outlined"
                 size="small"
                 onClick={() => { setOverrideMode(false); setOverridePrices({}); setOverrideReasons({}); }}
-                sx={{ borderColor: "rgba(255,255,255,.4)", color: "rgba(255,255,255,.85)", "&:hover": { borderColor: "white", color: "white" } }}
+                sx={{ borderColor: "var(--color-on-dark-border)", color: "var(--color-on-dark-muted)", "&:hover": { borderColor: "var(--color-on-dark)", color: "var(--color-on-dark)" } }}
               >
                 Discard
               </Button>
@@ -202,7 +202,7 @@ export default function MainLayout({
                 variant="contained"
                 size="small"
                 onClick={() => setOverrideMode(false)}
-                sx={{ background: "white", color: "var(--color-accent)", fontWeight: 700, "&:hover": { background: "rgba(255,255,255,.9)" } }}
+                sx={{ background: "var(--color-on-dark)", color: "var(--color-primary-strong)", fontWeight: 700, "&:hover": { background: "var(--color-on-dark-muted)" } }}
               >
                 Submit overrides ({Object.keys(overridePrices).length})
               </Button>
@@ -248,11 +248,11 @@ export default function MainLayout({
         title="Toggle Override Mode"
         className="override-topnav-btn"
         sx={overrideMode
-          ? { background: "var(--color-accent)", borderColor: "var(--color-accent)", color: "white", "&:hover": { background: "var(--color-primary-strong)" } }
-          : { borderColor: "var(--color-border)", color: "var(--color-text-muted)", "&:hover": { borderColor: "var(--color-accent)", color: "var(--color-accent)" } }
+          ? { background: "var(--color-primary)", borderColor: "var(--color-primary)", color: "var(--color-on-dark)", "&:hover": { background: "var(--color-primary-strong)" } }
+          : { borderColor: "var(--color-border)", color: "var(--color-text-muted)", "&:hover": { borderColor: "var(--color-primary)", color: "var(--color-primary)" } }
         }
       >
-        {overrideMode ? "🔴 Override On" : "Override Mode"}
+        {overrideMode ? "Override On" : "Override Mode"}
       </Button>
 
       <div className="fd-body">

@@ -512,9 +512,12 @@ export default function Hindsight({ user }) {
     <Stack direction="column" gap={4}>
       {/* ── Header: store / dept filters ──────────────────────────────────── */}
       <Card sx={{ ...panelSx, padding: "var(--sp-3) var(--sp-4)" }}>
-        <Stack direction="row" align="baseline" gap={2} wrap>
-          <Text variant="title">{store.name}</Text>
-          <Text variant="caption" tone="subtle">Business Review · R13 · SS 2026</Text>
+        <Stack direction="column" gap={0.5}>
+          <Text variant="overline" tone="primary">Hindsight</Text>
+          <Stack direction="row" align="baseline" gap={2} wrap>
+            <Text variant="title">{store.name}</Text>
+            <Text variant="caption" tone="subtle">Business Review · R13 · SS 2026</Text>
+          </Stack>
         </Stack>
       </Card>
 

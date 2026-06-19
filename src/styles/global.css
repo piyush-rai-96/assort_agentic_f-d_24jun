@@ -38,9 +38,10 @@
   --ice3:        var(--slate-surface3);
   --surface2:    var(--slate-surface2);
   --surface3:    var(--slate-surface3);
-  --green:       #2d6a2d;
-  --green2:      #1e5020;
-  --green-pale:  #edfaed;
+  /* Legacy green aliases — remapped to mint success to stay on-brand */
+  --green:       var(--mint);
+  --green2:      #047857;
+  --green-pale:  var(--mint-pale);
   --navy:        var(--navy-blue);
   --navy2:       var(--navy-blue2);
   --text:        var(--ink);
@@ -75,6 +76,7 @@
   --color-primary:        var(--indigo);
   --color-primary-strong: var(--indigo2);
   --color-primary-soft:   var(--indigo-pale);
+  --color-primary-border: #bfdbfe;
 
   --color-text:          var(--ink);
   --color-text-strong:   var(--navy-blue);
@@ -159,12 +161,15 @@
   --sp-6:  24px;
   --sp-7:  28px;
   --sp-8:  32px;
+  --sp-9:  36px;
   --sp-10: 40px;
+  --sp-12: 48px;
 
   /* ── Elevation — blue-tinted shadows ────────────────────────────────────── */
-  --sh:   0 1px 3px rgba(10, 22, 64, 0.07), 0 4px 12px rgba(10, 22, 64, 0.05);
-  --sh2:  0 4px 20px rgba(10, 22, 64, 0.10);
-  --sh3:  0 8px 32px rgba(37, 99, 235, 0.10);
+  --sh:    0 1px 3px rgba(10, 22, 64, 0.07), 0 4px 12px rgba(10, 22, 64, 0.05);
+  --sh2:   0 4px 20px rgba(10, 22, 64, 0.10);
+  --sh3:   0 8px 32px rgba(37, 99, 235, 0.10);
+  --sh-lg: 0 12px 40px rgba(10, 22, 64, 0.14);
 
   /* ── Border radius ───────────────────────────────────────────────────────── */
   --r:      12px;
@@ -202,7 +207,14 @@
   --color-text-primary: var(--color-text);
   --surface-alt:        var(--color-surface-alt);
   --border-accent-width: 3px;
-  --color-on-dark-subtle: rgba(255, 255, 255, 0.65);
+
+  /* ── On-dark tokens (for navy heroes / dark panels) ──────────────────────── */
+  --color-on-dark:         #ffffff;
+  --color-on-dark-muted:   rgba(255, 255, 255, 0.78);
+  --color-on-dark-subtle:  rgba(255, 255, 255, 0.62);
+  --color-on-dark-faint:   rgba(255, 255, 255, 0.42);
+  --color-on-dark-surface: rgba(255, 255, 255, 0.10);
+  --color-on-dark-border:  rgba(255, 255, 255, 0.16);
 }
 
 * {
@@ -254,6 +266,12 @@ select {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-border-strong);
+}
+
+/* Firefox scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--slate-border) transparent;
 }
 
 /* ── Utility ─────────────────────────────────────────────────────────────── */

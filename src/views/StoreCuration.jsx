@@ -290,12 +290,15 @@ export default function StoreCuration({ onNavigate, user }) {
         <div className="sc-header-top">
           <div className="sc-header-title-block">
             <div className="sc-header-title-row">
-              <h1 className="sc-title">Store Curation</h1>
-              <span className={`sc-persona-badge ${user?.id === "store" ? "sc-persona-badge--store" : "sc-persona-badge--corp"}`}>
-                {user?.id === "store" ? "My Store View" : "All Stores"}
-              </span>
+              <Text variant="title" as="h1">Store Curation</Text>
+              <Badge
+                variant="subtle"
+                size="small"
+                color={user?.id === "store" ? "info" : "default"}
+                label={user?.id === "store" ? "My Store View" : "All Stores"}
+              />
             </div>
-            <p className="sc-subtitle">Add / Drop decisions per store · SS 2026 PLR live</p>
+            <Text variant="caption" tone="muted">Add / Drop decisions per store · SS 2026 PLR live</Text>
           </div>
           <div className="sc-header-controls">
             {ViewToggle}
