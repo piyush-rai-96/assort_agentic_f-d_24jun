@@ -108,7 +108,8 @@ export default function Regional({ onNavigate }) {
   const [activeFilterTab, setActiveFilterTab] = useState("dept");
   const [activeCluster, setActiveCluster] = useState(null);
   const [activeStore, setActiveStore] = useState(null);
-  const [clusterAdds, setClusterAdds] = useState({});
+  /* clusterDrops: { [clusterId]: Set<skuId> } — only dropped items tracked; default = Keep */
+  const [clusterDrops, setClusterDrops] = useState({});
 
   /* Derived filter tag for the strip */
   const filterTags = useMemo(() => {
@@ -143,17 +144,20 @@ export default function Regional({ onNavigate }) {
   const openCluster = (id) => { setActiveCluster(id); setActiveStore(null); };
   const openStore = (clusterId, storeId) => { setActiveCluster(clusterId); setActiveStore(storeId); };
   const back = () => { if (activeStore) setActiveStore(null); else setActiveCluster(null); };
-  const toggleAdd = (clusterId, skuId) => {
-    setClusterAdds((prev) => {
-      const cl = { ...(prev[clusterId] || {}) };
-      if (cl[skuId]) delete cl[skuId];
-      else cl[skuId] = true;
-      const next = { ...prev, [clusterId]: cl };
-      // V3: sync to shared ASSORTMENT_PLAN so StoreCuration can read cluster decisions
+
+  /* Toggle drop state for a cluster SKU. Keep is default (no entry). */
+  const toggleDrop = (clusterId, skuId) => {
+    setClusterDrops((prev) => {
+      const clSet = new Set(prev[clusterId] || []);
+      if (clSet.has(skuId)) clSet.delete(skuId);
+      else clSet.add(skuId);
+      const next = { ...prev, [clusterId]: clSet };
+      // Sync kept SKUs to ASSORTMENT_PLAN for StoreCuration
       const flatDecisions = {};
-      Object.entries(next).forEach(([cid, adds]) => {
-        Object.keys(adds).forEach((sid) => {
-          flatDecisions[`${cid}:${sid}`] = "add";
+      SC.clusters.forEach((cl) => {
+        const dropped = next[cl.id] || new Set();
+        clusterSkus(cl).forEach((s) => {
+          if (!dropped.has(s.sku)) flatDecisions[`${cl.id}:${s.sku}`] = "keep";
         });
       });
       ASSORTMENT_PLAN.clusterDecisions = flatDecisions;
@@ -303,16 +307,16 @@ export default function Regional({ onNavigate }) {
 
         <Stack direction="column" gap={4} flex="1 1 460px" style={{ minWidth: 0 }}>
           {!activeCluster ? (
-            <ClusterOverview byDept={byDept} clusterAdds={clusterAdds} onReview={openCluster} onStore={openStore} />
+            <ClusterOverview byDept={byDept} clusterDrops={clusterDrops} onReview={openCluster} onStore={openStore} />
           ) : (
             <ClusterDetail
               clusterId={activeCluster}
               activeStore={activeStore}
               deptFilter={deptFilter}
               byDept={byDept}
-              clusterAdds={clusterAdds}
+              clusterDrops={clusterDrops}
               onStore={openStore}
-              onToggleAdd={toggleAdd}
+              onToggleDrop={toggleDrop}
             />
           )}
         </Stack>
@@ -338,14 +342,16 @@ export default function Regional({ onNavigate }) {
 }
 
 /* ════════════ ALL-CLUSTERS OVERVIEW ════════════ */
-function ClusterOverview({ byDept, clusterAdds, onReview, onStore }) {
+function ClusterOverview({ byDept, clusterDrops, onReview, onStore }) {
   return (
     <Stack direction="column" gap={3}>
       <Text variant="body-strong" tone="strong">Cluster assortment overview — open a cluster or store to drill in</Text>
       {SC.clusters.map((cl) => {
         const clSkus = byDept(clusterSkus(cl));
         const stores = cl.stores.map((id) => FD_STORES.find((s) => s.id === id)).filter(Boolean);
-        const addCount = Object.keys(clusterAdds[cl.id] || {}).length;
+        const dropped = clusterDrops[cl.id] || new Set();
+        const keptCount = clSkus.filter((s) => !dropped.has(s.sku)).length;
+        const droppedCount = clSkus.filter((s) => dropped.has(s.sku)).length;
         const storePickTotal = stores.reduce((a, s) => a + storeOnlySkus(s.id, cl).length, 0);
 
         return (
@@ -357,14 +363,14 @@ function ClusterOverview({ byDept, clusterAdds, onReview, onStore }) {
                 <Stack direction="column" gap={1} flex="1 1 auto" style={{ minWidth: 0 }}>
                   <Text variant="body-strong" tone="strong">{cl.label}</Text>
                   <Stack direction="row" gap={2} align="center" wrap>
-                    <Text variant="caption" tone="muted">{stores.length} stores · {clSkus.length} cluster SKUs</Text>
-                    {addCount ? <Badge variant="subtle" size="small" color="info" label={`+${addCount} regional adds`} /> : null}
+                    <Text variant="caption" tone="muted">{stores.length} stores · {clSkus.length} cluster options</Text>
+                    {droppedCount > 0 && <Badge variant="subtle" size="small" color="error" label={`${droppedCount} dropped`} />}
                   </Stack>
                 </Stack>
                 <Stack direction="row" gap={3} align="center" wrap>
                   <Stack direction="column" align="center" paddingX={3} paddingY={2} style={{ background: "var(--color-surface-alt)", borderRadius: "var(--r2)" }}>
-                    <Text variant="body-strong" tone="teal">{clSkus.length}</Text>
-                    <Text variant="micro" tone="muted">Cluster SKUs</Text>
+                    <Text variant="body-strong" tone="success">{keptCount}</Text>
+                    <Text variant="micro" tone="muted">Kept</Text>
                   </Stack>
                   <Stack direction="column" align="center" paddingX={3} paddingY={2} style={{ background: "var(--color-surface-alt)", borderRadius: "var(--r2)" }}>
                     <Text variant="body-strong" tone="accent">{storePickTotal}</Text>
@@ -383,18 +389,18 @@ function ClusterOverview({ byDept, clusterAdds, onReview, onStore }) {
                 ))}
               </Stack>
 
-              {/* OTB slot indicator */}
+              {/* Keep / Drop progress bar */}
               <div className="rr-otb-slot">
-                <span className="rr-otb-slot-label">Cluster slots</span>
-                <span className={`rr-otb-slot-count ${addCount > (CLUSTER_SLOTS[cl.id] || 10) ? "over" : ""}`}>
-                  {addCount} / {CLUSTER_SLOTS[cl.id] || 10} used
+                <span className="rr-otb-slot-label">Kept options</span>
+                <span className="rr-otb-slot-count">
+                  {keptCount} / {clSkus.length} kept
                 </span>
                 <div className="rr-otb-slot-bar">
                   <div
                     className="rr-otb-slot-fill"
                     style={{
-                      width: `${Math.min(100, (addCount / (CLUSTER_SLOTS[cl.id] || 10)) * 100)}%`,
-                      background: addCount > (CLUSTER_SLOTS[cl.id] || 10) ? "var(--color-error)" : "var(--color-success)",
+                      width: clSkus.length ? `${Math.round((keptCount / clSkus.length) * 100)}%` : "100%",
+                      background: "var(--color-success)",
                     }}
                   />
                 </div>
@@ -421,14 +427,15 @@ function ClusterOverview({ byDept, clusterAdds, onReview, onStore }) {
 }
 
 /* ════════════ CLUSTER DETAIL / STORE DRILL-IN ════════════ */
-function ClusterDetail({ clusterId, activeStore, deptFilter, byDept, clusterAdds, onStore, onToggleAdd }) {
+function ClusterDetail({ clusterId, activeStore, deptFilter, byDept, clusterDrops, onStore, onToggleDrop }) {
   const cl = SC.clusters.find((c) => c.id === clusterId);
   if (!cl) return <Card sx={panelSx}><Text tone="muted">Cluster not found.</Text></Card>;
 
   const clStores = cl.stores.map((id) => FD_STORES.find((s) => s.id === id)).filter(Boolean);
   const clSkusFull = clusterSkus(cl);
   const clSkus = byDept(clSkusFull);
-  const adds = clusterAdds[cl.id] || {};
+  const dropped = clusterDrops[cl.id] || new Set();
+  const keptCount = clSkus.filter((s) => !dropped.has(s.sku)).length;
 
   /* ── STORE DRILL-IN ─────────────────────────────────────────────────────── */
   if (activeStore) {
@@ -508,7 +515,9 @@ function ClusterDetail({ clusterId, activeStore, deptFilter, byDept, clusterAdds
       <Stack direction="row" align="center" gap={2} wrap>
         <span className="rr-dot" style={{ background: cl.color }} />
         <Text variant="subheading" tone="strong">{cl.label}</Text>
-        <Text variant="caption" tone="muted">{clStores.length} stores · {clSkus.length} cluster-level SKUs</Text>
+        <Badge variant="subtle" size="small" color="success" label={`${keptCount} kept`} />
+        {dropped.size > 0 && <Badge variant="subtle" size="small" color="error" label={`${dropped.size} dropped`} />}
+        <Text variant="caption" tone="muted">{clStores.length} stores</Text>
       </Stack>
 
       {/* Store pills */}
@@ -520,9 +529,15 @@ function ClusterDetail({ clusterId, activeStore, deptFilter, byDept, clusterAdds
         ))}
       </Stack>
 
-      {/* Cluster-level assortment — interactive add toggle */}
+      {/* Cluster-level assortment — Keep / Drop decisions */}
       <Stack direction="column" gap={2}>
-        <SectionHeader icon={Archive} title="Cluster-Level Assortment" count={clSkus.length} tone="teal" sub="Carried by ≥50% of cluster stores · not Core/BG" />
+        <SectionHeader
+          icon={Archive}
+          title="Cluster-Level Assortment"
+          count={`${keptCount} kept · ${clSkus.length} total`}
+          tone="teal"
+          sub="Keep options for this cluster · Drop to exclude from plan"
+        />
         {clSkus.length ? (
           <div className="rr-sku-table">
             {/* Table header */}
@@ -534,14 +549,14 @@ function ClusterDetail({ clusterId, activeStore, deptFilter, byDept, clusterAdds
               <div className="rr-th rr-th-action">Decision</div>
             </div>
             {clSkus.map((s) => {
-              const added = !!adds[s.sku];
+              const isDropped = dropped.has(s.sku);
               return (
-                <div key={s.sku} className={`rr-sku-row${added ? " is-added" : ""}`}>
+                <div key={s.sku} className={`rr-sku-row${isDropped ? " is-dropped" : " is-kept"}`}>
                   {/* SKU info */}
                   <div className="rr-td rr-td-sku">
                     <SkuSwatch sku={s} size={34} />
                     <div className="rr-td-sku-info">
-                      <div className="rr-td-sku-name">{s.desc}</div>
+                      <div className={`rr-td-sku-name${isDropped ? " rr-td-sku-name--dropped" : ""}`}>{s.desc}</div>
                       <div className="rr-td-sku-meta">
                         <span className="rr-sku-code">{s.sku}</span>
                         <Badge variant="subtle" size="small" color={DEPT_BADGE[s.dept] || "default"} label={s.dept} />
@@ -561,19 +576,29 @@ function ClusterDetail({ clusterId, activeStore, deptFilter, byDept, clusterAdds
                   </div>
                   {/* Price */}
                   <div className="rr-td rr-td-num rr-td-mono">${s.price.toFixed(2)}</div>
-                  {/* Add / Added button */}
+                  {/* Keep / Drop buttons */}
                   <div className="rr-td rr-td-action">
-                    <button
-                      type="button"
-                      className={`rr-add-btn${added ? " is-added" : ""}`}
-                      onClick={() => onToggleAdd(cl.id, s.sku)}
-                    >
-                      {added ? (
-                        <><CheckCircle2 size={12} aria-hidden="true" /> Added</>
-                      ) : (
-                        <>+ Add to cluster</>
-                      )}
-                    </button>
+                    <div className="rr-keep-drop-btns">
+                      <button
+                        type="button"
+                        className={`rr-kd-btn rr-kd-keep${!isDropped ? " active" : ""}`}
+                        onClick={() => isDropped && onToggleDrop(cl.id, s.sku)}
+                        disabled={!isDropped}
+                        title="Keep in cluster plan"
+                      >
+                        <CheckCircle2 size={11} aria-hidden="true" />
+                        Keep
+                      </button>
+                      <button
+                        type="button"
+                        className={`rr-kd-btn rr-kd-drop${isDropped ? " active" : ""}`}
+                        onClick={() => !isDropped && onToggleDrop(cl.id, s.sku)}
+                        disabled={isDropped}
+                        title="Drop from cluster plan"
+                      >
+                        Drop
+                      </button>
+                    </div>
                   </div>
                 </div>
               );

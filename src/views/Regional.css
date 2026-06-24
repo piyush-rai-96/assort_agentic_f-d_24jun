@@ -187,36 +187,68 @@
 
 .rr-td-action { display: flex; justify-content: flex-end; align-items: center; }
 
-/* Add / Added button */
-.rr-add-btn {
+/* ── Keep / Drop button pair ──────────────────────────────────────────────── */
+.rr-keep-drop-btns {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+.rr-kd-btn {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 6px 14px;
-  border-radius: 20px;
+  gap: 4px;
+  padding: 5px 11px;
+  border-radius: 16px;
   border: 1.5px solid var(--color-border);
   background: var(--color-surface);
-  color: var(--color-text-strong);
-  font-size: var(--fs-caption);
+  color: var(--color-text-muted);
+  font-size: var(--fs-micro);
   font-weight: var(--fw-semibold);
   cursor: pointer;
   transition: background 0.12s, border-color 0.12s, color 0.12s, box-shadow 0.12s;
   white-space: nowrap;
 }
-.rr-add-btn:hover {
-  border-color: var(--color-primary);
-  color: var(--color-primary);
-  background: color-mix(in srgb, var(--color-primary) 6%, var(--color-surface));
-  box-shadow: 0 2px 8px color-mix(in srgb, var(--color-primary) 14%, transparent);
+.rr-kd-btn:not(:disabled):hover {
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--color-primary) 12%, transparent);
 }
-.rr-add-btn.is-added {
-  background: color-mix(in srgb, var(--color-success) 10%, var(--color-surface));
+/* Keep — active state */
+.rr-kd-keep.active {
+  background: color-mix(in srgb, var(--color-success) 12%, var(--color-surface));
   border-color: var(--color-success);
   color: var(--color-success);
+  cursor: default;
 }
-.rr-add-btn.is-added:hover {
-  background: color-mix(in srgb, var(--color-success) 18%, var(--color-surface));
-  box-shadow: 0 2px 8px color-mix(in srgb, var(--color-success) 14%, transparent);
+/* Drop — active state */
+.rr-kd-drop.active {
+  background: color-mix(in srgb, var(--color-error) 12%, var(--color-surface));
+  border-color: var(--color-error);
+  color: var(--color-error);
+  cursor: default;
+}
+/* Inactive (not current selection) hover effect */
+.rr-kd-keep:not(.active):not(:disabled):hover {
+  border-color: var(--color-success);
+  color: var(--color-success);
+  background: color-mix(in srgb, var(--color-success) 6%, var(--color-surface));
+}
+.rr-kd-drop:not(.active):not(:disabled):hover {
+  border-color: var(--color-error);
+  color: var(--color-error);
+  background: color-mix(in srgb, var(--color-error) 6%, var(--color-surface));
+}
+
+/* Dropped row — dimmed */
+.rr-sku-row.is-dropped {
+  opacity: 0.5;
+  background: color-mix(in srgb, var(--color-error) 3%, var(--color-surface-alt));
+  border-left-color: var(--color-error) !important;
+}
+.rr-sku-row.is-kept {
+  border-left-color: var(--color-success);
+}
+.rr-td-sku-name--dropped {
+  text-decoration: line-through;
+  color: var(--color-text-muted);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

@@ -13,8 +13,14 @@ export const FD_OTB_DEPTS = {
   "Laminate & Vinyl":   1_600_000,
 };
 
-/* ── Cluster slot limits — max # of SKUs that can be cluster-added ──────── */
+/* ── Cluster slot limits — max # of SKUs that can be kept at cluster level ── */
 export const CLUSTER_SLOTS = {
+  /* Scenario B (Behavioral — recommended) */
+  B1: 24,  /* High-Velocity Pro Markets — 5 stores, high tier */
+  B2: 20,  /* Mid-Velocity Suburban    — 8 stores, mid tier  */
+  B3: 18,  /* Volume / Value Stores    — 6 stores, mid tier  */
+  B4: 12,  /* Developing / Transitional — 2 stores, low tier */
+  /* Scenario C (DC-based) */
   C1: 8,
   C2: 10,
   C3: 12,

@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { Card, Button, Badge, EmptyState, Alert, Chips, Input, FiltersStrip, FilterPanel } from "impact-ui";
+import { CheckCircle2 } from "lucide-react";
 import FdSelect from "../components/FdSelect.jsx";
 import Text from "../components/Text.jsx";
 import Stack from "../components/Stack.jsx";
@@ -78,7 +79,10 @@ function CurationRow({ sku, assocRow, locked, decision, localPrice, onDecision, 
         </div>
 
         {locked ? (
-          <Badge variant="subtle" color="neutral" label="Locked" />
+          <div className="sc-decision-locked">
+            <CheckCircle2 size={11} aria-hidden="true" />
+            Keep
+          </div>
         ) : isActive ? (
           <Button
             variant={decision === "drop" ? "danger" : "ghost"}
