@@ -302,8 +302,8 @@
 .sc-row-actions {
   display: flex;
   align-items: center;
-  gap: var(--sp-2);
-  flex: 0 0 220px;
+  gap: var(--sp-3);
+  flex: 0 0 260px;
   justify-content: flex-end;
 }
 
@@ -347,7 +347,77 @@
   margin-right: 6px; flex-shrink: 0;
 }
 
-/* Decision buttons */
+/* ── Keep / Drop / Add pill buttons ─────────────────────────────────────── */
+.sc-kd-pair {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.sc-kd-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  border-radius: 16px;
+  border: 1.5px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-size: var(--fs-micro);
+  font-weight: var(--fw-semibold);
+  font-family: inherit;
+  cursor: pointer;
+  transition: background .12s, border-color .12s, color .12s, box-shadow .12s;
+  white-space: nowrap;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.sc-kd-btn:not(:disabled):hover {
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--color-primary) 10%, transparent);
+}
+
+/* Keep — active */
+.sc-kd-keep.active {
+  background: color-mix(in srgb, var(--color-success) 12%, var(--color-surface));
+  border-color: var(--color-success);
+  color: var(--color-success);
+}
+.sc-kd-keep:not(.active):hover {
+  border-color: var(--color-success);
+  color: var(--color-success);
+  background: color-mix(in srgb, var(--color-success) 6%, var(--color-surface));
+}
+
+/* Drop — active */
+.sc-kd-drop.active {
+  background: color-mix(in srgb, var(--color-error) 12%, var(--color-surface));
+  border-color: var(--color-error);
+  color: var(--color-error);
+}
+.sc-kd-drop:not(.active):hover {
+  border-color: var(--color-error);
+  color: var(--color-error);
+  background: color-mix(in srgb, var(--color-error) 6%, var(--color-surface));
+}
+
+/* Add — active */
+.sc-kd-add {
+  padding: 5px 14px;
+}
+.sc-kd-add.active {
+  background: color-mix(in srgb, var(--color-success) 12%, var(--color-surface));
+  border-color: var(--color-success);
+  color: var(--color-success);
+}
+.sc-kd-add:not(.active):hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 6%, var(--color-surface));
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--color-primary) 12%, transparent);
+}
+
+/* Legacy decision buttons (kept for backward compat) */
 .sc-decision-btn {
   padding: 5px 14px;
   border-radius: var(--r2);

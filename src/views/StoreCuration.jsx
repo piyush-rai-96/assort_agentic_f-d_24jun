@@ -33,6 +33,7 @@ function CurationRow({ sku, assocRow, locked, decision, localPrice, onDecision, 
   const lp        = localPrice != null ? localPrice : menuPrice;
   const lpEdited  = localPrice != null && localPrice !== menuPrice;
 
+  /* Row highlight: added=green, dropped=red, else neutral */
   const stateClass = decision === "add" ? " is-add" : decision === "drop" ? " is-drop" : "";
 
   return (
@@ -78,27 +79,48 @@ function CurationRow({ sku, assocRow, locked, decision, localPrice, onDecision, 
           {lpEdited && <span className="sc-price-edited-dot" title="Price overridden" />}
         </div>
 
+        {/* ── Decision controls ─────────────────────────────────────── */}
         {locked ? (
+          /* Mandatory / cluster-locked — always Keep, cannot change */
           <div className="sc-decision-locked">
             <CheckCircle2 size={11} aria-hidden="true" />
             Keep
           </div>
         ) : isActive ? (
-          <Button
-            variant={decision === "drop" ? "danger" : "ghost"}
-            size="small"
-            onClick={() => onDecision("drop")}
-          >
-            {decision === "drop" ? "Dropped" : "Drop"}
-          </Button>
+          /* Existing assortment — Keep / Drop pair */
+          <div className="sc-kd-pair">
+            <button
+              type="button"
+              className={`sc-kd-btn sc-kd-keep${!decision || decision === "keep" ? " active" : ""}`}
+              onClick={() => onDecision(decision === "drop" ? null : "keep")}
+              title="Keep in this store's assortment"
+            >
+              <CheckCircle2 size={10} aria-hidden="true" />
+              Keep
+            </button>
+            <button
+              type="button"
+              className={`sc-kd-btn sc-kd-drop${decision === "drop" ? " active" : ""}`}
+              onClick={() => onDecision(decision === "drop" ? null : "drop")}
+              title="Drop from this store's assortment"
+            >
+              Drop
+            </button>
+          </div>
         ) : (
-          <Button
-            variant={decision === "add" ? "primary" : "ghost"}
-            size="small"
-            onClick={() => onDecision("add")}
+          /* Not carried — Add button */
+          <button
+            type="button"
+            className={`sc-kd-btn sc-kd-add${decision === "add" ? " active" : ""}`}
+            onClick={() => onDecision(decision === "add" ? null : "add")}
+            title="Add to this store's assortment"
           >
-            {decision === "add" ? "Added" : "+ Add"}
-          </Button>
+            {decision === "add" ? (
+              <><CheckCircle2 size={10} aria-hidden="true" /> Added</>
+            ) : (
+              <>+ Add</>
+            )}
+          </button>
         )}
       </div>
     </div>
@@ -186,7 +208,7 @@ export default function StoreCuration({ onNavigate, user }) {
     setDecisions((prev) => {
       const k = key(storeId, skuId);
       const next = { ...prev };
-      if (next[k] === val) delete next[k]; else next[k] = val;
+      if (val === null || next[k] === val) delete next[k]; else next[k] = val;
       return next;
     });
   const setPrice = (skuId, val) =>
