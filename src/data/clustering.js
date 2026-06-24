@@ -32,10 +32,10 @@ export const FD_CLUST_SCENARIOS = {
     composite: 91, statScore: 88, bizScore: 93,
     note: "Best balance of signal and manageability. Groups stores by how they actually sell — not just where they are.",
     clusters: [
-      { id: "B1", label: "Pro-Heavy South",    color: "#2D6A2D", stores: [104, 107, 101, 184, 129], tier: "high", revSqft: 382, st: 71, signals: ["Velocity A across all regions", "High pro-contractor mix", "Top unit productivity per sqft"] },
-      { id: "B2", label: "DIY-Heavy West",     color: "#0B7A6C", stores: [240, 160, 360, 286, 236, 205, 358, 356], tier: "mid", revSqft: 308, st: 62, signals: ["Velocity B", "Balanced DIY + Pro", "Renovation-led demand"] },
-      { id: "B3", label: "Volume-Value South", color: "#D97706", stores: [131, 376, 173, 237, 344, 294], tier: "mid", revSqft: 271, st: 57, signals: ["Velocity C", "High DIY mix", "LVP and basics-driven"] },
-      { id: "B4", label: "Developing Markets", color: "#DC2626", stores: [152, 341], tier: "low", revSqft: 256, st: 55, signals: ["Velocity D", "Low velocity — monitoring", "Candidate for format review"] },
+      { id: "B1", label: "High-Velocity Pro Markets",  color: "#2D6A2D", stores: [104, 107, 101, 184, 129], tier: "high", revSqft: 382, st: 71, signals: ["Velocity A across all regions", "High pro-contractor mix", "Top unit productivity per sqft"] },
+      { id: "B2", label: "Mid-Velocity Suburban",      color: "#0B7A6C", stores: [240, 160, 360, 286, 236, 205, 358, 356], tier: "mid", revSqft: 308, st: 62, signals: ["Velocity B", "Balanced DIY + Pro", "Renovation-led demand"] },
+      { id: "B3", label: "Volume / Value Stores",      color: "#D97706", stores: [131, 376, 173, 237, 344, 294], tier: "mid", revSqft: 271, st: 57, signals: ["Velocity C", "High DIY mix", "LVP and basics-driven"] },
+      { id: "B4", label: "Developing / Transitional",  color: "#DC2626", stores: [152, 341], tier: "low", revSqft: 256, st: 55, signals: ["Velocity D", "Low velocity — monitoring", "Candidate for format review"] },
     ],
   },
   C: {

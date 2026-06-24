@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { Card, Button, Badge, Table, EmptyState, FiltersStrip, FilterPanel } from "impact-ui";
-import { Lock, Archive, MapPin } from "lucide-react";
+import { Lock, Archive, MapPin, CheckCircle2, Target } from "lucide-react";
 import Text from "../components/Text.jsx";
 import Stack from "../components/Stack.jsx";
 import Grid from "../components/Grid.jsx";
@@ -22,6 +22,7 @@ import {
 } from "../data/regional.js";
 import { CLUSTER_SLOTS, otbClusterConsumed, fmtCurrency, otbPct } from "../data/otb.js";
 import { CATALOGUE_SKUS } from "../data/catalogue.js";
+import { plrCalcOptionCount } from "../utils/optionCalc.js";
 import "./Regional.css";
 import { panelSx, softSx } from "../styles/panelSx.js";
 
@@ -165,6 +166,12 @@ export default function Regional({ onNavigate }) {
     [deptFilter]
   );
 
+  /* Option targets from OptionRec calc — used in the banner */
+  const optTargets = useMemo(() => {
+    const dept = deptFilter === "All" ? "Tile" : deptFilter;
+    return plrCalcOptionCount(dept, null, "B");
+  }, [deptFilter]);
+
   return (
     <Stack direction="column" gap={4}>
       {/* ── Header + legend + dept filter ──────────────────────────────────── */}
@@ -207,6 +214,33 @@ export default function Regional({ onNavigate }) {
               );
               })}
             </Stack>
+
+            {/* ── Option Rec targets banner ──────────────────────────────────── */}
+            {optTargets && (
+              <div className="rr-opt-target-banner">
+                <Target size={13} strokeWidth={2} className="rr-opt-target-icon" aria-hidden="true" />
+                <span className="rr-opt-target-label">Option targets ({deptFilter === "All" ? "Tile" : deptFilter})</span>
+                <div className="rr-opt-target-pills">
+                  <span className="rr-opt-pill rr-opt-pill--national">
+                    <span className="rr-opt-pill-num">{optTargets.national}</span>
+                    <span className="rr-opt-pill-lbl">National</span>
+                  </span>
+                  <span className="rr-opt-pill rr-opt-pill--cluster">
+                    <span className="rr-opt-pill-num">{optTargets.regional}</span>
+                    <span className="rr-opt-pill-lbl">Cluster</span>
+                  </span>
+                  <span className="rr-opt-pill rr-opt-pill--store">
+                    <span className="rr-opt-pill-num">{optTargets.store}</span>
+                    <span className="rr-opt-pill-lbl">Store</span>
+                  </span>
+                  <span className="rr-opt-pill rr-opt-pill--total">
+                    <span className="rr-opt-pill-num">{optTargets.total}</span>
+                    <span className="rr-opt-pill-lbl">Total</span>
+                  </span>
+                </div>
+                <span className="rr-opt-target-note">From Option Rec · Scenario B</span>
+              </div>
+            )}
           </Stack>
         </Stack>
       </Card>
@@ -490,41 +524,61 @@ function ClusterDetail({ clusterId, activeStore, deptFilter, byDept, clusterAdds
       <Stack direction="column" gap={2}>
         <SectionHeader icon={Archive} title="Cluster-Level Assortment" count={clSkus.length} tone="teal" sub="Carried by ≥50% of cluster stores · not Core/BG" />
         {clSkus.length ? (
-          <Card sx={{ ...panelSx, padding: 0, overflow: "hidden" }}>
+          <div className="rr-sku-table">
+            {/* Table header */}
+            <div className="rr-sku-head">
+              <div className="rr-th rr-th-sku">SKU / Description</div>
+              <div className="rr-th rr-th-num">Avg R13</div>
+              <div className="rr-th rr-th-num">Carry</div>
+              <div className="rr-th rr-th-num">Price</div>
+              <div className="rr-th rr-th-action">Decision</div>
+            </div>
             {clSkus.map((s) => {
               const added = !!adds[s.sku];
               return (
-                <Stack key={s.sku} className={`rr-add-row${added ? " is-added" : ""}`} direction="row" align="center" gap={4} wrap paddingX={4} paddingY={3}>
-                  <Stack direction="row" align="center" gap={2} flex="1 1 240px" style={{ minWidth: 0 }}>
-                    <SkuSwatch sku={s} size={30} />
-                    <Stack direction="column" gap={1} style={{ minWidth: 0 }}>
-                      <Text variant="body-strong" tone="strong">{s.desc}</Text>
-                    <Stack direction="row" gap={2} align="center" wrap>
-                      <Text variant="micro" tone="subtle" mono>{s.sku}</Text>
-                      <Badge variant="subtle" size="small" color={DEPT_BADGE[s.dept] || "default"} label={s.dept} />
-                      <Text variant="micro" tone="muted">{s.subDept}</Text>
-                      </Stack>
-                    </Stack>
-                  </Stack>
-                  <Stack direction="column" gap={1} style={{ width: 90, flexShrink: 0 }}>
-                    <Text variant="micro" tone="muted">Avg R13</Text>
-                    <Text variant="body-strong" tone="strong">{clusterAvgR13(cl, s.sku)} sqft</Text>
-                  </Stack>
-                  <Stack direction="column" gap={1} style={{ width: 110, flexShrink: 0 }}>
-                    <Text variant="micro" tone="muted">Carry</Text>
-                    <Text variant="body-strong" tone="strong">{s.storeCount}/{s.totalStores} stores</Text>
-                  </Stack>
-                  <Stack direction="column" gap={1} style={{ width: 70, flexShrink: 0 }}>
-                    <Text variant="micro" tone="muted">Price</Text>
-                    <Text variant="body-strong" tone="strong" mono>${s.price.toFixed(2)}</Text>
-                  </Stack>
-                  <Button variant={added ? "primary" : "secondary"} size="small" onClick={() => onToggleAdd(cl.id, s.sku)} style={{ flexShrink: 0 }}>
-                    {added ? "Added ✓" : "Add"}
-                  </Button>
-                </Stack>
+                <div key={s.sku} className={`rr-sku-row${added ? " is-added" : ""}`}>
+                  {/* SKU info */}
+                  <div className="rr-td rr-td-sku">
+                    <SkuSwatch sku={s} size={34} />
+                    <div className="rr-td-sku-info">
+                      <div className="rr-td-sku-name">{s.desc}</div>
+                      <div className="rr-td-sku-meta">
+                        <span className="rr-sku-code">{s.sku}</span>
+                        <Badge variant="subtle" size="small" color={DEPT_BADGE[s.dept] || "default"} label={s.dept} />
+                        {s.subDept && <span className="rr-sku-subdept">{s.subDept}</span>}
+                      </div>
+                    </div>
+                  </div>
+                  {/* Avg R13 */}
+                  <div className="rr-td rr-td-num">
+                    <span className="rr-stat-val">{clusterAvgR13(cl, s.sku)}</span>
+                    <span className="rr-stat-unit">sqft</span>
+                  </div>
+                  {/* Carry */}
+                  <div className="rr-td rr-td-num">
+                    <span className="rr-stat-val">{s.storeCount}/{s.totalStores}</span>
+                    <span className="rr-stat-unit">stores</span>
+                  </div>
+                  {/* Price */}
+                  <div className="rr-td rr-td-num rr-td-mono">${s.price.toFixed(2)}</div>
+                  {/* Add / Added button */}
+                  <div className="rr-td rr-td-action">
+                    <button
+                      type="button"
+                      className={`rr-add-btn${added ? " is-added" : ""}`}
+                      onClick={() => onToggleAdd(cl.id, s.sku)}
+                    >
+                      {added ? (
+                        <><CheckCircle2 size={12} aria-hidden="true" /> Added</>
+                      ) : (
+                        <>+ Add to cluster</>
+                      )}
+                    </button>
+                  </div>
+                </div>
               );
             })}
-          </Card>
+          </div>
         ) : (
           <Card sx={softSx}>
             <EmptyState heading="No cluster-level SKUs" description="No non-core SKUs reach the 50% cluster-carry threshold for this department filter." />
