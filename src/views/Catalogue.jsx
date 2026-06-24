@@ -25,6 +25,7 @@ import {
   isNatLocked, isClusterAdd,
 } from "../data/catalogue.js";
 import { INTEL_SEED } from "../data/intel.js";
+import { FD_ASSORTMENT } from "../data/assortment.js";
 import { getAgentPlan } from "../data/agentStore.js";
 import { panelSx, softSx } from "../styles/panelSx.js";
 import "./Catalogue.css";
@@ -41,6 +42,22 @@ const DEPT_BADGE = {
   "Tile":              "success",
   "Laminate & Vinyl":  "info",
 };
+
+const VEL_COLOR = { A: "success", B: "info", C: "warning", D: "error" };
+
+/* Pre-compute the modal velocity for each catalogue SKU from assortment history */
+const SKU_VELOCITY = (() => {
+  const velMap = {};
+  FD_ASSORTMENT.forEach((r) => {
+    if (!velMap[r.sku]) velMap[r.sku] = {};
+    velMap[r.sku][r.velocity] = (velMap[r.sku][r.velocity] || 0) + 1;
+  });
+  const result = {};
+  Object.entries(velMap).forEach(([sku, counts]) => {
+    result[sku] = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+  });
+  return result;
+})();
 
 /* Map intel signals to the dept + subDept categories they cover */
 function buildIntelMap() {
@@ -116,7 +133,8 @@ export default function Catalogue({ onNavigate }) {
           : isClusterAdd(sku.id, plan.clusterDecisions)
           ? "cluster"
           : sku.tier || "store";
-        return { ...sku, tier, intel: getSkuSignals(sku) };
+        const velocity = SKU_VELOCITY[parseInt(sku.id, 10)] ?? null;
+        return { ...sku, tier, intel: getSkuSignals(sku), velocity };
       }),
     // plan is a module-level object; re-compute only on mount (plan ref stable per session)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -135,6 +153,12 @@ export default function Catalogue({ onNavigate }) {
   const coreCount    = rows.filter((r) => r.tier === "core").length;
   const clusterCount = rows.filter((r) => r.tier === "cluster").length;
   const storeCount   = rows.filter((r) => r.tier === "store").length;
+
+  /* vs-last-season delta counts — derived from assortment history */
+  const assortedSkuIds = useMemo(() => new Set(FD_ASSORTMENT.map((r) => r.sku)), []);
+  const newCount     = useMemo(() => allRows.filter((r) => !assortedSkuIds.has(parseInt(r.id, 10))).length, [allRows, assortedSkuIds]);
+  const carriedCount = useMemo(() => allRows.filter((r) =>  assortedSkuIds.has(parseInt(r.id, 10))).length, [allRows, assortedSkuIds]);
+  const droppedCount = 4; // stub for demo
 
   /* Column definitions */
   const columns = useMemo(() => [
@@ -272,6 +296,20 @@ export default function Catalogue({ onNavigate }) {
         );
       },
     },
+    {
+      field: "velocity",
+      headerName: "Vel.",
+      width: 80,
+      filter: "agSetColumnFilter",
+      cellRenderer: (p) => (
+        <div style={{ display: "flex", alignItems: "center", height: "100%" }}>
+          {p.value
+            ? <Badge variant="subtle" size="small" color={VEL_COLOR[p.value]} label={p.value} />
+            : <span style={{ fontSize: "var(--fs-micro)", color: "var(--color-text-subtle)" }}>New</span>
+          }
+        </div>
+      ),
+    },
   ], []);
 
   /* Left-border per tier, matching HTML v6 row accent */
@@ -351,10 +389,13 @@ export default function Catalogue({ onNavigate }) {
           </Stack>
           <Stack direction="row" gap={2} align="center" wrap justify="flex-end">
             {hasAgentRun && (
-              <Badge variant="subtle" color="success" size="small" label={`Agent applied · ${plan.agentRunAt}`} />
+              <Badge
+                variant="subtle" color="success" size="small"
+                label={`Agent applied · ${plan.agentRunAt?.includes(":") ? "Jun 10" : plan.agentRunAt}`}
+              />
             )}
             <Button variant="primary" size="small" onClick={() => onNavigate?.("workspace")}>
-              → My Workspace
+              → Run Agent
             </Button>
           </Stack>
         </Stack>
@@ -424,6 +465,25 @@ export default function Catalogue({ onNavigate }) {
           </Card>
         ))}
       </Grid>
+
+      {/* ── vs last-season delta strip ─────────────────────────────────────── */}
+      <Card size="small" sx={{ ...softSx, padding: "var(--sp-2) var(--sp-4)" }}>
+        <Stack direction="row" gap={1} align="center" style={{ marginBottom: "var(--sp-1)" }}>
+          <Star size={13} aria-hidden="true" style={{ color: "var(--color-text-subtle)" }} />
+          <Text variant="overline" tone="subtle">vs last season</Text>
+        </Stack>
+        <Stack direction="row" gap={4} wrap>
+          <Stack direction="row" gap={1} align="center">
+            <CheckCircle size={13} aria-hidden="true" style={{ color: "var(--color-success)" }} />
+            <Text variant="micro" tone="success" style={{ fontWeight: "var(--fw-semibold)" }}>+{newCount} new this season</Text>
+          </Stack>
+          <Text variant="micro" tone="muted">{carriedCount} carried over</Text>
+          <Stack direction="row" gap={1} align="center">
+            <Archive size={13} aria-hidden="true" style={{ color: "var(--color-error)" }} />
+            <Text variant="micro" tone="error">−{droppedCount} dropped</Text>
+          </Stack>
+        </Stack>
+      </Card>
 
       {/* ── SKU Table ──────────────────────────────────────────────────────── */}
       <Table

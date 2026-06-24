@@ -783,29 +783,7 @@
 }
 
 /* ── Radar chart container ───────────────────────────────────────── */
-.cr-radar-wrap {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--sp-6);
-  flex-wrap: wrap;
-}
-.cr-radar-legend {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-2);
-  min-width: 160px;
-}
-.cr-radar-legend-item {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-2);
-  font-size: var(--fs-micro);
-}
-.cr-radar-legend-dot {
-  width: 10px; height: 10px;
-  border-radius: 2px;
-  flex-shrink: 0;
-}
+/* radar rules removed — RadarChart component deleted */
 
 /* ── Attribute deviation bars (store vs cluster avg) ─────────────── */
 .cr-attr-deviation {
@@ -977,11 +955,12 @@
   animation: cr-slide-in 0.2s ease;
 }
 
-/* ── Analytics layout ────────────────────────────────────────────── */
+/* ── Analytics layout — left 2/3 for bars + key drivers, right 1/3 for insights */
 .cr-analytics-two-col {
   display: grid;
-  grid-template-columns: 1fr 320px;
+  grid-template-columns: 2fr 1fr;
   gap: var(--sp-5);
+  align-items: flex-start;
 }
 @media (max-width: 960px) {
   .cr-analytics-two-col { grid-template-columns: 1fr; }
@@ -1077,17 +1056,28 @@
   text-align: right;
 }
 
-/* ── Radar legend item — upgraded ────────────────────────────────── */
-.cr-radar-legend-item-v2 {
+/* ── Agent "Why I recommend B" quote card inside scenario card ───── */
+.cr-agent-why {
+  background: var(--color-primary-soft);
+  border-radius: var(--r);
+  padding: var(--sp-2) var(--sp-3);
+  border-left: 3px solid var(--color-primary);
+  margin: var(--sp-2) 0;
   display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 5px 8px;
-  border-radius: var(--r2);
-  border: 1px solid var(--color-border);
-  background: var(--color-surface-alt);
+  gap: var(--sp-2);
+  align-items: flex-start;
+}
+
+/* ── Agent cohesion comment chip in change banner ────────────────── */
+.cr-agent-comment {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--color-primary-soft);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--r);
   font-size: var(--fs-micro);
-  font-weight: var(--fw-semibold);
 }
 
 
@@ -1398,4 +1388,74 @@
 @keyframes crCursorBlink {
   0%, 100% { opacity: 1; }
   50%       { opacity: 0; }
+}
+
+/* ── Cluster agent — complete state ──────────────────────────────────────── */
+
+/* Panel success border + glow */
+.cr-agent-run.is-complete {
+  border-color: var(--color-success);
+  animation: crCompleteGlow 0.6s ease-out forwards;
+}
+@keyframes crCompleteGlow {
+  0%   { box-shadow: 0 0 0 0 var(--color-success-soft, rgba(34,197,94,.12)); }
+  50%  { box-shadow: 0 0 0 6px transparent; }
+  100% { box-shadow: var(--sh); }
+}
+
+/* Bot avatar turns success green on complete */
+.cr-agent-bot.is-done {
+  background: var(--color-success-soft);
+  border-color: var(--color-success);
+  color: var(--color-success);
+  animation: none;
+}
+
+/* Progress bar turns success gradient */
+.cr-agent-run-bar-fill.is-complete {
+  background: linear-gradient(90deg, var(--color-success), var(--color-teal)) !important;
+  box-shadow: 0 0 8px var(--color-success-soft);
+  transition: background 0.4s ease !important;
+}
+
+/* Terminal title bar success tint */
+.cr-agent-console.is-complete .cr-agent-console-bar {
+  background: color-mix(in srgb, #1a2035 80%, var(--color-success) 20%);
+}
+
+/* Green traffic-light pulse */
+.cr-agent-dot.cr-dot-g.is-pulse {
+  animation: crGreenPulse 1.5s ease-in-out 3;
+}
+@keyframes crGreenPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(59,178,115,.4); }
+  50%       { box-shadow: 0 0 0 5px transparent; }
+}
+
+/* exit 0 line */
+.cr-agent-log-done {
+  color: #4dde6a;
+  font-weight: 700;
+  margin-top: 4px;
+}
+.cr-agent-log-exit {
+  color: #4dde6a;
+  font-weight: 700;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  letter-spacing: 0.02em;
+}
+
+/* Console badge */
+.cr-agent-console-badge {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  font-weight: 700;
+  color: #4dde6a;
+  background: rgba(77,222,106,.12);
+  border: 1px solid rgba(77,222,106,.3);
+  border-radius: 10px;
+  padding: 1px 8px;
 }

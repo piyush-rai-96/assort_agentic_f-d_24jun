@@ -32,10 +32,10 @@ export const FD_CLUST_SCENARIOS = {
     composite: 91, statScore: 88, bizScore: 93,
     note: "Best balance of signal and manageability. Groups stores by how they actually sell — not just where they are.",
     clusters: [
-      { id: "B1", label: "High-Velocity Pro Markets", color: "#2D6A2D", stores: [104, 107, 101, 184, 129], tier: "high", revSqft: 382, st: 71, signals: ["Velocity A across all regions", "High pro-contractor mix", "Top unit productivity per sqft"] },
-      { id: "B2", label: "Mid-Velocity Suburban", color: "#0B7A6C", stores: [240, 160, 360, 286, 236, 205, 358, 356], tier: "mid", revSqft: 308, st: 62, signals: ["Velocity B", "Balanced DIY + Pro", "Renovation-led demand"] },
-      { id: "B3", label: "Volume / Value Stores", color: "#D97706", stores: [131, 376, 173, 237, 344, 294], tier: "mid", revSqft: 271, st: 57, signals: ["Velocity C", "High DIY mix", "LVP and basics-driven"] },
-      { id: "B4", label: "Developing / Transitional", color: "#DC2626", stores: [152, 341], tier: "low", revSqft: 256, st: 55, signals: ["Velocity D", "Low velocity — monitoring", "Candidate for format review"] },
+      { id: "B1", label: "Pro-Heavy South",    color: "#2D6A2D", stores: [104, 107, 101, 184, 129], tier: "high", revSqft: 382, st: 71, signals: ["Velocity A across all regions", "High pro-contractor mix", "Top unit productivity per sqft"] },
+      { id: "B2", label: "DIY-Heavy West",     color: "#0B7A6C", stores: [240, 160, 360, 286, 236, 205, 358, 356], tier: "mid", revSqft: 308, st: 62, signals: ["Velocity B", "Balanced DIY + Pro", "Renovation-led demand"] },
+      { id: "B3", label: "Volume-Value South", color: "#D97706", stores: [131, 376, 173, 237, 344, 294], tier: "mid", revSqft: 271, st: 57, signals: ["Velocity C", "High DIY mix", "LVP and basics-driven"] },
+      { id: "B4", label: "Developing Markets", color: "#DC2626", stores: [152, 341], tier: "low", revSqft: 256, st: 55, signals: ["Velocity D", "Low velocity — monitoring", "Candidate for format review"] },
     ],
   },
   C: {
@@ -100,19 +100,19 @@ export const ACTIVE_CLUSTER_SET = {
   author: "D. Rivera",
   cohesion: 0.80,
   clusters: [
-    { id: "C1", name: "Pro-Heavy South",    stores: 18, proAvg: 70, cohesion: 0.84, color: color.primary,  dominantCats: ["Tile", "Installation Materials", "Stone"], skus: 1124 },
-    { id: "C2", name: "DIY-Heavy West",     stores: 15, proAvg: 28, cohesion: 0.78, color: color.teal,     dominantCats: ["LVP", "Laminate", "Tools"],                skus: 986  },
-    { id: "C3", name: "DIY-Heavy South",    stores: 16, proAvg: 32, cohesion: 0.81, color: color.info,     dominantCats: ["Tile", "Grout", "Accessories"],            skus: 1042 },
-    { id: "C4", name: "Mixed Urban East",   stores: 13, proAvg: 51, cohesion: 0.76, color: color.accent,   dominantCats: ["Stone", "Mosaic", "Natural Stone"],        skus: 874  },
-    { id: "C5", name: "Pro-Heavy Midwest",  stores:  8, proAvg: 65, cohesion: 0.79, color: color.warning,  dominantCats: ["Industrial", "Commercial Tile", "Install"], skus: 756  },
+    { id: "C1", name: "Pro-Heavy South",   stores: 4, proAvg: 71, cohesion: 0.84, color: color.primary, dominantCats: ["Tile", "Installation Materials", "Stone"],  skus: 1124 },
+    { id: "C2", name: "DIY-Heavy West",    stores: 4, proAvg: 29, cohesion: 0.78, color: color.teal,    dominantCats: ["LVP", "Laminate", "Tools"],                  skus: 986  },
+    { id: "C3", name: "DIY-Heavy South",   stores: 4, proAvg: 32, cohesion: 0.81, color: color.info,    dominantCats: ["Tile", "Grout", "Accessories"],              skus: 1042 },
+    { id: "C4", name: "Mixed Urban East",  stores: 4, proAvg: 51, cohesion: 0.76, color: color.accent,  dominantCats: ["Stone", "Mosaic", "Natural Stone"],          skus: 874  },
+    { id: "C5", name: "Pro-Heavy Midwest", stores: 4, proAvg: 65, cohesion: 0.79, color: color.warning, dominantCats: ["Industrial", "Commercial Tile", "Install"],  skus: 756  },
   ],
 };
 
 export const CLUSTER_RUNS = [
-  { id: "CR-018", name: "Network 5-cluster (k-means)", method: "k-means · k=5",   attrs: 4, stores: 70, status: "live",     date: "2026-01-12", author: "D. Rivera", cohesion: 0.80 },
-  { id: "CR-017", name: "Network 4-cluster (k-means)", method: "k-means · k=4",   attrs: 4, stores: 70, status: "archived", date: "2025-10-08", author: "S. Patel",  cohesion: 0.74 },
-  { id: "CR-016", name: "Regional behavioral run",     method: "k-means · k=6",   attrs: 5, stores: 70, status: "archived", date: "2025-07-15", author: "D. Rivera", cohesion: 0.77 },
-  { id: "CR-015", name: "DC-aligned baseline",         method: "hierarchical",     attrs: 3, stores: 70, status: "archived", date: "2025-04-02", author: "T. Nguyen", cohesion: 0.68 },
+  { id: "CR-018", name: "Network 5-cluster (k-means)", method: "k-means · k=5",   attrs: 4, stores: 21, status: "live",     date: "2026-01-12", author: "D. Rivera", cohesion: 0.80 },
+  { id: "CR-017", name: "Network 4-cluster (k-means)", method: "k-means · k=4",   attrs: 4, stores: 21, status: "archived", date: "2025-10-08", author: "S. Patel",  cohesion: 0.74 },
+  { id: "CR-016", name: "Regional behavioral run",     method: "k-means · k=6",   attrs: 5, stores: 21, status: "archived", date: "2025-07-15", author: "D. Rivera", cohesion: 0.77 },
+  { id: "CR-015", name: "DC-aligned baseline",         method: "hierarchical",     attrs: 3, stores: 21, status: "archived", date: "2025-04-02", author: "T. Nguyen", cohesion: 0.68 },
 ];
 
 export const CLUSTER_ATTRIBUTES = [
@@ -131,7 +131,7 @@ export const CLUSTER_ATTRIBUTES = [
 ];
 
 export const WIZARD_DEFAULTS = {
-  name: "",
+  name: "SS26 Behavioral network run",
   notes: "",
   scope: "network",
   method: "kmeans",

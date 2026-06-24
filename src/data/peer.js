@@ -47,24 +47,32 @@ export const SKUS = [
   { id: "WOO-91044", name: 'Ranch Pine Solid 3.25" — Knotty', cat: "Wood", sub: "Solid Hardwood", flag: "network-loser", carried: true, peerCarry: 39, peerST: 26, classification: "Loser", confidence: 73, trend: trendDown(7, 62), proSplit: "DIY-leaning", revOpp: -33000, weeksAtLoser: 11, plrCycles: 2, trapped: 38400 },
 ];
 
-/* My-store-vs-cluster comparison rows (static, from the prototype). */
+/* My-store-vs-cluster comparison rows (static, from the prototype).
+ * highlight values:
+ *   "miss"        — store trails cluster (red ▼)
+ *   "opportunity" — gap to fill, not a failure (amber ◈)
+ *   "loser"       — active risk / trapped capital (red ▼)
+ */
 export const COMPARE_ROWS = [
-  { metric: "# SKUs carried", a: "1,047", b: "1,128", c: "1,212" },
-  { metric: "Avg sell-through rate", a: "64.2%", b: "67.1%", c: "74.8%" },
-  { metric: "# Winners carried", a: "188", b: "212", c: "241" },
-  { metric: "# Network Winners not carried", a: "24", b: "—", c: "—", highlight: "win" },
-  { metric: "# Losers still carried", a: "31", b: "24", c: "—", highlight: "loser" },
-  { metric: "Trapped capital estimate", a: "$184k", b: "$148k", c: "—", highlight: "loser" },
+  { metric: "# SKUs carried",               a: "1,047", b: "1,128", c: "1,212", highlight: "miss"        },
+  { metric: "Avg sell-through rate",         a: "64.2%", b: "67.1%", c: "74.8%", highlight: "miss"        },
+  { metric: "# Winners carried",             a: "188",   b: "212",   c: "241",   highlight: "miss"        },
+  { metric: "# Network Winners not carried", a: "24",    b: "—",     c: "—",     highlight: "opportunity" },
+  { metric: "# Losers still carried",        a: "31",    b: "24",    c: "—",     highlight: "loser"       },
+  { metric: "Trapped capital estimate",      a: "$184k", b: "$148k", c: "—",     highlight: "loser"       },
 ];
 
-/* Stores shown as columns in the variance heatmap. */
+/* Stores shown as columns in the variance heatmap.
+ * compValues — stub metrics used when the store is selected as a comp / sister store
+ * in the "My Store vs Cluster" comparison table.
+ */
 export const HEATMAP_STORES = [
-  { id: "S0142", name: "Buckhead", isMe: true },
-  { id: "S0211", name: "North Plano" },
-  { id: "S0089", name: "Westheimer" },
-  { id: "S0317", name: "Scottsdale" },
-  { id: "S0028", name: "Brandon" },
-  { id: "S0455", name: "South End" },
+  { id: "S0142", name: "Buckhead",    isMe: true },
+  { id: "S0211", name: "North Plano", compValues: { skus: "1,089", st: "66.8%", winnersCarried: "201", winnersNotCarried: "18", losers: "27", trapped: "$162k" } },
+  { id: "S0089", name: "Westheimer",  compValues: { skus: "1,134", st: "68.4%", winnersCarried: "214", winnersNotCarried: "12", losers: "22", trapped: "$138k" } },
+  { id: "S0317", name: "Scottsdale",  compValues: { skus: "1,201", st: "71.2%", winnersCarried: "228", winnersNotCarried: "9",  losers: "19", trapped: "$115k" } },
+  { id: "S0028", name: "Brandon",     compValues: { skus: "1,058", st: "65.3%", winnersCarried: "196", winnersNotCarried: "21", losers: "29", trapped: "$175k" } },
+  { id: "S0455", name: "South End",   compValues: { skus: "1,176", st: "70.1%", winnersCarried: "220", winnersNotCarried: "11", losers: "21", trapped: "$128k" } },
 ];
 
 /* Counts used by the drill-down card headers / "view all" affordances. */

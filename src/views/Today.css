@@ -1,9 +1,15 @@
 /* ──────────────────────────────────────────────────────────────────────────
-   Today Dashboard — v6 layout (premium edition)
-   All values use design tokens. Impact UI Card / Badge / Button components
-   are used for all interactive panels. Raw divs are only for layout shell.
+   Today Cockpit — 4-zone layout
+   Zones:
+     1. Status bar (greeting header + stat strip + pipeline progress)
+     2. Alerts   (left col — alert cards + intel signals)
+     3. Agent    (left col — run the agent CTA + recent activity)
+     4. What Needs You (right col — review plans, PLR windows, cluster, quick nav)
+   All values use design tokens. Impact UI Card / Badge / Button used for all
+   interactive panels. Raw divs are for layout shell only.
    ────────────────────────────────────────────────────────────────────────── */
 
+/* ── Shell ───────────────────────────────────────────────────────────────── */
 .today-shell {
   flex: 1;
   overflow-y: auto;
@@ -12,40 +18,35 @@
   gap: var(--sp-4);
 }
 
-/* ── 1. Page header — notification widget (Card handles the container) ───── */
-
-/* Notification widget — displayed inside the light page-header Card */
-.today-hero-notifs {
+/* ── Notification button (header, replaces workspace link) ───────────────── */
+.today-notif-btn {
   background: var(--color-primary-tint-12);
   border: 1px solid var(--color-primary-tint-28);
   border-radius: var(--r);
   padding: var(--sp-3) var(--sp-5);
   text-align: center;
-  min-width: 130px;
+  min-width: 110px;
   cursor: pointer;
   transition: opacity 0.15s, background 0.15s;
   flex-shrink: 0;
-  /* reset button defaults */
   font-family: inherit;
   color: inherit;
 }
-.today-hero-notifs:hover {
+.today-notif-btn:hover {
   background: var(--color-primary-tint-20);
 }
-
-.today-hero-notifs-count {
+.today-notif-count {
   font-size: var(--fs-kpi);
   font-weight: var(--fw-bold);
   color: var(--color-primary);
   line-height: 1;
   margin-bottom: var(--sp-1);
 }
-
-.today-hero-notifs-label {
+.today-notif-label {
   color: var(--color-text-subtle);
 }
 
-/* ── 2. Quick-stat strip ─────────────────────────────────────────────────── */
+/* ── Zone 1a — Stat strip ────────────────────────────────────────────────── */
 .today-stat-strip {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -55,7 +56,6 @@
   background: var(--color-surface);
   overflow: hidden;
 }
-
 .today-stat-cell {
   padding: var(--sp-5) var(--sp-5) var(--sp-4);
   cursor: pointer;
@@ -64,7 +64,6 @@
   display: flex;
   flex-direction: column;
   gap: var(--sp-2);
-  /* reset button defaults */
   background: transparent;
   border-top: none;
   border-bottom: none;
@@ -74,11 +73,7 @@
   color: inherit;
 }
 .today-stat-cell:last-child { border-right: none; }
-.today-stat-cell:hover {
-  background: var(--stat-bg, var(--color-surface-alt));
-}
-
-/* Icon wrapped in a soft tinted pill */
+.today-stat-cell:hover { background: var(--stat-bg, var(--color-surface-alt)); }
 .today-stat-icon-wrap {
   width: 36px;
   height: 36px;
@@ -86,142 +81,74 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
   flex-shrink: 0;
 }
-
 .today-stat-val {
   font-size: var(--fs-kpi);
   font-weight: var(--fw-bold);
   line-height: 1;
 }
+.today-stat-label { color: var(--color-text-subtle); }
 
-.today-stat-label {
-  /* typography handled by <Text variant="overline"> */
-  color: var(--color-text-subtle);
-}
-
-/* ── 3. Cluster model panel ──────────────────────────────────────────────── */
-.today-cluster-panel {
-  padding: var(--sp-4) var(--sp-5);
-  border-bottom: 1px solid var(--color-border);
-  background: var(--color-surface-sunken);
-  flex-shrink: 0;
-}
-
-.today-cluster-empty-icon {
-  font-size: 20px;
-  color: var(--color-text-subtle);
-  flex-shrink: 0;
-}
-
-/* Cluster cards grid */
-.today-cluster-cards {
+/* ── Zone 1b — Pipeline progress track ──────────────────────────────────── */
+.today-pipeline-track {
   display: grid;
-  gap: var(--sp-3);
+  grid-template-columns: repeat(8, 1fr);
+  gap: var(--sp-1);
 }
-
-.today-cluster-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
+.today-pipeline-seg {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
 }
-
-.today-cluster-label {
-  /* font-size + color handled by <Text variant="caption"> */
-  font-weight: var(--fw-bold);
-}
-
-.today-cluster-meta {
-  /* font-size + color handled by <Text variant="micro" tone="subtle"> */
-  line-height: 1.4;
-}
-
-.today-cluster-signal {
-  /* font-size + color handled by <Text variant="micro" tone="muted"> */
-  margin-top: var(--sp-2);
-  font-style: italic;
-}
-
-/* Cluster card hover */
-.today-cluster-card:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--sh) !important;
-}
-
-
-/* ── Section divider ─────────────────────────────────────────────────────── */
-.today-section-divider {
-  height: 1px;
+.today-pipeline-fill {
+  height: 5px;
+  border-radius: 3px;
   background: var(--color-border);
-  margin: var(--sp-4) 0 var(--sp-3);
+  transition: width 0.4s ease;
+  min-width: 4px;
+}
+.today-pipeline-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* ── 4. Two-column body ──────────────────────────────────────────────────── */
+/* ── Two-column body (zones 2, 3, 4) ────────────────────────────────────── */
 .today-body {
   display: grid;
-  grid-template-columns: 1fr var(--sidebar-col-w);
+  grid-template-columns: 1fr var(--sidebar-col-w, 340px);
   gap: var(--sp-5);
-  padding: var(--sp-6);
+  padding: var(--sp-2) 0 var(--sp-8);
   flex: 1;
   min-height: 0;
   align-items: start;
 }
-
-.today-focus-col,
+.today-left-col,
 .today-right-col {
   display: flex;
   flex-direction: column;
 }
 
-/* ── Plan cards ──────────────────────────────────────────────────────────── */
-.today-plan-card {
-  margin-bottom: var(--sp-3) !important;
-}
-.today-plan-card:hover {
-  border-color: var(--color-primary) !important;
-  box-shadow: 0 4px 16px var(--color-primary-tint-12) !important;
-}
-
-/* Segmented pipeline progress */
-.today-plan-pipe {
+/* ── Zone labels ─────────────────────────────────────────────────────────── */
+.today-zone-header {
   display: flex;
-  gap: var(--sp-1);
-  margin: var(--sp-3) 0 var(--sp-2);
-}
-
-.today-plan-pipe-seg {
-  flex: 1;
-  height: 4px;
-  border-radius: var(--r-xs);
-  transition: background 0.2s;
-}
-
-/* ── PLR cards hover ─────────────────────────────────────────────────────── */
-.today-plr-card:hover {
-  border-color: var(--color-teal) !important;
-  box-shadow: 0 2px 8px var(--color-teal-tint-15) !important;
-}
-
-/* ── Quick access grid ───────────────────────────────────────────────────── */
-.today-quick-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  align-items: center;
   gap: var(--sp-2);
-  margin-bottom: var(--sp-1);
+  margin-bottom: var(--sp-3);
+  padding-bottom: var(--sp-2);
+  border-bottom: 1px solid var(--color-border);
 }
 
-.today-quick-card:hover {
-  transform: translateY(-2px) !important;
-  box-shadow: var(--sh) !important;
-  border-color: var(--color-border) !important;
-}
-
-.today-quick-icon {
-  font-size: 20px;
-  flex-shrink: 0;
-  line-height: 1;
+/* ── Alert cards ─────────────────────────────────────────────────────────── */
+.today-alert-card:hover {
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08) !important;
+  transform: translateY(-1px);
 }
 
 /* ── Intel signal cards ──────────────────────────────────────────────────── */
@@ -229,33 +156,127 @@
   box-shadow: 0 2px 10px var(--color-text-tint-10) !important;
 }
 
-.today-intel-meta { display: block; }
+/* ── Agent card ──────────────────────────────────────────────────────────── */
+.today-agent-card {
+  transition: box-shadow 0.15s, border-color 0.15s !important;
+}
+.today-agent-card:hover {
+  box-shadow: 0 4px 20px var(--color-primary-tint-12) !important;
+  border-color: var(--color-primary-tint-28) !important;
+}
+.today-agent-icon-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--r2);
+  background: var(--color-primary-tint-12);
+  border: 1px solid var(--color-primary-tint-28);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
 
+/* ── Activity feed ───────────────────────────────────────────────────────── */
+.today-activity-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-1);
+  border-radius: var(--r);
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-family: inherit;
+  text-align: left;
+  width: 100%;
+  transition: background 0.1s;
+}
+.today-activity-row:hover {
+  background: var(--color-surface-alt);
+}
+.today-activity-time {
+  flex-shrink: 0;
+  min-width: 70px;
+  font-variant-numeric: tabular-nums;
+}
+.today-activity-text {
+  line-height: 1.5;
+}
+
+/* ── Plan cards (Zone 4) ─────────────────────────────────────────────────── */
+.today-plan-card:hover {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 4px 16px var(--color-primary-tint-12) !important;
+}
+.today-plan-pipe {
+  display: flex;
+  gap: var(--sp-1);
+  margin: var(--sp-2) 0 var(--sp-2);
+}
+.today-plan-pipe-seg {
+  flex: 1;
+  height: 4px;
+  border-radius: var(--r-xs);
+  transition: background 0.2s;
+}
+
+/* ── PLR window cards ────────────────────────────────────────────────────── */
+.today-plr-card:hover {
+  border-color: var(--color-teal) !important;
+  box-shadow: 0 2px 8px var(--color-teal-tint-15) !important;
+}
+
+/* ── Cluster mini card ───────────────────────────────────────────────────── */
+.today-cluster-mini:hover {
+  box-shadow: var(--sh) !important;
+  transform: translateY(-1px);
+}
+
+/* ── Quick access grid ───────────────────────────────────────────────────── */
+.today-quick-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-2);
+}
+.today-quick-card:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: var(--sh) !important;
+  border-color: var(--color-border) !important;
+}
+
+/* ── Section divider ─────────────────────────────────────────────────────── */
+.today-section-divider {
+  height: 1px;
+  background: var(--color-border);
+  margin: var(--sp-4) 0 var(--sp-3);
+  flex-shrink: 0;
+}
 
 /* ── Responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .today-pipeline-track { grid-template-columns: repeat(4, 1fr); }
+  .today-pipeline-seg:nth-child(n+5) { display: none; }
+}
+
 @media (max-width: 900px) {
-  .today-hero {
-    padding: var(--sp-6) var(--sp-5) var(--sp-5);
-    flex-wrap: wrap;
-  }
-  .today-hero-notifs { min-width: 110px; }
   .today-stat-strip { grid-template-columns: repeat(3, 1fr); }
   .today-stat-cell:nth-child(4),
   .today-stat-cell:nth-child(5) { border-top: 1px solid var(--color-border); }
   .today-body {
     grid-template-columns: 1fr;
-    padding: var(--sp-4);
+    padding: var(--sp-2) 0 var(--sp-6);
     gap: var(--sp-4);
   }
   .today-right-col {
     border-top: 1px solid var(--color-border);
     padding-top: var(--sp-5);
   }
-  .today-cluster-panel { padding: var(--sp-3) var(--sp-4); }
+  .today-pipeline-track { grid-template-columns: repeat(4, 1fr); }
 }
 
 @media (max-width: 600px) {
-  .today-cluster-cards { grid-template-columns: 1fr 1fr !important; }
   .today-stat-strip { grid-template-columns: 1fr 1fr; }
   .today-stat-cell:last-child { grid-column: span 2; border-right: none; }
+  .today-pipeline-track { grid-template-columns: repeat(2, 1fr); }
+  .today-notif-btn { min-width: 90px; }
 }

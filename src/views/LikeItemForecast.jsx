@@ -61,8 +61,21 @@ function buildProjections(likeSkuId) {
     storeName: s.name,
     region: s.region,
     velocity: s.velocity,
+    noHistory: avgByV[s.velocity] === 0,
     projSqft: Math.round((avgByV[s.velocity] || 60) * (0.72 + Math.random() * 0.18)),
   }));
+}
+
+/* Attribute fit score: dept (50) + subDept (30) + price proximity within 20% (20) */
+function attrFitScore(newSku, likeSku) {
+  let score = 0;
+  if (newSku.dept === likeSku.dept) score += 50;
+  if (newSku.subDept && likeSku.subDept && newSku.subDept === likeSku.subDept) score += 30;
+  if (newSku.price && likeSku.price) {
+    const ratio = Math.min(newSku.price, likeSku.price) / Math.max(newSku.price, likeSku.price);
+    if (ratio >= 0.8) score += 20;
+  }
+  return score;
 }
 
 /* ── Numbered workflow step card ───────────────────────────────────────────── */
@@ -160,7 +173,17 @@ export default function LikeItemForecast({ onNavigate }) {
   // ── Step 3 results table ────────────────────────────────────────────────────
   const projColumns = useMemo(
     () => [
-      { field: "storeName", headerName: "Store", minWidth: 200, flex: 1, filter: "agTextColumnFilter" },
+      {
+        field: "storeName", headerName: "Store", minWidth: 200, flex: 1, filter: "agTextColumnFilter",
+        cellRenderer: (p) => (
+          <Stack direction="row" align="center" gap={2}>
+            <span>{p.value}</span>
+            {p.data?.noHistory && (
+              <Badge variant="subtle" size="small" color="warning" label="No history" />
+            )}
+          </Stack>
+        ),
+      },
       { field: "region", headerName: "Region", width: 130, filter: "agSetColumnFilter" },
       {
         field: "velocity",
@@ -249,6 +272,8 @@ export default function LikeItemForecast({ onNavigate }) {
     const step3Active = st.status === "submitted";
 
     const likeStats = step1Done ? likeItemStats(st.likeSkuId) : null;
+    const likeSku = step1Done ? FD_SKUS.find((s) => s.sku === st.likeSkuId) : null;
+    const fitPct = (likeSku && active) ? attrFitScore(active, likeSku) : null;
 
     let step3Body;
     if (step3Done && st.projections) {
@@ -352,8 +377,13 @@ export default function LikeItemForecast({ onNavigate }) {
             <Card size="small" sx={{ ...panelSx, background: "var(--color-teal-soft)", boxShadow: "none" }}>
               <Stack direction="row" justify="space-between" align="center" gap={3} wrap>
                 <Stack direction="column" gap={1} flex="1 1 auto" style={{ minWidth: 0 }}>
-                  <Text variant="body-strong" tone="teal">{st.likeSkuDesc}</Text>
-                  <Text variant="micro" mono tone="muted">{st.likeSkuId} · R13: {likeStats.r13} sqft · {likeStats.stores}/21 stores</Text>
+                  <Stack direction="row" gap={2} align="center" wrap>
+                    <Text variant="body-strong" tone="teal">{st.likeSkuDesc}</Text>
+                    {fitPct !== null && (
+                      <Badge variant="subtle" size="small" color={fitPct >= 80 ? "success" : fitPct >= 50 ? "info" : "warning"} label={`Attribute match: ${fitPct}%`} />
+                    )}
+                  </Stack>
+                  <Text variant="micro" mono tone="muted">{st.likeSkuId} · R13: {likeStats.r13} sqft · in assortment at {likeStats.stores} of 21 stores</Text>
                 </Stack>
                 {st.status === "assigned" ? (
                   <Button variant="secondary" size="small" onClick={() => changeLike(active.sku)}>Change</Button>

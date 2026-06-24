@@ -8,7 +8,7 @@
 export const INTEL_SEED = [
   {
     id: "I-001", type: "competitive", direction: "threat", urgency: "immediate",
-    scope: "store", cluster: "Southeast Suburban", store: "ATL-01",
+    scope: "store", cluster: "Pro-Heavy South", store: "ATL-01",
     title: "HomeDepot tile dept expanded — matching our zellige selection",
     body: "HomeDepot on Peachtree Industrial expanded their decorative tile section last week. They now carry three zellige SKUs at competitive prices, including a 4×4 sage green that directly competes with SKU-10901 on our agent recommendation list. Two customers mentioned comparing prices.",
     skus: ["SKU-10901", "SKU-10782"],
@@ -19,30 +19,31 @@ export const INTEL_SEED = [
   },
   {
     id: "I-002", type: "market", direction: "opportunity", urgency: "season",
-    scope: "cluster", cluster: "Southeast Suburban", store: null,
+    scope: "cluster", cluster: "Pro-Heavy South", store: null,
     title: "Large mixed-use development breaking ground Q3 — 800 units",
     body: "Ponce City South development, 800 residential + 40k sqft commercial, breaking ground Sep 2025. GC is Skanska. Expected completion Q2 2027. Our Midtown and Buckhead stores are within 3 miles. Strong opportunity for pro/contractor business over the next 6–8 seasons. Large format tile and LVP will lead.",
-    skus: ["SKU-11020", "SKU-10198"],
+    skus: ["SKU-11020", "SKU-10987"],
     categories: ["Hardwood/LVP", "Tile – Porcelain"],
-    modelInstruction: "Upgrade confidence for large-format tile and LVP SKUs in ATL-01, ATL-03, ATL-07 cluster for FW 2025 and SS 2026. Tag as \"development signal: Ponce City South\".",
+    modelInstruction: "Upgrade confidence for large-format tile and LVP SKUs in ATL-01, ATL-03, ATL-07 cluster for FW 2025 and SS 2026. Tag as \"development signal: Ponce City South\". Affects SKU-11020 (Driftwood Ash LVP) and SKU-10987 (Lava Black 24×48 Porcelain).",
     feedsModel: true, status: "new", author: "Jason R.", authorRole: "Regional VP", date: "Jun 2, 2025",
     confidence: "confirmed", escalated: false, merchantNote: "",
   },
   {
     id: "I-003", type: "customer", direction: "opportunity", urgency: "immediate",
-    scope: "store", cluster: "Southeast Suburban", store: "ATL-01",
+    scope: "store", cluster: "Pro-Heavy South", store: "ATL-01",
     title: "Pro contractor asking for 24×48 rectified porcelain — not in catalogue",
     body: "Marcus Tile & Stone (regular pro contractor, ~$80K annual spend) asked specifically for 24×48 rectified porcelain in a light grey tone — something like Bianco Lasa or Gris Cemento. Said he has 3 projects this season requiring it. Our current 24×24 range (Mojave Sand, Calacatta White) doesn't satisfy the rectified/large-format need. He's currently sourcing from Tile Shop.",
     skus: ["SKU-10839"],
     categories: ["Tile – Porcelain"],
     modelInstruction: null,
     catalogueGap: true, catalogueRequest: "24×48 rectified porcelain, light grey. 3 contractor projects confirmed.",
+    estDemand: "$80–120k",
     feedsModel: false, status: "reviewed", author: "Lisa T.", authorRole: "Store Manager", date: "Jun 1, 2025",
     confidence: "confirmed", escalated: true, merchantNote: "Following up with Marazzi and Florim reps — may be a FW 2025 catalogue addition.",
   },
   {
     id: "I-004", type: "product", direction: "threat", urgency: "season",
-    scope: "cluster", cluster: "Southeast Suburban", store: null,
+    scope: "cluster", cluster: "Pro-Heavy South", store: null,
     title: "Barnwood Oak LVP returns up 22% — install complaints from contractors",
     body: "SKU-10198 (Barnwood Oak 6×36 LVP) showing a return rate spike over last 6 weeks. Talking to the floor team, at least 3 contractors have mentioned issues with click-lock failure in humid conditions — common in Atlanta summers. Our sell-through looks fine but we're masking a quality signal. One contractor switched to Shaw LVP and told two other pros.",
     skus: ["SKU-10198"],
@@ -53,13 +54,14 @@ export const INTEL_SEED = [
   },
   {
     id: "I-005", type: "trend", direction: "opportunity", urgency: "next",
-    scope: "region", cluster: "Southeast Suburban", store: null,
+    scope: "region", cluster: "Pro-Heavy South", store: null,
     title: "Limewash and textured wall tile demand building — 6 months ahead of national",
     body: "Seeing early limewash tile demand across 4 Southeast stores. Interior designers are specifying it heavily for new builds and high-end renovations. Our current catalogue has no limewash ceramic — closest is the Rustic Slate. Zillow data shows renovation spend in Atlanta MSA up 18% YoY. This is a trend that will hit national planning in SS 2026 at the latest.",
     skus: [],
     categories: ["Tile – Ceramic", "Tile – Porcelain"],
     modelInstruction: null,
     catalogueGap: true, catalogueRequest: "Limewash ceramic wall tile — textured surface, neutral tones. High-end renovation market.",
+    estDemand: "$40–60k",
     feedsModel: false, status: "reviewed", author: "Jason R.", authorRole: "Regional VP", date: "May 25, 2025",
     confidence: "multiple customers", escalated: false, merchantNote: "",
   },
@@ -98,7 +100,7 @@ export const CATALOGUE_SKUS = [
 ];
 
 export const CLUSTER_NAMES = [
-  "Southeast Suburban", "Southwest Desert", "Northeast Urban", "Midwest Heartland",
+  "Pro-Heavy South", "Southwest Desert", "Northeast Urban", "Midwest Heartland",
   "Pacific Coast", "Mountain West", "Gulf Coast", "Mid-Atlantic Suburb",
 ];
 

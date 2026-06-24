@@ -47,38 +47,54 @@ const AGENT_TIERS = [
 ];
 
 /* ─── Animated agent run panel ──────────────────────────────────────────── */
-function AgentRunPanel({ ctx, onComplete }) {
-  const [done, setDone] = useState(0);
+/*
+ * Props:
+ *   ctx          — pipeline context (counts, totals)
+ *   onPersist    — called once when animation reaches 100% to save to agentStore
+ *   preFinished  — true when mounting already-complete (re-visit after a prior run)
+ *   onNavigate   — passed through for "View Catalogue →" CTA
+ *   onReRun      — passed through for "Re-run" CTA
+ */
+function AgentRunPanel({ ctx, onPersist, preFinished = false, onNavigate, onReRun }) {
   const total = AGENT_PIPELINE.length;
-  const cbRef = useRef(onComplete);
-  cbRef.current = onComplete;
+  // If re-visiting an already-complete run, start fully done; else animate from 0
+  const [done, setDone] = useState(preFinished ? total : 0);
+  const persistedRef = useRef(preFinished); // prevent double-persist
 
   useEffect(() => {
+    if (preFinished) return; // already complete — no animation needed
     if (done >= total) {
-      const t = setTimeout(() => cbRef.current?.(), 760);
-      return () => clearTimeout(t);
+      if (!persistedRef.current) {
+        persistedRef.current = true;
+        onPersist?.();
+      }
+      return;
     }
     const dur = 640 + (done % 3) * 200;
     const t = setTimeout(() => setDone((d) => d + 1), dur);
     return () => clearTimeout(t);
-  }, [done, total]);
+  }, [done, total, preFinished, onPersist]);
 
   const finished = done >= total;
   const pct = Math.round((done / total) * 100);
   const activeStep = finished ? null : AGENT_PIPELINE[done];
 
   return (
-    <Card size="small" sx={panelSx}>
-      <div className="cat-run">
+    <Card size="small" sx={{ ...panelSx, ...(finished ? { borderLeft: "3px solid var(--color-success)" } : {}) }}>
+      <div className={`cat-run${finished ? " is-complete" : ""}`}>
+
+        {/* Header */}
         <div className="cat-run-head">
-          <div className={`cat-bot ${finished ? "is-done" : ""}`}>{finished ? <CheckCircle2 size={22} aria-hidden="true" /> : <Bot size={22} aria-hidden="true" />}</div>
+          <div className={`cat-bot ${finished ? "is-done" : ""}`}>
+            {finished ? <CheckCircle2 size={22} aria-hidden="true" /> : <Bot size={22} aria-hidden="true" />}
+          </div>
           <div className="cat-run-head-txt">
-            <Text variant="subheading" tone="primary">
-              {finished ? "Assortment plan ready" : "Agent is building your assortment…"}
+            <Text variant="subheading" tone={finished ? "success" : "primary"}>
+              {finished ? "Assortment plan ready · all tiers applied" : "Agent is building your assortment…"}
             </Text>
             <Text variant="caption" tone="muted">
               {finished
-                ? "All 7 stages complete — tiers applied to Catalogue"
+                ? `All ${total} stages complete — Core ${ctx.natCount} · Cluster ${ctx.clCount} · Store ${ctx.storePicks} SKUs tiered`
                 : `Step ${Math.min(done + 1, total)} of ${total} · ${activeStep?.title ?? ""}`}
             </Text>
           </div>
@@ -87,25 +103,37 @@ function AgentRunPanel({ ctx, onComplete }) {
           </div>
         </div>
 
+        {/* Progress bar */}
         <div className="cat-run-bar">
-          <div className="cat-run-bar-fill" style={{ width: `${pct}%` }} />
+          <div
+            className={`cat-run-bar-fill${finished ? " is-complete" : ""}`}
+            style={{ width: `${pct}%` }}
+          />
         </div>
 
+        {/* Steps + terminal */}
         <div className="cat-run-grid">
           <ol className="cat-steps">
             {AGENT_PIPELINE.map((s, i) => {
-              const state = i < done ? "done" : i === done ? "active" : "queued";
+              // When finished every step is done — no more spinners
+              const state = finished ? "done" : i < done ? "done" : i === done ? "active" : "queued";
               return (
                 <li key={s.id} className={`cat-step is-${state}`}>
                   <span className={`cat-step-ico tone-${s.tone}`}>
-                    {state === "done" ? <Check size={13} aria-hidden="true" /> : state === "active" ? <span className="cat-spin" /> : <s.Icon size={13} aria-hidden="true" />}
+                    {state === "done"
+                      ? <Check size={13} aria-hidden="true" />
+                      : state === "active"
+                        ? <span className="cat-spin" />
+                        : <s.Icon size={13} aria-hidden="true" />}
                   </span>
                   <div className="cat-step-body">
                     <span className="cat-step-title">{s.title}</span>
                     <span className="cat-step-sub">
                       {state === "active"
                         ? <>{s.sub}<span className="cat-dots" /></>
-                        : state === "done" ? s.result(ctx) : "Waiting…"}
+                        : state === "done"
+                          ? s.result(ctx)
+                          : "Waiting…"}
                     </span>
                   </div>
                 </li>
@@ -113,50 +141,92 @@ function AgentRunPanel({ ctx, onComplete }) {
             })}
           </ol>
 
-          <div className="cat-console" aria-hidden="true">
+          <div className={`cat-console${finished ? " is-complete" : ""}`} aria-hidden="true">
             <div className="cat-console-bar">
-              <span className="cat-dot r" /><span className="cat-dot y" /><span className="cat-dot g" />
-              <span className="cat-console-title">assortment-agent · trace</span>
+              <span className="cat-dot r" /><span className="cat-dot y" />
+              <span className={`cat-dot g${finished ? " is-pulse" : ""}`} />
+              <span className="cat-console-title">
+                assortment-agent · trace{finished ? " · complete" : ""}
+              </span>
+              {finished && (
+                <span className="cat-console-badge">exit 0</span>
+              )}
             </div>
             <div className="cat-console-body">
-              <div className="cat-log cat-log-muted">$ agent run --catalogue FW2025 --stores {ctx.storeCount}</div>
-              {AGENT_PIPELINE.slice(0, done).map((s) => (
+              <div className="cat-log cat-log-muted">
+                $ agent run --catalogue FW2025 --stores {ctx.storeCount} --season SS2026
+              </div>
+              {/* Always show all steps when finished, else only completed ones */}
+              {(finished ? AGENT_PIPELINE : AGENT_PIPELINE.slice(0, done)).map((s) => (
                 <div key={s.id} className="cat-log">
-                  <span className="cat-log-ok">✓</span> {s.title} <span className="cat-log-muted">— {s.result(ctx)}</span>
+                  <span className="cat-log-ok">✓</span> {s.title}{" "}
+                  <span className="cat-log-muted">— {s.result(ctx)}</span>
                 </div>
               ))}
+              {/* Active step — blinking cursor while running */}
               {!finished && (
                 <div className="cat-log cat-log-run">
                   <span className="cat-log-arrow">▸</span> {activeStep?.title}<span className="cat-cursor" />
                 </div>
               )}
+              {/* Completion footer lines */}
               {finished && (
-                <div className="cat-log cat-log-done">
-                  ✓ Plan committed · Core {ctx.natCount} · Cluster {ctx.clCount} · Store {ctx.storePicks}
-                </div>
+                <>
+                  <div className="cat-log cat-log-done">
+                    ✓ Plan committed · Core {ctx.natCount} · Cluster {ctx.clCount} · Store {ctx.storePicks}
+                  </div>
+                  <div className="cat-log cat-log-muted">
+                    [ok] catalogue.write: {ctx.total} SKUs tiered · {ctx.coreLocked} locked
+                  </div>
+                  <div className="cat-log cat-log-muted">
+                    [ok] agent-store.commit · {ctx.intelSignals} intel signal(s) applied
+                  </div>
+                  <div className="cat-log cat-log-exit">
+                    Run completed · exit 0
+                  </div>
+                </>
               )}
             </div>
           </div>
         </div>
+
+        {/* Action row — only shown when complete */}
+        {finished && (
+          <div className="cat-run-actions">
+            <Button variant="primary" size="small" onClick={() => onNavigate?.("catalogue")}>
+              View Catalogue →
+            </Button>
+            <Button variant="outlined" size="small" onClick={() => onNavigate?.("national")}>
+              Review National Core
+            </Button>
+            <div style={{ flex: 1 }} />
+            <Button variant="ghost" size="small" onClick={onReRun}>
+              Re-run
+            </Button>
+          </div>
+        )}
       </div>
     </Card>
   );
 }
 
 /* ─── Top-of-Workspace agent section ────────────────────────────────────── */
-function AgentSection({ onNavigateCatalogue }) {
+function AgentSection({ onNavigateCatalogue, onNavigate }) {
   const scClusters = FD_CLUST_SCENARIOS.B.clusters;
   const existing = getAgentPlan();
   const alreadyRun = !!existing.agentRunAt;
 
-  const [phase, setPhase]   = useState(alreadyRun ? "done" : "idle");
+  // phases: "idle" | "running" | "complete"
+  const [phase, setPhase]   = useState(alreadyRun ? "complete" : "idle");
   const [plan,  setPlanLocal] = useState(alreadyRun ? existing : null);
-  const [collapsed, setCollapsed] = useState(alreadyRun); // collapse after first run
+  // collapsed only when user explicitly collapses — never auto-collapse after run
+  const [collapsed, setCollapsed] = useState(false);
 
   const runAgent = () => {
     const result = runCatalogueAgent();
     setPlanLocal(result);
     setPhase("running");
+    setCollapsed(false);
   };
   const reRun = () => {
     resetAgentPlan();
@@ -164,10 +234,10 @@ function AgentSection({ onNavigateCatalogue }) {
     setPhase("idle");
     setCollapsed(false);
   };
-  const onComplete = () => {
+  // Called once when animation finishes — persists plan, keeps panel visible
+  const onPersist = () => {
     setAgentPlan(plan);
-    setPhase("done");
-    setCollapsed(false);
+    setPhase("complete");
   };
 
   const natCount = plan
@@ -190,22 +260,22 @@ function AgentSection({ onNavigateCatalogue }) {
     storePicks: STORE_PICK_COUNT,
   }), [natCount, clCount, scClusters.length]);
 
-  /* Compact done banner */
-  if (phase === "done" && collapsed) {
+  /* Compact collapsed banner — only shown when user explicitly collapses */
+  if (phase === "complete" && collapsed) {
     return (
       <Card size="small" sx={{ ...panelSx, borderLeft: "3px solid var(--color-success)" }}>
         <Stack direction="row" justify="space-between" align="center" gap={3} wrap>
           <Stack direction="row" gap={2} align="center" flex="1 1 auto" style={{ minWidth: 0 }}>
             <CheckCircle2 size={20} aria-hidden="true" style={{ color: "var(--color-success)", flexShrink: 0 }} />
             <Stack direction="column" gap={0}>
-              <Text variant="body-strong" tone="success">Assortment agent applied</Text>
+              <Text variant="body-strong" tone="success">Assortment agent complete</Text>
               <Text variant="micro" tone="muted">
                 Core {natCount} · Cluster {clCount} · Store {STORE_PICK_COUNT} · {plan?.agentRunAt}
               </Text>
             </Stack>
           </Stack>
           <Stack direction="row" gap={2} wrap>
-            <Button variant="secondary" size="small" onClick={() => setCollapsed(false)}>View details</Button>
+            <Button variant="secondary" size="small" onClick={() => setCollapsed(false)}>View run log</Button>
             <Button variant="ghost" size="small" onClick={reRun}>Re-run</Button>
             <Button variant="primary" size="small" onClick={onNavigateCatalogue}>View Catalogue →</Button>
           </Stack>
@@ -259,51 +329,47 @@ function AgentSection({ onNavigateCatalogue }) {
     );
   }
 
-  /* Running */
-  if (phase === "running") {
-    return <AgentRunPanel ctx={agentCtx} onComplete={onComplete} />;
+  /* Running — animated panel (stays visible when done) */
+  if (phase === "running" || phase === "complete") {
+    return (
+      <Stack direction="column" gap={3}>
+        <AgentRunPanel
+          ctx={agentCtx}
+          onPersist={onPersist}
+          preFinished={phase === "complete"}
+          onNavigate={onNavigate ?? onNavigateCatalogue}
+          onReRun={reRun}
+        />
+
+        {/* Tier summary — shown below terminal once complete */}
+        {phase === "complete" && (
+          <>
+            <Grid columns={3} gap={3}>
+              {[
+                { Icon: Lock,    label: "National Core", n: natCount,         note: "All stores · locked",   color: "var(--color-success)", tone: "success" },
+                { Icon: Archive, label: "Cluster Adds",  n: clCount,          note: "Per-cluster mandatory", color: "var(--color-teal)",    tone: "info" },
+                { Icon: MapPin,  label: "Store Picks",   n: STORE_PICK_COUNT, note: "Store-level curation",  color: "var(--color-accent)",  tone: "default" },
+              ].map((t) => (
+                <Card size="small" key={t.label} sx={{ ...softSx, borderTop: `3px solid ${t.color}`, padding: "var(--sp-4)" }}>
+                  <Stack direction="column" gap={1}>
+                    <t.Icon size={18} aria-hidden="true" style={{ color: t.color }} />
+                    <Text variant="kpi" tone={t.tone}>{t.n}</Text>
+                    <Text variant="body-strong" tone="strong">{t.label}</Text>
+                    <Text variant="micro" tone="muted">{t.note}</Text>
+                  </Stack>
+                </Card>
+              ))}
+            </Grid>
+            <div style={{ display: "flex", justifyContent: "flex-end" }}>
+              <Button variant="ghost" size="small" onClick={() => setCollapsed(true)}>
+                Collapse run log
+              </Button>
+            </div>
+          </>
+        )}
+      </Stack>
+    );
   }
-
-  /* Done — expanded */
-  return (
-    <Stack direction="column" gap={3}>
-      {/* Success header */}
-      <Card size="small" sx={{ ...panelSx, borderLeft: "3px solid var(--color-success)" }}>
-        <Stack direction="row" justify="space-between" align="center" gap={3} wrap>
-          <Stack direction="row" gap={2} align="center" flex="1 1 auto">
-            <CheckCircle2 size={22} aria-hidden="true" style={{ color: "var(--color-success)", flexShrink: 0 }} />
-            <Stack direction="column" gap={0}>
-              <Text variant="subheading" tone="success">Assortment plan committed to Catalogue</Text>
-              <Text variant="micro" tone="muted">Applied {plan?.agentRunAt} — navigate to Catalogue to see tier assignments</Text>
-            </Stack>
-          </Stack>
-          <Stack direction="row" gap={2} wrap>
-            <Button variant="ghost" size="small" onClick={reRun}>Re-run</Button>
-            <Button variant="ghost" size="small" onClick={() => setCollapsed(true)}>Collapse</Button>
-            <Button variant="primary" size="small" onClick={onNavigateCatalogue}>View Catalogue →</Button>
-          </Stack>
-        </Stack>
-      </Card>
-
-      {/* Tier cascade */}
-      <Grid columns={3} gap={3}>
-        {[
-          { Icon: Lock,    label: "National Core", n: natCount,         note: "All stores · locked",   color: "var(--color-success)", tone: "success" },
-          { Icon: Archive, label: "Cluster Adds",  n: clCount,          note: "Per-cluster mandatory", color: "var(--color-teal)",    tone: "info" },
-          { Icon: MapPin,  label: "Store Picks",   n: STORE_PICK_COUNT, note: "Store-level curation",  color: "var(--color-accent)",  tone: "default" },
-        ].map((t) => (
-          <Card size="small" key={t.label} sx={{ ...softSx, borderTop: `3px solid ${t.color}`, padding: "var(--sp-4)" }}>
-            <Stack direction="column" gap={1}>
-              <t.Icon size={18} aria-hidden="true" style={{ color: t.color }} />
-              <Text variant="kpi" tone={t.tone}>{t.n}</Text>
-              <Text variant="body-strong" tone="strong">{t.label}</Text>
-              <Text variant="micro" tone="muted">{t.note}</Text>
-            </Stack>
-          </Card>
-        ))}
-      </Grid>
-    </Stack>
-  );
 }
 
 /* ─── Shared atoms ──────────────────────────────────────────────────────── */
@@ -918,7 +984,7 @@ export default function Workspace({ onNavigate, user }) { // eslint-disable-line
       </Card>
 
       {/* ── Agent Recommendation Section ─────────────────────────────────── */}
-      <AgentSection onNavigateCatalogue={() => onNavigate?.("catalogue")} />
+      <AgentSection onNavigateCatalogue={() => onNavigate?.("catalogue")} onNavigate={onNavigate} />
 
       {/* ── Active Cluster Model Banner ───────────────────────────────────── */}
       <ClusterBanner onNavigate={onNavigate} />

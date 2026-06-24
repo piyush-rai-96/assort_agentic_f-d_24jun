@@ -215,6 +215,7 @@ export default function PortfolioBuild({ onNavigate }) {
         intelId: sig.id,
         intelTitle: sig.title,          // full original signal title for callout
         cluster: sig.cluster ?? null,   // cluster context for callout
+        estDemand: sig.estDemand ?? null, // estimated annual demand from intel signal
       }));
   }, []);
 
@@ -229,7 +230,7 @@ export default function PortfolioBuild({ onNavigate }) {
         const store = FD_STORES.find((s) => sig.store && s.id.toString().includes("01"));
         return {
           id: `wish-intel-${sig.id}`,
-          store: store?.name || sig.cluster || "Southeast",
+          store: store?.name || sig.cluster || "Pro-Heavy South",
           region: store?.region || sig.cluster || "",
           item: sig.title,
           evidence: "Market intel",
@@ -748,6 +749,15 @@ export default function PortfolioBuild({ onNavigate }) {
             </Card>
           )}
 
+          {activeGap.estDemand && (
+            <Stack direction="row" gap={2} align="center"
+              style={{ background: "var(--color-success-soft)", border: "1px solid var(--color-success)", borderRadius: "var(--r2)", padding: "var(--sp-2) var(--sp-3)" }}
+            >
+              <Text variant="micro" tone="muted" style={{ fontWeight: 600 }}>Est. annual demand</Text>
+              <Text variant="caption" tone="success" mono style={{ fontWeight: 700 }}>{activeGap.estDemand}</Text>
+            </Stack>
+          )}
+
           <Text variant="micro" tone="subtle">Logged by {activeGap.addedBy} · {activeGap.date}</Text>
 
           {/* Related field wishlists cross-link */}
@@ -789,7 +799,20 @@ export default function PortfolioBuild({ onNavigate }) {
     );
   })();
 
-  const WishDetail = activeWish && (
+  const WishDetail = activeWish && (() => {
+    const isConfirmedIntel =
+      (activeWish.source === "intel" || activeWish.source === "market-intel") &&
+      (activeWish.evidence === "Market intel" || activeWish.evidence === "3 contractor projects confirmed");
+    const displayUrgency = isConfirmedIntel ? "High" : activeWish.urgency || "Medium";
+
+    /* Fuzzy-match similar catalogue SKUs by keyword overlap */
+    const wishKeywords = (activeWish.item || "").toLowerCase().split(/\s+/);
+    const similarCatSkus = CATALOGUE_SKUS.filter((s) => {
+      const sName = s.name.toLowerCase();
+      return wishKeywords.some((kw) => kw.length > 3 && sName.includes(kw));
+    });
+
+    return (
     <Card size="small" sx={formCardSx}>
       <Stack direction="column" gap={3}>
         <Stack direction="column" gap={1}>
@@ -819,7 +842,7 @@ export default function PortfolioBuild({ onNavigate }) {
         <Grid columns={2} gap={3}>
           {[
             { l: "Evidence",     v: activeWish.evidence },
-            { l: "Urgency",      v: activeWish.urgency || "Medium" },
+            { l: "Urgency",      v: displayUrgency },
             { l: "Submitted",    v: activeWish.date },
             { l: "Submitted by", v: activeWish.store },
           ].map((f) => (
@@ -836,15 +859,41 @@ export default function PortfolioBuild({ onNavigate }) {
             <Text variant="caption" tone="default">{activeWish.note}</Text>
           </Card>
         ) : null}
+        {/* Similar items already in catalogue */}
+        {similarCatSkus.length > 0 && (
+          <Card size="small" sx={{ ...panelSx, background: "var(--color-surface-alt)", boxShadow: "none", padding: "var(--sp-3) var(--sp-4)" }}>
+            <Text variant="overline" tone="subtle" style={{ marginBottom: "var(--sp-2)", display: "block" }}>Similar items already in catalogue</Text>
+            <Stack direction="column" gap={2}>
+              {similarCatSkus.slice(0, 3).map((s) => (
+                <Stack key={s.id} direction="row" align="center" gap={2}>
+                  <SkuSwatch desc={s.name} size={24} />
+                  <Text variant="micro" tone="muted">{s.name}</Text>
+                </Stack>
+              ))}
+            </Stack>
+          </Card>
+        )}
+
         <Stack direction="row" gap={2} wrap>
           <Button variant="primary" size="medium" onClick={() => convertWishToGap(activeWish)}>Convert to line gap →</Button>
           <Button variant="secondary" size="medium" onClick={() => goTab(3)}>Find vendor SKU</Button>
         </Stack>
       </Stack>
     </Card>
-  );
+    );
+  })();
 
-  const VendorDetail = activeVendor && (
+  const VendorDetail = activeVendor && (() => {
+    /* Find the best-matching gap for this vendor SKU */
+    const filledGap = gaps.find((g) => {
+      const vendorName = (activeVendor.name || "").toLowerCase();
+      const vendorDept = (activeVendor.dept || "").toLowerCase();
+      const gapDesc = (g.desc || "").toLowerCase();
+      const gapCat  = (g.category || g.type || "").toLowerCase();
+      return gapDesc.includes(vendorDept) || vendorName.includes(gapCat.split(" ")[0]) ||
+             gapDesc.split(" ").some((w) => w.length > 4 && vendorName.includes(w));
+    });
+    return (
     <Card size="small" sx={formCardSx}>
       <Stack direction="column" gap={3}>
         {/* Header: SKU thumbnail (56px) + product name + status badge */}
@@ -878,13 +927,35 @@ export default function PortfolioBuild({ onNavigate }) {
           ))}
         </Grid>
 
+        {/* Fills gap callout */}
+        {filledGap && (
+          <Card size="small" sx={{ ...panelSx, background: "var(--color-info-soft)", border: "1px solid var(--color-info)", boxShadow: "none", padding: "var(--sp-2) var(--sp-3)" }}>
+            <Stack direction="row" align="center" gap={2}>
+              <ClipboardList size={14} aria-hidden="true" style={{ color: "var(--color-info)", flexShrink: 0 }} />
+              <Stack direction="column" gap={0} flex="1" style={{ minWidth: 0 }}>
+                <Text variant="micro" tone="muted" style={{ fontWeight: 600 }}>Fills gap</Text>
+                <Text variant="caption" tone="strong" truncate>{filledGap.desc}</Text>
+              </Stack>
+              <Badge variant="subtle" size="small" color={PRIORITY_BADGE[filledGap.priority]} label={PRIORITY_LABEL[filledGap.priority] || filledGap.priority} />
+            </Stack>
+          </Card>
+        )}
+
         {/* Margin bar */}
         <Card size="small" sx={{ ...panelSx, background: "var(--color-surface-alt)", boxShadow: "none" }}>
           <Stack direction="row" justify="space-between" align="center" style={{ marginBottom: "var(--sp-2)" }}>
             <Text variant="caption" tone="strong">Margin</Text>
-            <Text variant="caption" mono tone={activeVendor.margin >= 42 ? "success" : "error"}>{activeVendor.margin}%</Text>
+            <Stack direction="row" gap={2} align="center">
+              <Text variant="caption" mono tone={activeVendor.margin >= 42 ? "success" : "error"}>{activeVendor.margin}%</Text>
+              <Badge
+                variant="subtle" size="small"
+                color={activeVendor.margin >= 42 ? "success" : "error"}
+                label={activeVendor.margin >= 42 ? "Meets target" : "Below 42% target"}
+              />
+            </Stack>
           </Stack>
           <ProgressBar value={Math.min(activeVendor.margin, 100)} status={activeVendor.margin >= 42 ? "completed" : "remaining"} showTime={false} customLabel=" " />
+          <Text variant="micro" tone="subtle" style={{ marginTop: "var(--sp-1)" }}>Target: ≥42% margin</Text>
         </Card>
 
         {/* Approve / Decline / Approved state */}
@@ -903,7 +974,8 @@ export default function PortfolioBuild({ onNavigate }) {
         ) : null}
       </Stack>
     </Card>
-  );
+    );
+  })();
 
   /* ── Vendor right panel when nothing is selected ─────────────────────────── */
   const VendorEmptyPanel = (

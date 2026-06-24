@@ -48,6 +48,55 @@ function Tag({ tint, children }) {
 
 const CAT_NAME = Object.fromEntries(CATALOGUE_SKUS.map((s) => [s.id, s.name]));
 
+/* Downstream impact chain — per signal type + direction */
+function getDownstreamChain(signal) {
+  const key = `${signal.type}/${signal.direction}`;
+  const skuLabel = signal.skus.length ? `(${signal.skus.slice(0, 2).join(", ")})` : "";
+  const clusterLabel = signal.cluster ? `in ${signal.cluster}` : "";
+  const chains = {
+    "market/opportunity": [
+      "Forecast uplift for affected SKUs",
+      `Peer Intelligence confidence ↑ ${skuLabel}`,
+      `PLR carry + depth recommendation ${clusterLabel}`,
+    ],
+    "product/threat": [
+      `Confidence ↓ for ${skuLabel || "affected SKUs"}`,
+      "De-winner flag in Peer Intelligence",
+      "HOLD — do not expand in next PLR",
+    ],
+    "customer/opportunity": [
+      "Line gap created in Range Build",
+      "Wishlist item for next PLR",
+      "Like-item forecast transferred off named comps",
+    ],
+    "competitive/threat": [
+      "Watch flag added to affected SKUs",
+      "Peer Intelligence confidence ↓",
+      "Pricing / defend recommendation surfaced",
+    ],
+    "supply/threat": [
+      "Forecast dampened for constrained SKUs",
+      "Hindsight annotated — supply dip, not demand weakness",
+      "Supply risk warning on recommendation cards",
+    ],
+    "trend/opportunity": [
+      "Early forecast uplift for category",
+      "New-range candidate added to Range Build",
+      "PLR surfaces as next-season recommend",
+    ],
+    "competitive/opportunity": [
+      "Competitor gap flagged as market opportunity",
+      "Peer Intelligence confidence ↑ for gap SKUs",
+      "Opportunistic carry recommendation in next PLR",
+    ],
+  };
+  return chains[key] || [
+    "Signal structured and tagged",
+    "Agent model updated at next refresh",
+    "Visible in next Peer Intelligence / PLR cycle",
+  ];
+}
+
 function SkuChip({ children }) {
   const code = typeof children === "string" ? children : "";
   const name = CAT_NAME[code] || code;
@@ -75,18 +124,28 @@ function NoteBox({ tone, label, children }) {
   );
 }
 
+const CONF_BADGE_COLOR = { confirmed: "success", "multiple customers": "warning", anecdotal: "default" };
+const CONF_LABEL = { confirmed: "Confirmed", "multiple customers": "Multiple", anecdotal: "Anecdotal" };
+
 /* Signal card rendered in the 2-col grid */
-function SignalCard({ i, isSelected, fromPortfolio, onSelect, onMarkReviewed, onApplyModel, onCatTask, onFieldReq, onWatch, onDismiss }) {
+function SignalCard({ i, isSelected, fromPortfolio, onSelect, onMarkReviewed, onApplyModel, onCatTask, onFieldReq, onWatch, onDismiss, onOpenDetail }) {
   const isThreat = i.direction === "threat";
+  const isAnecdotal = i.confidence === "anecdotal";
   const hasActions =
     i.status === "new" ||
     i.status === "reviewed" ||
     ((i.status === "actioned" || i.status === "watching") && i.merchantNote);
 
+  const dirBorderColor = i.direction === "opportunity" ? "var(--color-success)" : "var(--color-error)";
   return (
-    <div
-      className={`mi-signal-card mi-signal-card--${i.direction}${isSelected ? " mi-signal-card--selected" : ""}${i.id === fromPortfolio ? " mi-signal-card--portfolio" : ""}`}
+    <Card
+      className={`mi-signal-card mi-signal-card--${i.direction}${isSelected ? " mi-signal-card--selected" : ""}${i.id === fromPortfolio ? " mi-signal-card--portfolio" : ""}${isAnecdotal ? " mi-signal-card--anecdotal" : ""}`}
       onClick={onSelect}
+      sx={{ ...panelSx, cursor: "pointer", borderLeft: `3px solid ${dirBorderColor}`,
+        boxShadow: isSelected ? "0 0 0 2px var(--color-primary)" : undefined,
+        ":hover": { boxShadow: `0 4px 12px rgba(0,0,0,.1), 0 0 0 1.5px ${dirBorderColor}` },
+        transition: "box-shadow .15s",
+      }}
     >
       {/* ── Top: title + status badge ── */}
       <div className="mi-sc-top">
@@ -97,27 +156,34 @@ function SignalCard({ i, isSelected, fromPortfolio, onSelect, onMarkReviewed, on
       {/* ── Meta row: author/date on left, scope pill on right ── */}
       <div className="mi-sc-meta">
         <span>{i.author} · {i.date}</span>
-        <span className="mi-sc-scope-pill">
-          {i.scope}{i.store ? ` · ${i.store}` : ""}
-        </span>
+        <Badge variant="subtle" size="small" color="neutral"
+          label={`${i.scope}${i.store ? ` · ${i.store}` : ""}`} />
       </div>
 
       {/* ── Compact tag row: type + direction + urgency + icons ── */}
       <div className="mi-sc-tags">
         <Tag tint={TYPE_TINT[i.type]}>{i.type}</Tag>
-        <span className={`mi-dir-badge mi-dir-badge--${i.direction}`}>
-          {isThreat ? "↓" : "↑"} {i.direction}
-        </span>
+        <Badge variant="subtle" size="small"
+          color={isThreat ? "error" : "success"}
+          label={`${isThreat ? "↓" : "↑"} ${i.direction}`} />
         {i.urgency !== "watch" ? (
-          <span className={`mi-urg-badge mi-urg-badge--${i.urgency}`}>{i.urgency}</span>
+          <Badge variant="subtle" size="small"
+            color={i.urgency === "high" ? "error" : i.urgency === "medium" ? "warning" : "neutral"}
+            label={i.urgency} />
         ) : null}
         {i.feedsModel && (
-          <span className="mi-sc-indicator mi-sc-indicator--model" title="Feeds agent model">
+          <span className="mi-sc-indicator mi-sc-indicator--model" title="Agent-suggested tags">
             <Bot size={10} aria-hidden="true" />
+            <span className="mi-sc-agent-label">Agent-suggested</span>
           </span>
         )}
         {i.catalogueGap && (
-          <span className="mi-sc-indicator mi-sc-indicator--gap" title="Catalogue gap">gap</span>
+          <Badge variant="subtle" size="small" color="info" label="gap" />
+        )}
+        {i.confidence && (
+          <Badge variant="subtle" size="small"
+            color={i.confidence === "high" ? "success" : i.confidence === "medium" ? "info" : i.confidence === "low" ? "warning" : "neutral"}
+            label={CONF_LABEL[i.confidence] || i.confidence} />
         )}
       </div>
 
@@ -138,13 +204,22 @@ function SignalCard({ i, isSelected, fromPortfolio, onSelect, onMarkReviewed, on
                 <Button size="small" variant="secondary" onClick={() => onMarkReviewed(i.id)}>Mark reviewed</Button>
               )}
               {(i.status === "new" || i.status === "reviewed") && i.feedsModel && (
-                <Button size="small" variant="primary" onClick={() => onApplyModel(i.id)}>Apply to model</Button>
+                <Stack direction="column" gap={0.5} align="flex-start">
+                  <Button size="small" variant="primary" onClick={() => onOpenDetail(i.id)}>Apply to model</Button>
+                  <span className="mi-action-hint">See instruction preview first →</span>
+                </Stack>
               )}
               {(i.status === "new" || i.status === "reviewed") && i.catalogueGap && (
-                <Button size="small" variant="secondary" onClick={() => onCatTask(i.id)}>Line Gap</Button>
+                <Stack direction="column" gap={0.5} align="flex-start">
+                  <Button size="small" variant="secondary" onClick={() => onCatTask(i.id)}>Line Gap</Button>
+                  <span className="mi-action-hint">→ Routes to Range Build</span>
+                </Stack>
               )}
               {(i.status === "new" || i.status === "reviewed") && i.direction === "opportunity" && !i.feedsModel && (
-                <Button size="small" variant="secondary" onClick={() => onFieldReq(i.id)}>Field Request</Button>
+                <Stack direction="column" gap={0.5} align="flex-start">
+                  <Button size="small" variant="secondary" onClick={() => onFieldReq(i.id)}>Field Request</Button>
+                  <span className="mi-action-hint">→ Routes to Range Build</span>
+                </Stack>
               )}
               {i.status === "reviewed" && (
                 <>
@@ -159,7 +234,7 @@ function SignalCard({ i, isSelected, fromPortfolio, onSelect, onMarkReviewed, on
           )}
         </div>
       )}
-    </div>
+    </Card>
   );
 }
 
@@ -169,9 +244,12 @@ export default function MarketIntel() {
   const [statusTab, setStatusTab] = useState("all");
   const [dirFilter, setDirFilter] = useState(null);
   const [typeFilter, setTypeFilter] = useState(null);
+  const [confFilter, setConfFilter] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
   const [noteDraft, setNoteDraft] = useState("");
   const [log, setLog] = useState(EMPTY_LOG);
+  const [alanState, setAlanState] = useState(null); // null | "loading" | "proposed"
+  const [alanProposal, setAlanProposal] = useState(null);
   const [fromPortfolio, setFromPortfolio] = useState(null);
   const [toast, setToast] = useState(null);
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
@@ -212,9 +290,10 @@ export default function MarketIntel() {
         if (statusTab !== "all" && i.status !== statusTab) return false;
         if (dirFilter && i.direction !== dirFilter) return false;
         if (typeFilter && i.type !== typeFilter) return false;
+        if (confFilter && i.confidence !== confFilter) return false;
         return true;
       }),
-    [intel, statusTab, dirFilter, typeFilter]
+    [intel, statusTab, dirFilter, typeFilter, confFilter]
   );
 
   /* ── Metrics ──────────────────────────────────────────────────────────── */
@@ -222,13 +301,15 @@ export default function MarketIntel() {
   const newCount = intel.filter((i) => i.status === "new").length;
   const threats = intel.filter((i) => i.direction === "threat").length;
   const opps = intel.filter((i) => i.direction === "opportunity").length;
-  const feedModel = intel.filter((i) => i.feedsModel).length;
+  const appliedToModel = intel.filter((i) => i.feedsModel && i.status === "actioned").length;
+  const changedDecision = intel.filter((i) => i.feedsModel && i.status === "actioned").length;
   const metrics = [
-    { v: total, l: "Total signals", tone: "strong" },
-    { v: newCount, l: "Awaiting review", tone: "error" },
-    { v: threats, l: "Threat signals", tone: "error" },
-    { v: opps, l: "Opportunities", tone: "success" },
-    { v: feedModel, l: "Feed model", tone: "accent" },
+    { v: total,           l: "Total signals",        tone: "strong",  accent: "var(--color-text-muted)" },
+    { v: newCount,        l: "Awaiting review",       tone: "error",   accent: "var(--color-warning)" },
+    { v: threats,         l: "Threat signals",        tone: "error",   accent: "var(--color-error)" },
+    { v: opps,            l: "Opportunities",         tone: "success", accent: "var(--color-success)" },
+    { v: appliedToModel,  l: "Applied to model",      tone: "accent",  accent: "var(--color-primary)" },
+    { v: changedDecision, l: "Changed a decision",    tone: "success", accent: "var(--color-teal, var(--color-success))" },
   ];
 
   /* ── Mutations ────────────────────────────────────────────────────────── */
@@ -241,7 +322,7 @@ export default function MarketIntel() {
   const saveNote = (id) => { patch(id, { merchantNote: noteDraft }); showToast("Note saved"); };
 
   /* ── Filter handlers ──────────────────────────────────────────────────── */
-  const setStatus = (key) => { setStatusTab(key); setDirFilter(null); setTypeFilter(null); };
+  const setStatus = (key) => { setStatusTab(key); setDirFilter(null); setTypeFilter(null); setConfFilter(null); };
   const toggleDir = (key) => { setDirFilter((d) => (d === key ? null : key)); setStatusTab("all"); };
   const toggleType = (key) => { setTypeFilter((t) => (t === key ? null : key)); setStatusTab("all"); };
 
@@ -272,7 +353,7 @@ export default function MarketIntel() {
     const entry = {
       id: `I-${String(100 + intel.length + 1)}`,
       type: log.type, direction: log.direction, urgency: log.urgency || "watch", scope: log.scope || "store",
-      cluster: "Southeast Suburban", store: "ATL-01", title: log.title, body: log.body,
+      cluster: "Pro-Heavy South", store: "ATL-01", title: log.title, body: log.body,
       skus: [...log.skus], categories: [], confidence: log.confidence || "anecdotal",
       modelInstruction: log.skus.length
         ? `Signal logged: ${log.type} / ${log.direction}. Affects ${log.skus.join(", ")}. Pending merchant review before model update.`
@@ -282,9 +363,56 @@ export default function MarketIntel() {
     };
     setIntel((prev) => [entry, ...prev]);
     setLog({ ...EMPTY_LOG, submitted: true });
+    setAlanState(null);
+    setAlanProposal(null);
   };
 
   const countBy = (pred) => intel.filter(pred).length;
+
+  /* ── Ask Alan keyword extraction ─────────────────────────────────────── */
+  const extractAlanProposal = (body) => {
+    const text = body.toLowerCase();
+    let type = null, direction = null, scope = "store";
+    if (/competitor|competing|home depot|floor.{0,10}decor|tile corner|tile shop/.test(text)) { type = "competitive"; direction = "threat"; }
+    else if (/development|construction|breaking ground|mixed.use|residential|commercial|building ground/.test(text)) { type = "market"; direction = "opportunity"; }
+    else if (/contractor|asked for|not in catalogue|not carry|customer request|wishlist/.test(text)) { type = "customer"; direction = "opportunity"; }
+    else if (/return|complaint|install|defect|quality|failure|humidity/.test(text)) { type = "product"; direction = "threat"; }
+    else if (/lead time|supply|available|stock|delivery|weeks|vendor/.test(text)) { type = "supply"; direction = "threat"; }
+    else if (/trend|demand building|designer|emerging|renovation|interior/.test(text)) { type = "trend"; direction = "opportunity"; }
+
+    if (/national|across all/.test(text)) scope = "national";
+    else if (/region|southeast|gulf|pacific|northeast|midwest|mountain/.test(text)) scope = "region";
+    else if (/cluster|stores in/.test(text)) scope = "cluster";
+
+    const skuMatches = body.match(/SKU-\d+/g) || [];
+    const uniqueSkus = [...new Set(skuMatches)].filter((s) => CATALOGUE_SKUS.some((c) => c.id === s));
+
+    return { type, direction, scope, skus: uniqueSkus };
+  };
+
+  const triggerAlanPrefill = () => {
+    if (!log.body.trim()) return;
+    setAlanState("loading");
+    setTimeout(() => {
+      const proposal = extractAlanProposal(log.body);
+      setAlanProposal(proposal);
+      setAlanState("proposed");
+    }, 1500);
+  };
+
+  const acceptAlanProposal = () => {
+    setLog((p) => ({
+      ...p,
+      type: alanProposal.type || p.type,
+      direction: alanProposal.direction || p.direction,
+      scope: alanProposal.scope || p.scope,
+      skus: alanProposal.skus.length ? alanProposal.skus : p.skus,
+    }));
+    setAlanState(null);
+    setAlanProposal(null);
+  };
+
+  const dismissAlanProposal = () => { setAlanState(null); setAlanProposal(null); };
 
   /* ── Derived filter tags for FiltersStrip ─────────────────────────────── */
   const miFilterTags = useMemo(() => {
@@ -295,8 +423,9 @@ export default function MarketIntel() {
       const opt = TYPE_OPTIONS.find((t) => t.id === typeFilter);
       tags.push({ id: "type", label: "Type", values: [{ id: 1, label: opt?.label || typeFilter }] });
     }
+    if (confFilter) tags.push({ id: "conf", label: "Confidence", values: [{ id: 1, label: CONF_LABEL[confFilter] || confFilter }] });
     return tags;
-  }, [statusTab, dirFilter, typeFilter]);
+  }, [statusTab, dirFilter, typeFilter, confFilter]);
 
   const STATUS_FD_OPTIONS = [
     { value: "all", label: `All (${intel.length})` },
@@ -309,6 +438,12 @@ export default function MarketIntel() {
     { value: "opportunity", label: `Opps (${opps})` },
   ];
   const TYPE_FD_OPTIONS = TYPE_OPTIONS.map((t) => ({ value: t.id, label: t.label }));
+
+  const CONF_FD_OPTIONS = [
+    { value: "confirmed",         label: "Confirmed (3rd-party verified)" },
+    { value: "multiple customers", label: "Multiple customers (2–5 signals)" },
+    { value: "anecdotal",         label: "Anecdotal (1 customer)" },
+  ];
 
   const miFilterPanelTabs = [
     {
@@ -354,6 +489,22 @@ export default function MarketIntel() {
             value={typeFilter || ""}
             options={[{ value: "", label: "All types" }, ...TYPE_FD_OPTIONS]}
             onChange={(v) => { if (v === "") setTypeFilter(null); else setTypeFilter(v); }}
+            width={320}
+          />
+        </Stack>
+      ),
+    },
+    {
+      value: "confidence",
+      title: "Confidence",
+      numberOfFilter: confFilter ? 1 : 0,
+      children: (
+        <Stack direction="column" gap={3} style={{ padding: "var(--sp-4)" }}>
+          <FdSelect
+            label="Confidence level"
+            value={confFilter || ""}
+            options={[{ value: "", label: "All confidence levels" }, ...CONF_FD_OPTIONS]}
+            onChange={(v) => { if (v === "") setConfFilter(null); else setConfFilter(v); }}
             width={320}
           />
         </Stack>
@@ -428,7 +579,7 @@ export default function MarketIntel() {
     <div className="mi-metric-strip">
       {metrics.map((m) => (
         <div key={m.l} className="mi-metric">
-          <span className={`mi-metric-accent tone-${m.tone}`} />
+          <span className={`mi-metric-accent tone-${m.tone}`} style={m.accent ? { background: m.accent } : undefined} />
           <span className={`mi-metric-num tone-${m.tone}`}>{m.v}</span>
           <span className="mi-metric-label">{m.l}</span>
         </div>
@@ -474,6 +625,7 @@ export default function MarketIntel() {
               onFieldReq={sendFieldRequest}
               onWatch={watchSignal}
               onDismiss={dismissSignal}
+              onOpenDetail={(id) => selectIntel(id)}
             />
           ))}
         </div>
@@ -487,9 +639,10 @@ export default function MarketIntel() {
       {/* Close row */}
       <div className="mi-detail-close-row">
         <span className="mi-detail-label">Signal detail</span>
-        <button className="mi-detail-close-btn" onClick={() => setSelectedId(null)} aria-label="Close detail">
+        <Button variant="ghost" size="small" onClick={() => setSelectedId(null)} aria-label="Close detail"
+          sx={{ padding: "2px 6px", minWidth: 0 }}>
           <X size={16} />
-        </button>
+        </Button>
       </div>
 
       {/* Body */}
@@ -498,11 +651,13 @@ export default function MarketIntel() {
         <div className="mi-detail-title">{selected.title}</div>
         <div className="mi-signal-tags" style={{ marginBottom: "var(--sp-3)" }}>
           <Tag tint={TYPE_TINT[selected.type]}>{selected.type}</Tag>
-          <span className={`mi-dir-badge mi-dir-badge--${selected.direction}`}>
-            {selected.direction === "threat" ? "↓" : "↑"} {selected.direction}
-          </span>
+          <Badge variant="subtle" size="small"
+            color={selected.direction === "threat" ? "error" : "success"}
+            label={`${selected.direction === "threat" ? "↓" : "↑"} ${selected.direction}`} />
           {selected.urgency !== "watch" ? (
-            <span className={`mi-urg-badge mi-urg-badge--${selected.urgency}`}>{selected.urgency}</span>
+            <Badge variant="subtle" size="small"
+              color={selected.urgency === "high" ? "error" : selected.urgency === "medium" ? "warning" : "neutral"}
+              label={selected.urgency} />
           ) : null}
           <Badge variant="subtle" size="small" color={STATUS_BADGE[selected.status]} label={selected.status} />
         </div>
@@ -517,12 +672,25 @@ export default function MarketIntel() {
           ].map(([l, v]) => (
             <div key={l} className="mi-detail-meta-row">
               <span className="mi-detail-meta-lbl">{l}</span>
-              <span className="mi-detail-meta-val">{v}</span>
+              <span className="mi-detail-meta-val">
+                {v}
+                {l === "Confidence" &&
+                  selected.confidence === "confirmed" &&
+                  (selected.authorRole?.includes("VP") || selected.authorRole?.includes("Regional")) && (
+                    <Badge
+                      variant="subtle" size="small" color="success" label="High weight"
+                      style={{ marginLeft: "var(--sp-2)" }}
+                    />
+                )}
+              </span>
             </div>
           ))}
         </div>
 
         {/* Full body */}
+        <div style={{ marginBottom: "var(--sp-1)" }}>
+          <Text variant="micro" tone="subtle">Human-read only · not processed by the model</Text>
+        </div>
         <div className="mi-detail-full-body">{selected.body}</div>
 
         {/* Affected SKUs */}
@@ -537,7 +705,30 @@ export default function MarketIntel() {
 
         {/* Model instruction */}
         {selected.feedsModel && selected.modelInstruction && (
-          <NoteBox tone="accent" label="Agent model instruction">{selected.modelInstruction}</NoteBox>
+          <>
+            <NoteBox tone="accent" label="Agent model instruction">{selected.modelInstruction}</NoteBox>
+            <Text variant="micro" tone="subtle" style={{ marginTop: "var(--sp-1)" }}>
+              Machine-readable · processed by the agent model
+            </Text>
+          </>
+        )}
+
+        {/* Downstream impact chain */}
+        {selected.feedsModel && (
+          <div className="mi-downstream">
+            <Stack direction="row" align="center" gap={2} style={{ marginBottom: "var(--sp-2)" }}>
+              <ArrowDownCircle size={14} style={{ color: "var(--color-primary)", flexShrink: 0 }} />
+              <Text variant="caption" style={{ fontWeight: 700, color: "var(--color-primary)" }}>Where this signal flows</Text>
+            </Stack>
+            <div className="mi-downstream-steps">
+              {getDownstreamChain(selected).map((step, idx, arr) => (
+                <React.Fragment key={step}>
+                  <span className="mi-downstream-step">{step}</span>
+                  {idx < arr.length - 1 && <span className="mi-downstream-arrow">→</span>}
+                </React.Fragment>
+              ))}
+            </div>
+          </div>
         )}
 
         {/* Catalogue gap */}
@@ -727,9 +918,43 @@ export default function MarketIntel() {
             <TextArea
               placeholder="The full picture — who, what, where, when. Free text stays human-read only."
               value={log.body}
-              onChange={(e) => setLog((p) => ({ ...p, body: e.target.value }))}
+              onChange={(e) => { setLog((p) => ({ ...p, body: e.target.value })); setAlanState(null); setAlanProposal(null); }}
               width="100%" height="110px"
             />
+            {log.body.trim().length > 20 && alanState === null && (
+              <Button variant="secondary" size="small" onClick={triggerAlanPrefill}>
+                Ask Alan to extract tags →
+              </Button>
+            )}
+            {alanState === "loading" && (
+              <div className="mi-alan-propose mi-alan-propose--loading">
+                <span className="mi-alan-spinner" />
+                <Text variant="caption" tone="muted">Alan is reading your signal…</Text>
+              </div>
+            )}
+            {alanState === "proposed" && alanProposal && (
+              <div className="mi-alan-propose">
+                <Stack direction="row" align="center" gap={2} style={{ marginBottom: "var(--sp-2)" }}>
+                  <Bot size={14} style={{ color: "var(--color-primary)", flexShrink: 0 }} />
+                  <Text variant="caption" tone="primary" style={{ fontWeight: 700 }}>Alan suggests</Text>
+                </Stack>
+                <Stack direction="row" gap={1} wrap style={{ marginBottom: "var(--sp-2)" }}>
+                  {alanProposal.type && <Badge variant="subtle" size="small" color={TYPE_BADGE[alanProposal.type]} label={alanProposal.type} />}
+                  {alanProposal.direction && <Badge variant="subtle" size="small" color={DIR_BADGE[alanProposal.direction]} label={alanProposal.direction} />}
+                  {alanProposal.scope && <Badge variant="subtle" size="small" color="default" label={alanProposal.scope} />}
+                  {alanProposal.skus.map((s) => <Badge key={s} variant="subtle" size="small" color="info" label={s} />)}
+                </Stack>
+                {(!alanProposal.type && !alanProposal.direction) ? (
+                  <Text variant="micro" tone="subtle" style={{ marginBottom: "var(--sp-2)" }}>
+                    Could not extract tags automatically — fill in the fields above.
+                  </Text>
+                ) : null}
+                <Stack direction="row" gap={2}>
+                  <Button variant="primary" size="small" onClick={acceptAlanProposal}>Accept</Button>
+                  <Button variant="secondary" size="small" onClick={dismissAlanProposal}>Edit manually</Button>
+                </Stack>
+              </div>
+            )}
           </FormSection>
           <FormSection label="Affected SKUs (optional)">
             {log.skus.length ? (
@@ -864,7 +1089,7 @@ export default function MarketIntel() {
             primaryButtonLabel="Apply"
             onPrimaryButtonClick={() => setFilterPanelOpen(false)}
             secondaryButtonLabel="Clear all"
-            onSecondaryButtonClick={() => { setStatus("all"); setDirFilter(null); setTypeFilter(null); }}
+            onSecondaryButtonClick={() => { setStatus("all"); setDirFilter(null); setTypeFilter(null); setConfFilter(null); }}
           />
           {/* 3-pane shell */}
           <div className="mi-shell">

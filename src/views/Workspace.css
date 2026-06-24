@@ -504,6 +504,73 @@
 .cat-pipe-chip.tone-info    { color: var(--color-info); }
 .cat-pipe-chip.tone-accent  { color: var(--color-accent); }
 
+/* ── Agent run panel — complete state ────────────────────────────────────── */
+
+/* Card gets a subtle success glow when the run finishes */
+.cat-run.is-complete {
+  animation: catCompleteGlow 0.6s ease-out forwards;
+}
+@keyframes catCompleteGlow {
+  0%   { box-shadow: 0 0 0 0 var(--color-success-soft); }
+  50%  { box-shadow: 0 0 0 8px var(--color-success-soft); }
+  100% { box-shadow: none; }
+}
+
+/* Progress bar turns solid success gradient when done */
+.cat-run-bar-fill.is-complete {
+  background: linear-gradient(90deg, var(--color-success), var(--color-teal)) !important;
+  box-shadow: 0 0 10px var(--color-success-soft) !important;
+  transition: background 0.4s ease, box-shadow 0.4s ease !important;
+}
+
+/* Terminal title bar — green glow on complete */
+.cat-console.is-complete .cat-console-bar {
+  background: color-mix(in srgb, var(--navy-blue2) 85%, var(--color-success) 15%);
+}
+
+/* Green traffic-light dot pulse on complete */
+.cat-dot.g.is-pulse {
+  animation: catGreenPulse 1.5s ease-in-out 3;
+}
+@keyframes catGreenPulse {
+  0%, 100% { box-shadow: 0 0 0 0 #3bb27340; }
+  50%       { box-shadow: 0 0 0 5px transparent; }
+}
+
+/* exit 0 line in terminal */
+.cat-log-exit {
+  color: var(--color-success-soft);
+  font-weight: 700;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  letter-spacing: 0.02em;
+}
+
+/* Console badge next to title */
+.cat-console-badge {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  font-weight: 700;
+  color: var(--color-success-soft);
+  background: rgba(59,178,115,0.15);
+  border: 1px solid rgba(59,178,115,0.3);
+  border-radius: var(--r-pill);
+  padding: 1px 8px;
+}
+
+/* Action row at bottom of complete panel */
+.cat-run-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--color-border);
+  animation: catFade 0.4s ease;
+}
+
 /* .ws-agent-cascade* rules removed — replaced by Grid+Card components */
 
 /* ═══════════════════════════════════════════════════════════════════════════

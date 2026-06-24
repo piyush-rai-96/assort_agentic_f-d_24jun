@@ -25,6 +25,7 @@ import PlrCalendar from "./views/PlrCalendar.jsx";
 import Clustering from "./views/Clustering.jsx";
 import LeadTime from "./views/LeadTime.jsx";
 import PeerIntelligence from "./views/PeerIntelligence.jsx";
+import OptionRec from "./views/OptionRec.jsx";
 
 /*
  * App root — renders the Login screen when no user is authenticated,
@@ -37,7 +38,7 @@ import PeerIntelligence from "./views/PeerIntelligence.jsx";
  * rendering nothing.
  */
 const VIEWS = {
-  today: ({ navigate, user }) => <Today onNavigate={navigate} user={user} />,
+  today: ({ navigate, user, openChatBot }) => <Today onNavigate={navigate} user={user} onOpenAgent={openChatBot} />,
   workspace: ({ navigate, user }) => <Workspace onNavigate={navigate} user={user} />,
   hindsight: ({ user }) => <Hindsight user={user} />,
   "store-hub": () => <StoreHub />,
@@ -45,6 +46,7 @@ const VIEWS = {
   forecast: () => <LikeItemForecast />,
   "assortment-intelligence": ({ navigate }) => <AssortmentIntelligence onNavigate={navigate} />,
   catalogue: ({ navigate }) => <Catalogue onNavigate={navigate} />,
+  "option-rec": ({ navigate }) => <OptionRec onNavigate={navigate} />,
   national: ({ navigate }) => <National onNavigate={navigate} />,
   regional: ({ navigate }) => <Regional onNavigate={navigate} />,
   "store-curation": ({ navigate, user }) => <StoreCuration onNavigate={navigate} user={user} />,
@@ -81,14 +83,14 @@ export default function App() {
 
   return (
     <MainLayout>
-      {({ activeModule, moduleLabel, groupLabel, navigate, hasAccess }) => {
+      {({ activeModule, moduleLabel, groupLabel, navigate, hasAccess, openChatBot }) => {
         // Defense-in-depth: block access even if navigation state drifts.
         if (!hasAccess(activeModule)) {
           return <AccessDenied />;
         }
         const View = VIEWS[activeModule];
         return View ? (
-          View({ navigate, user })
+          View({ navigate, user, openChatBot })
         ) : (
           <ModulePlaceholder
             activeModule={activeModule}

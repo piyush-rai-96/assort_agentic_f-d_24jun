@@ -90,6 +90,37 @@
 }
 .override-reason-input::placeholder { color: var(--color-on-dark-faint); }
 
+/* ── Sidebar sub-heading section labels (Line Review · PLR Build/Curate/Measure) ── */
+/*
+ * Impact UI Sidebar renders disabled children with .child-route-disabled.
+ * We hijack that class to style them as non-interactive section labels
+ * (uppercase overline, muted colour, no hover/cursor).
+ */
+.impact-sidebar-routes-list-item-children.child-route-disabled {
+  pointer-events: none !important;
+  cursor: default !important;
+  opacity: 1 !important;
+  padding-top: 14px !important;
+  padding-bottom: 2px !important;
+  background: transparent !important;
+}
+.impact-sidebar-routes-list-item-children.child-route-disabled:hover {
+  background: transparent !important;
+}
+.impact-sidebar-routes-list-item-children.child-route-disabled
+  .impact-sidebar-routes-list-item-child-label {
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+  color: var(--color-text-muted, rgba(255,255,255,0.38)) !important;
+  opacity: 1 !important;
+}
+.impact-sidebar-routes-list-item-children.child-route-disabled
+  .impact-sidebar-routes-list-item-child-icon {
+  display: none !important;
+}
+
 /* ── Agent expand icon (replaces emoji) ─────────────────────────────────── */
 .fd-agent-expand-icon {
   display: inline-block;

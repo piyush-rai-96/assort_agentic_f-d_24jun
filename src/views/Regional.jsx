@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { Card, Button, Badge, Table, EmptyState, FiltersStrip, FilterPanel } from "impact-ui";
+import { Lock, Archive, MapPin } from "lucide-react";
 import Text from "../components/Text.jsx";
 import Stack from "../components/Stack.jsx";
 import Grid from "../components/Grid.jsx";
@@ -36,9 +37,9 @@ const VEL_BADGE = { A: "success", B: "info", C: "warning", D: "error" };
 
 /* 3-tier legend → token color (functional tier indicator). */
 const TIERS = [
-  { icon: "🔒", label: "National Core", sub: "All stores · locked", tone: "success", barColor: color.success },
-  { icon: "🗂", label: "Cluster Level", sub: "50%+ of cluster", tone: "teal", barColor: color.teal },
-  { icon: "📍", label: "Store Picks", sub: "Store-specific", tone: "accent", barColor: color.accent },
+  { icon: Lock,    label: "National Core", sub: "All stores · locked", tone: "success", barColor: color.success },
+  { icon: Archive, label: "Cluster Level", sub: "50%+ of cluster",     tone: "teal",    barColor: color.teal    },
+  { icon: MapPin,  label: "Store Picks",   sub: "Store-specific",      tone: "accent",  barColor: color.accent  },
 ];
 
 const SC = FD_CLUST_SCENARIOS.B;
@@ -85,10 +86,15 @@ function SkuTable({ rows, carryHeader, label }) {
 }
 
 /* Section title row shared across tiers. */
-function SectionHeader({ icon, title, count, tone, sub }) {
+function SectionHeader({ icon: IconCmp, title, count, tone, sub }) {
   return (
     <Stack direction="row" align="center" gap={2} wrap>
-      <Text variant="body-strong" tone={tone}>{icon} {title}</Text>
+      {IconCmp && typeof IconCmp !== "string" && (
+        <IconCmp size={14} strokeWidth={2} aria-hidden="true"
+          style={{ color: tone === "success" ? "var(--color-success)" : tone === "teal" ? "var(--color-info)" : "var(--color-accent)", flexShrink: 0 }} />
+      )}
+      {IconCmp && typeof IconCmp === "string" && <span>{IconCmp}</span>}
+      <Text variant="body-strong" tone={tone}>{title}</Text>
       <Badge variant="subtle" size="small" color={tone === "success" ? "success" : tone === "teal" ? "info" : "default"} label={`${count}`} />
       {sub ? <Text variant="caption" tone="muted">{sub}</Text> : null}
     </Stack>
@@ -180,7 +186,9 @@ export default function Regional({ onNavigate }) {
 
             <Stack direction="column" gap={3}>
             <Stack direction="row" gap={2} wrap>
-              {TIERS.map((t) => (
+              {TIERS.map((t) => {
+                const TierIcon = t.icon;
+                return (
                 <Stack
                   key={t.label}
                   direction="row"
@@ -190,13 +198,14 @@ export default function Regional({ onNavigate }) {
                   paddingY={2}
                   style={{ background: "var(--color-surface-alt)", borderLeft: `3px solid ${t.barColor}`, borderRadius: "var(--r2)" }}
                 >
-                  <Text variant="caption">{t.icon}</Text>
+                  <TierIcon size={14} strokeWidth={2} style={{ color: t.barColor, flexShrink: 0 }} aria-hidden="true" />
                   <Stack direction="column">
                     <Text variant="caption" tone={t.tone} style={{ fontWeight: 700 }}>{t.label}</Text>
                     <Text variant="micro" tone="muted">{t.sub}</Text>
                   </Stack>
                 </Stack>
-              ))}
+              );
+              })}
             </Stack>
           </Stack>
         </Stack>
@@ -235,7 +244,10 @@ export default function Regional({ onNavigate }) {
       <Stack direction="row" gap={4} align="flex-start" wrap>
         <Card sx={{ ...panelSx, width: 240, flexShrink: 0, padding: 0, overflow: "hidden" }}>
           <Stack direction="column" gap={1} paddingX={3} paddingY={3} style={{ background: "var(--color-success-soft)", borderBottom: "1px solid var(--color-border)" }}>
-            <Text variant="overline" tone="success">🔒 National Core</Text>
+            <Stack direction="row" align="center" gap={1}>
+              <Lock size={11} strokeWidth={2} style={{ color: "var(--color-success)", flexShrink: 0 }} aria-hidden="true" />
+              <Text variant="overline" tone="success">National Core</Text>
+            </Stack>
             <Text variant="micro" tone="muted">{coreSidebar.length} SKUs · all {FD_STORES.length} stores</Text>
           </Stack>
           <Stack direction="column" className="rr-core-list">
@@ -275,7 +287,7 @@ export default function Regional({ onNavigate }) {
       {/* ── Advance footer ─────────────────────────────────────────────────── */}
       <Card sx={{ ...panelSx, background: "var(--color-success-soft)", border: "1.5px solid var(--color-success)" }}>
         <Stack direction="row" align="center" gap={3} wrap>
-          <Text variant="subheading">🗂</Text>
+          <Archive size={22} strokeWidth={1.75} style={{ color: "var(--color-success)", flexShrink: 0 }} aria-hidden="true" />
           <Stack direction="column" gap={1} flex="1 1 auto" style={{ minWidth: 0 }}>
             <Text variant="body-strong" tone="success">Cluster decisions feed Store Curation</Text>
             <Text variant="caption" tone="muted">
@@ -399,7 +411,7 @@ function ClusterDetail({ clusterId, activeStore, deptFilter, byDept, clusterAdds
       const s = FD_SKUS.find((x) => x.sku === r.sku) || {};
       const inCore = CORE_IDS.has(r.sku);
       const clMatch = clSkusFull.find((cs) => cs.sku === r.sku);
-      const carry = inCore ? "🔒 All stores" : clMatch ? `${clMatch.storeCount}/${cl.stores.length} in cluster` : "Store only";
+      const carry = inCore ? "All stores (locked)" : clMatch ? `${clMatch.storeCount}/${cl.stores.length} in cluster` : "Store only";
       return { desc: r.desc, sku: String(r.sku), dept: r.dept, size: s.size || "—", price: s.price ?? r.menuPrice ?? 0, r13: r13forStore(store.id, r.sku), carry };
     };
 
@@ -436,19 +448,19 @@ function ClusterDetail({ clusterId, activeStore, deptFilter, byDept, clusterAdds
 
         {coreRows.length ? (
           <Stack direction="column" gap={2}>
-            <SectionHeader icon="🔒" title="National Core" count={coreRows.length} tone="success" sub="Locked · cannot change" />
+            <SectionHeader icon={Lock} title="National Core" count={coreRows.length} tone="success" sub="Locked · cannot change" />
             <SkuTable rows={coreRows} carryHeader="Carry" label="National Core SKUs" />
           </Stack>
         ) : null}
         {clustRows.length ? (
           <Stack direction="column" gap={2}>
-            <SectionHeader icon="🗂" title="Cluster Level" count={clustRows.length} tone="teal" sub={cl.label} />
+            <SectionHeader icon={Archive} title="Cluster Level" count={clustRows.length} tone="teal" sub={cl.label} />
             <SkuTable rows={clustRows} carryHeader="Carry" label="Cluster-level SKUs" />
           </Stack>
         ) : null}
         {storeRows.length ? (
           <Stack direction="column" gap={2}>
-            <SectionHeader icon="📍" title="Store Picks" count={storeRows.length} tone="accent" sub="This store only" />
+            <SectionHeader icon={MapPin} title="Store Picks" count={storeRows.length} tone="accent" sub="This store only" />
             <SkuTable rows={storeRows} carryHeader="Status" label="Store pick SKUs" />
           </Stack>
         ) : null}
@@ -476,7 +488,7 @@ function ClusterDetail({ clusterId, activeStore, deptFilter, byDept, clusterAdds
 
       {/* Cluster-level assortment — interactive add toggle */}
       <Stack direction="column" gap={2}>
-        <SectionHeader icon="🗂" title="Cluster-Level Assortment" count={clSkus.length} tone="teal" sub="Carried by ≥50% of cluster stores · not Core/BG" />
+        <SectionHeader icon={Archive} title="Cluster-Level Assortment" count={clSkus.length} tone="teal" sub="Carried by ≥50% of cluster stores · not Core/BG" />
         {clSkus.length ? (
           <Card sx={{ ...panelSx, padding: 0, overflow: "hidden" }}>
             {clSkus.map((s) => {
@@ -522,7 +534,7 @@ function ClusterDetail({ clusterId, activeStore, deptFilter, byDept, clusterAdds
 
       {/* Store picks by store */}
       <Stack direction="column" gap={2}>
-        <SectionHeader icon="📍" title="Store Picks by Store" count={`${clStores.length} stores`} tone="accent" sub="SKUs unique to each store within this cluster" />
+        <SectionHeader icon={MapPin} title="Store Picks by Store" count={`${clStores.length} stores`} tone="accent" sub="SKUs unique to each store within this cluster" />
         {clStores.map((s) => {
           const picks = byDept(storeOnlySkus(s.id, cl));
           const pickRows = picks.map((sku) => ({

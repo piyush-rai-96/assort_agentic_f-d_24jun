@@ -29,7 +29,7 @@ const SKU_BY_ID = FD_SKUS.reduce((m, s) => {
 
 export default function Hindsight({ user }) {
   const [storeId, setStoreId] = useState(user?.storeId || 101);
-  const [dept, setDept] = useState("All");
+  const [dept, setDept] = useState("Tile");
   const [tab, setTab] = useState(0);
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
   const [activeFilterTab, setActiveFilterTab] = useState("store");
@@ -317,8 +317,8 @@ export default function Hindsight({ user }) {
       },
       {
         field: "carry",
-        headerName: "Carry",
-        minWidth: 90,
+        headerName: "Carry (stores)",
+        minWidth: 100,
         flex: 1,
         filter: false,
         cellStyle: { textAlign: "right", color: "var(--color-text-muted)" },
@@ -333,7 +333,10 @@ export default function Hindsight({ user }) {
 
   const benchmarksTab = (
     <Stack direction="column" gap={4}>
-      <Text variant="body-strong" tone="strong">Department R13 — This Store vs Cluster Avg vs Network Avg</Text>
+      <Stack direction="column" gap={1}>
+        <Text variant="body-strong" tone="strong">Department R13 — This Store vs Cluster Avg vs Network Avg</Text>
+        <Text variant="micro" tone="subtle">Use the Overview → vs National table for sub-dept mix gaps; use this tab for total department revenue positioning.</Text>
+      </Stack>
       {model.deptBenchmarks.map((db) => {
         const max = Math.max(db.store, db.cluster, db.network, 1);
         return (
@@ -443,7 +446,10 @@ export default function Hindsight({ user }) {
         <Grid columns={2} gap={4}>
           {model.attrCards.map((ac) => (
             <Card key={ac.title} sx={panelSx}>
-              <Text variant="overline" tone="muted" style={{ marginBottom: "var(--sp-3)", display: "block" }}>{ac.title}</Text>
+              <Stack direction="row" align="center" justify="space-between" style={{ marginBottom: "var(--sp-3)" }}>
+                <Text variant="overline" tone="muted">{ac.title}</Text>
+                <Text variant="micro" tone="subtle" style={{ fontStyle: "italic" }}>Δ vs national (pts)</Text>
+              </Stack>
               <Stack direction="column" gap={3}>
                 {ac.dist.slice(0, 5).map((d) => (
                   <Stack key={d.val} direction="column" gap={1}>

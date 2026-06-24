@@ -259,7 +259,7 @@ export default function MainLayout({
         <main className="fd-content" role="main" aria-live="polite">
           <div className="fd-content-inner">
             {typeof children === "function"
-              ? children({ activeModule, moduleLabel, groupLabel, navigate, hasAccess, user })
+              ? children({ activeModule, moduleLabel, groupLabel, navigate, hasAccess, user, openChatBot })
               : children}
           </div>
         </main>

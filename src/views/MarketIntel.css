@@ -714,3 +714,102 @@
 .mi-main-scroll > * {
   flex-shrink: 0;
 }
+
+/* ── Confidence chip on signal cards ────────────────────────────────────── */
+.mi-conf-chip {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 9999px;
+  letter-spacing: .04em;
+}
+.mi-conf-chip--confirmed         { background: var(--color-success-soft); color: var(--color-success); }
+.mi-conf-chip--multiple-customers { background: var(--color-warning-soft); color: var(--color-warning); }
+.mi-conf-chip--anecdotal          { background: var(--color-surface-sunken); color: var(--color-text-muted); }
+
+/* Anecdotal card visual demotion */
+.mi-signal-card--anecdotal {
+  opacity: 0.78;
+  border-color: var(--color-border) !important;
+}
+
+/* ── Agent-suggested label next to bot icon ──────────────────────────────── */
+.mi-sc-indicator--model {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.mi-sc-agent-label {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--color-primary);
+  letter-spacing: .03em;
+}
+
+/* ── Action routing hint ─────────────────────────────────────────────────── */
+.mi-action-hint {
+  font-size: 10px;
+  color: var(--color-text-muted);
+  font-style: italic;
+  line-height: 1;
+}
+
+/* ── Ask Alan proposal card ──────────────────────────────────────────────── */
+.mi-alan-propose {
+  background: var(--color-primary-soft);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--r2);
+  padding: var(--sp-3) var(--sp-3);
+  margin-top: var(--sp-2);
+}
+.mi-alan-propose--loading {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.mi-alan-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--color-primary);
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: miSpin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes miSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Downstream impact chain ─────────────────────────────────────────────── */
+.mi-downstream {
+  background: var(--color-primary-soft);
+  border-left: 3px solid var(--color-primary);
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: 0 var(--r2) var(--r2) 0;
+  margin-top: var(--sp-1);
+}
+.mi-downstream-steps {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-top: var(--sp-1);
+}
+.mi-downstream-step {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-primary);
+  border-radius: 9999px;
+  padding: 3px 10px;
+  white-space: nowrap;
+}
+.mi-downstream-arrow {
+  color: var(--color-primary);
+  font-weight: 700;
+  font-size: 13px;
+}

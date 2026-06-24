@@ -1,52 +1,85 @@
-/* National Core — agent-recommendation row accents.
-   Backgrounds stay neutral (surface-alt); the left border encodes the
-   merchant's decision state (approve = success, reject = error). */
+/* ── National Core header ────────────────────────────────────────────────── */
+.nat-header {
+  background: linear-gradient(135deg, #0f172a 0%, #1a2744 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, .08);
+  flex-shrink: 0;
+}
+
+.nat-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  padding: 16px 24px 10px;
+  flex-wrap: wrap;
+}
+
+.nat-header-icon {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  background: rgba(110, 237, 184, .12);
+  border: 1px solid rgba(110, 237, 184, .2);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+
+.nat-dept-filter {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 8px 24px 12px;
+  border-top: 1px solid rgba(255, 255, 255, .06);
+  flex-wrap: wrap;
+}
+
+/* ── KPI strip ───────────────────────────────────────────────────────────── */
+.nat-kpi-strip {
+  display: flex;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+}
+.nat-kpi-strip > * { flex: 1 1 120px; }
+
+/* ── OTB grid ────────────────────────────────────────────────────────────── */
+.nat-otb-grid { display: flex; flex-direction: column; gap: var(--sp-3); }
+.nat-otb-grid--row { flex-direction: row; flex-wrap: wrap; gap: var(--sp-5); }
+.nat-otb-dept { display: flex; flex-direction: column; gap: var(--sp-1); }
+.nat-otb-dept-header { display: flex; justify-content: space-between; align-items: center; }
+.nat-otb-dept-name { font-size: var(--fs-body); font-weight: var(--fw-bold); color: var(--color-text); }
+.nat-otb-dept-val { font-size: var(--fs-caption); font-weight: var(--fw-bold); color: var(--color-text-muted); }
+.nat-otb-dept-val.over { color: var(--color-error); }
+.nat-otb-dept-pct { font-size: var(--fs-micro); color: var(--color-text-subtle); }
+.nat-otb-over { color: var(--color-error); font-weight: var(--fw-bold); display: flex; align-items: center; }
+
+/* ── Metrics strip ───────────────────────────────────────────────────────── */
+.nat-metrics-strip {
+  display: flex;
+  gap: var(--sp-6);
+  flex-wrap: wrap;
+  padding-top: var(--sp-2);
+  border-top: 1px solid var(--color-border);
+}
+.nat-metrics-cell { display: flex; flex-direction: column; }
+
+/* ── Agent-recommendation row styles ─────────────────────────────────────── */
 .nat-rec-row {
   border-bottom: 1px solid var(--color-border);
   border-left: 3px solid transparent;
   background: var(--color-surface-alt);
   transition: border-color 0.12s, background 0.12s;
 }
-.nat-rec-row:last-child {
-  border-bottom: none;
-}
+.nat-rec-row:last-child { border-bottom: none; }
 .nat-rec-row:hover { background: var(--color-surface); }
-.nat-rec-row:focus-within {
-  outline: 2px solid var(--color-primary);
-  outline-offset: -2px;
-}
-.nat-rec-row.is-approved {
-  border-left-color: var(--color-success);
-}
-.nat-rec-row.is-rejected {
-  border-left-color: var(--color-error);
-}
+.nat-rec-row.is-approved { border-left-color: var(--color-success); }
+.nat-rec-row.is-rejected { border-left-color: var(--color-error); }
 
-/* ── OTB budget grid ─────────────────────────────────────────────────────── */
-.nat-otb-grid { display: flex; flex-direction: column; gap: var(--sp-3); }
-.nat-otb-dept { display: flex; flex-direction: column; gap: var(--sp-1); }
-.nat-otb-dept-header { display: flex; justify-content: space-between; align-items: center; }
-.nat-otb-dept-name { font-size: var(--fs-body); font-weight: var(--fw-bold); color: var(--color-text); }
-.nat-otb-dept-val { font-size: var(--fs-caption); font-weight: var(--fw-bold); color: var(--color-text-muted); }
-.nat-otb-dept-val.over { color: var(--color-error); }
-/* Shared OTB bar spec: 6px / var(--r2) — matches Regional and StoreCuration */
-.nat-otb-bar-track { height: 6px; background: var(--color-border); border-radius: var(--r2); overflow: hidden; }
-.nat-otb-bar-fill { height: 100%; border-radius: var(--r2); transition: width 0.3s; }
-.nat-otb-dept-pct { font-size: var(--fs-micro); color: var(--color-text-subtle); }
-.nat-otb-over { color: var(--color-error); font-weight: var(--fw-bold); }
-
-/* ── Intel delta badges ──────────────────────────────────────────────────── */
+/* ── Intel / flag badges ─────────────────────────────────────────────────── */
 .nat-intel-badge {
-  padding: 2px 8px; border-radius: var(--r2); font-size: var(--fs-micro); font-weight: var(--fw-bold);
+  padding: 2px 8px; border-radius: var(--r2);
+  font-size: var(--fs-micro); font-weight: var(--fw-bold);
 }
 .nat-intel-badge.pos { background: var(--color-success-soft); color: var(--color-success); }
 .nat-intel-badge.neg { background: var(--color-error-soft); color: var(--color-error); }
-
-.nat-flag-badge {
-  padding: 2px 8px; border-radius: var(--r2); font-size: var(--fs-micro); font-weight: var(--fw-semibold);
-}
-.nat-flag--supply { background: var(--color-error-soft); color: var(--color-error); }
+.nat-flag-badge { padding: 2px 8px; border-radius: var(--r2); font-size: var(--fs-micro); font-weight: var(--fw-semibold); }
+.nat-flag--supply  { background: var(--color-error-soft);   color: var(--color-error);   }
 .nat-flag--quality { background: var(--color-warning-soft); color: var(--color-warning); }
-
-/* ── SKU description truncation ─────────────────────────────────────────── */
-.nat-rec-row .ia-text { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

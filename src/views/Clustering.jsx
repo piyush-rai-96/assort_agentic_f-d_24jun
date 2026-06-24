@@ -53,7 +53,7 @@ function CohesionBar({ value }) {
 function CatPills({ cats }) {
   return (
     <Stack direction="row" gap={1} wrap>
-      {cats.map((c) => <span key={c} className="cr-cat-pill">{c}</span>)}
+      {cats.map((c) => <Badge key={c} variant="subtle" color="neutral" size="small" label={c} />)}
     </Stack>
   );
 }
@@ -74,8 +74,8 @@ function NetworkDistBar({ clusters }) {
 
 function StatusPill({ status }) {
   return status === "live"
-    ? <span className="cr-status-live">Live</span>
-    : <span className="cr-status-archived">Archived</span>;
+    ? <Badge variant="subtle" color="success" size="small" label="Live" />
+    : <Badge variant="subtle" color="neutral" size="small" label="Archived" />;
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -83,67 +83,6 @@ function StatusPill({ status }) {
    ══════════════════════════════════════════════════════════════════════════ */
 
 /* ── SVG Radar Chart ────────────────────────────────────────────────────── */
-function RadarChart({ clusterValues, networkValues, clusterColor: clColor, size = 220 }) {
-  const cx = size / 2, cy = size / 2;
-  const radius = size * 0.34;
-  const n = clusterValues.length;
-  const angles = clusterValues.map((_, i) => (i * 2 * Math.PI) / n - Math.PI / 2);
-  const toXY = (angle, r) => [cx + r * Math.cos(angle), cy + r * Math.sin(angle)];
-  const toPath = (pts) =>
-    pts.map((p, i) => `${i === 0 ? "M" : "L"}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(" ") + " Z";
-
-  const netPts  = networkValues.map((v, i)  => toXY(angles[i], v  * radius));
-  const clustPts = clusterValues.map((v, i) => toXY(angles[i], v  * radius));
-  const gridLevels = [0.25, 0.5, 0.75, 1];
-  const labels = ["Pro %", "Cohesion", "Size", "Velocity", "Cat Mix"];
-
-  return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ overflow: "visible" }}>
-      {/* Grid circles */}
-      {gridLevels.map((l) => (
-        <circle key={l} cx={cx} cy={cy} r={radius * l}
-          fill="none" stroke="var(--border)" strokeWidth={1} />
-      ))}
-      {/* Axis lines */}
-      {clusterValues.map((_, i) => {
-        const [x2, y2] = toXY(angles[i], radius);
-        return <line key={i} x1={cx} y1={cy} x2={x2} y2={y2} stroke="var(--border)" strokeWidth={1} />;
-      })}
-      {/* Network average polygon */}
-      <path d={toPath(netPts)} fill="var(--ice2)" fillOpacity={0.7}
-        stroke="var(--border2)" strokeWidth={1.5} strokeDasharray="4 2" />
-      {/* Cluster polygon */}
-      <path d={toPath(clustPts)} fill={clColor} fillOpacity={0.18}
-        stroke={clColor} strokeWidth={2.5} />
-      {/* Data points */}
-      {clustPts.map((p, i) => (
-        <circle key={i} cx={p[0]} cy={p[1]} r={3.5} fill={clColor} stroke="white" strokeWidth={1.5} />
-      ))}
-      {/* Axis labels */}
-      {labels.map((lbl, i) => {
-        const [x, y] = toXY(angles[i], radius * 1.28);
-        return (
-          <text key={i} x={x} y={y} textAnchor="middle" dominantBaseline="middle"
-            fontSize="9.5" fill="var(--text3)" fontWeight="700"
-            fontFamily="var(--font-sans)">
-            {lbl}
-          </text>
-        );
-      })}
-    </svg>
-  );
-}
-
-/* ── Normalise store / cluster attributes for radar (0–1) ──────────────── */
-function normaliseForRadar(proSplit, cohesion, sqftK, velScore, catTile) {
-  return [
-    proSplit / 100,
-    cohesion,
-    Math.min(sqftK / 100, 1),
-    (5 - velScore) / 4,       // 1(A)=1.0, 4(D)=0.25
-    catTile / 100,
-  ];
-}
 
 /* ── Deviation bar: store value vs cluster average ──────────────────────── */
 function DeviationBar({ storeVal, avgVal, maxVal, unit = "", positive = "above" }) {
@@ -184,22 +123,33 @@ function calcClusterStats(stores) {
 
 /* ── Cross-cluster metric comparison ────────────────────────────────────── */
 function CrossClusterComparison({ managedClusters }) {
+  /* Compute real stats from storeList for each cluster once */
+  const clusterData = managedClusters.map((cl) => {
+    const stats = cl.storeList?.length ? calcClusterStats(cl.storeList) : {
+      proSplit: cl.proAvg ?? 0, sqftK: 0, velScore: 2, catTile: 0, cohesion: cl.cohesion ?? 0,
+    };
+    const velAVelocityPct = cl.storeList?.length
+      ? Math.round(cl.storeList.filter((s) => s.velScore === 1).length / cl.storeList.length * 100)
+      : 0;
+    return { ...cl, stats, velAVelocityPct };
+  });
+
   const METRICS = [
-    { key: "proSplit", label: "Pro / DIY mix",    unit: "%",   max: 100,  goodHigh: true  },
-    { key: "cohesion", label: "Avg cohesion",     unit: "",    max: 1,    goodHigh: true  },
-    { key: "sqftK",    label: "Avg store size",   unit: "k",   max: 100,  goodHigh: false },
-    { key: "catTile",  label: "Tile sales share", unit: "%",   max: 100,  goodHigh: false },
-    { key: "velScore", label: "Velocity (1=A)",   unit: "",    max: 4,    goodHigh: false },
+    { key: "proSplit",        label: "Pro / DIY mix",        unit: "%",  max: 100, goodHigh: true,  fmt: (v) => `${Math.round(v)}%`  },
+    { key: "cohesion",        label: "Avg cohesion",          unit: "",   max: 1,   goodHigh: true,  fmt: (v) => (typeof v?.toFixed === "function" ? v.toFixed(2) : v) },
+    { key: "sqftK",           label: "Avg store size",        unit: "k",  max: 100, goodHigh: false, fmt: (v) => `${Math.round(v)}k`  },
+    { key: "catTile",         label: "Tile sales share",      unit: "%",  max: 100, goodHigh: false, fmt: (v) => `${Math.round(v)}%`  },
+    { key: "velAVelocityPct", label: "% A-velocity stores",   unit: "%",  max: 100, goodHigh: true,  fmt: (v) => `${Math.round(v)}%`  },
   ];
 
   return (
     <div style={{ overflowX: "auto" }}>
-      <div className="cr-compare-grid" style={{ gridTemplateColumns: `160px repeat(${managedClusters.length}, 1fr)` }}>
+      <div className="cr-compare-grid" style={{ gridTemplateColumns: `160px repeat(${clusterData.length}, 1fr)` }}>
         {/* Header row */}
         <div className="cr-compare-cell" style={{ background: "var(--color-surface-alt)" }}>
           <Text variant="micro" tone="subtle" style={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em" }}>Metric</Text>
         </div>
-        {managedClusters.map((cl) => (
+        {clusterData.map((cl) => (
           <div key={cl.id} className="cr-compare-cell"
             style={{ background: "var(--color-surface-alt)", flexDirection: "column", alignItems: "flex-start", gap: 4 }}>
             <Stack direction="row" align="center" gap={1}>
@@ -216,20 +166,20 @@ function CrossClusterComparison({ managedClusters }) {
             <div className="cr-compare-cell" style={{ background: "var(--color-surface-alt)" }}>
               <Text variant="micro" tone="muted" style={{ fontWeight: 600 }}>{m.label}</Text>
             </div>
-            {managedClusters.map((cl) => {
-              const stats = cl.stats || cl;
-              const raw = stats[m.key] ?? (m.key === "proSplit" ? cl.proAvg : m.key === "cohesion" ? cl.cohesion : 0);
+            {clusterData.map((cl) => {
+              const raw = m.key === "velAVelocityPct"
+                ? cl.velAVelocityPct
+                : (cl.stats[m.key] ?? 0);
               const pct = m.max > 0 ? (raw / m.max) * 100 : 0;
-              const barColor = m.goodHigh ? (pct > 60 ? color.success : pct > 35 ? color.warning : color.error)
+              const barColor = m.goodHigh
+                ? (pct > 60 ? color.success : pct > 35 ? color.warning : color.error)
                 : (pct < 40 ? color.success : pct < 65 ? color.warning : color.error);
               return (
                 <div key={cl.id} className="cr-compare-cell">
                   <div className="cr-metric-bar-wrap">
-                    <Stack direction="row" justify="space-between" align="center">
-                      <Text variant="micro" tone="strong" style={{ fontWeight: 700 }}>
-                        {m.key === "cohesion" ? raw.toFixed ? raw.toFixed(2) : raw : Math.round(raw)}{m.unit}
-                      </Text>
-                    </Stack>
+                    <Text variant="micro" tone="strong" style={{ fontWeight: 700 }}>
+                      {m.fmt(raw)}
+                    </Text>
                     <div className="cr-metric-bar-track">
                       <div className="cr-metric-bar-fill" style={{ width: `${Math.min(pct, 100)}%`, background: barColor }} />
                     </div>
@@ -244,29 +194,33 @@ function CrossClusterComparison({ managedClusters }) {
   );
 }
 
-/* ── Cluster Fingerprint (radar + attribute breakdown) ──────────────────── */
+/* ── Cluster Fingerprint (deviation bars + attribute breakdown) ─────────── */
 function ClusterFingerprint({ cluster, allClusters }) {
   const stores = cluster.storeList || [];
   const stats = stores.length ? calcClusterStats(stores) : {
     proSplit: cluster.proAvg ?? 50, sqftK: 72, velScore: 2, catTile: 45, cohesion: cluster.cohesion,
   };
 
-  const netVals  = normaliseForRadar(NETWORK_AVERAGES.proSplit, NETWORK_AVERAGES.cohesion, NETWORK_AVERAGES.sqftK, NETWORK_AVERAGES.velScore, NETWORK_AVERAGES.catTile);
-  const clustVals = normaliseForRadar(stats.proSplit, stats.cohesion, stats.sqftK, stats.velScore, stats.catTile);
+  /* % of stores in Velocity A (velScore === 1) */
+  const velAPct = stores.length
+    ? Math.round(stores.filter((s) => s.velScore === 1).length / stores.length * 100)
+    : 0;
+  const networkVelAPct = Math.round(
+    PREVIEW_CLUSTER_STORES.filter((s) => s.clusterId !== null && s.velScore === 1).length / 20 * 100
+  );
 
   const attrRows = [
-    { label: "Pro / DIY mix",   storeVal: stats.proSplit, avg: NETWORK_AVERAGES.proSplit, max: 100,  unit: "%",  positive: "above" },
-    { label: "Avg store size",  storeVal: stats.sqftK,    avg: NETWORK_AVERAGES.sqftK,   max: 100,  unit: "k",  positive: "above" },
-    { label: "Sales velocity",  storeVal: stats.velScore, avg: NETWORK_AVERAGES.velScore, max: 4,   unit: "",   positive: "below" },
-    { label: "Tile share",      storeVal: stats.catTile,  avg: NETWORK_AVERAGES.catTile,  max: 100, unit: "%",  positive: "above" },
-    { label: "Cohesion",        storeVal: stats.cohesion, avg: NETWORK_AVERAGES.cohesion, max: 1,   unit: "",   positive: "above" },
+    { label: "Pro / DIY mix",      storeVal: stats.proSplit, avg: NETWORK_AVERAGES.proSplit, max: 100, unit: "%", positive: "above" },
+    { label: "Avg store size",      storeVal: stats.sqftK,    avg: NETWORK_AVERAGES.sqftK,   max: 100, unit: "k", positive: "above" },
+    { label: "% A-velocity stores", storeVal: velAPct,        avg: networkVelAPct,           max: 100, unit: "%", positive: "above" },
+    { label: "Tile share",          storeVal: stats.catTile,  avg: NETWORK_AVERAGES.catTile,  max: 100, unit: "%", positive: "above" },
+    { label: "Cohesion",            storeVal: stats.cohesion, avg: NETWORK_AVERAGES.cohesion, max: 1,   unit: "",  positive: "above" },
   ];
 
   return (
     <div className="cr-analytics-two-col">
-      {/* Left: radar + deviation bars */}
+      {/* Left 2/3: attribute fingerprint + key drivers */}
       <div className="cr-form-section">
-        {/* Colored accent bar at top */}
         <div className="cr-fingerprint-accent" style={{ background: cluster.color }} />
         <div className="cr-form-section-header">
           <Stack direction="row" align="center" gap={2}>
@@ -275,44 +229,49 @@ function ClusterFingerprint({ cluster, allClusters }) {
           </Stack>
         </div>
         <div className="cr-form-section-body">
-          <div className="cr-radar-wrap">
-            <RadarChart
-              clusterValues={clustVals}
-              networkValues={netVals}
-              clusterColor={cluster.color}
-              size={230}
-            />
-            <Stack direction="column" gap={4} style={{ flex: 1, minWidth: 0 }}>
-              {/* Legend */}
-              <Stack direction="column" gap={2}>
-                <div className="cr-radar-legend-item-v2">
-                  <div style={{ width: 12, height: 12, borderRadius: 3, background: cluster.color, flexShrink: 0 }} />
-                  <Text variant="micro" tone="strong" style={{ fontWeight: 700 }}>{cluster.name}</Text>
-                </div>
-                <div className="cr-radar-legend-item-v2">
-                  <div style={{ width: 12, height: 12, borderRadius: 3, background: "var(--ice2)", border: "1.5px dashed var(--color-border-strong)", flexShrink: 0 }} />
-                  <Text variant="micro" tone="subtle">Network average</Text>
-                </div>
+          {/* Deviation bars — full width */}
+          <Stack direction="column" gap={3}>
+            <Text variant="micro" tone="subtle" style={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: ".07em" }}>vs Network avg</Text>
+            {attrRows.map((r) => (
+              <Stack key={r.label} direction="column" gap={1}>
+                <Text variant="micro" tone="muted" style={{ fontWeight: 600 }}>{r.label}</Text>
+                <DeviationBar storeVal={r.storeVal} avgVal={r.avg} maxVal={r.max} unit={r.unit} positive={r.positive} />
               </Stack>
-              {/* Deviation bars */}
-              <Stack direction="column" gap={3}>
-                <Text variant="micro" tone="subtle" style={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: ".07em" }}>vs Network avg</Text>
-                {attrRows.map((r) => (
-                  <Stack key={r.label} direction="column" gap={1}>
-                    <Text variant="micro" tone="muted" style={{ fontWeight: 600 }}>{r.label}</Text>
-                    <DeviationBar storeVal={r.storeVal} avgVal={r.avg} maxVal={r.max} unit={r.unit} positive={r.positive} />
-                  </Stack>
-                ))}
-              </Stack>
-            </Stack>
+            ))}
+          </Stack>
+
+          {/* Key drivers — below deviation bars */}
+          <div className="cr-insight-card" style={{ marginTop: "var(--sp-5)" }}>
+            <div className="cr-insight-card-header">
+              <div style={{ width: 8, height: 8, borderRadius: 2, background: cluster.color }} />
+              <Text variant="caption" tone="strong" style={{ fontWeight: 700 }}>Key drivers of inclusion</Text>
+            </div>
+            <div className="cr-insight-card-body">
+              <Text variant="micro" tone="subtle" style={{ marginTop: -4, marginBottom: 4 }}>Stores are assigned to this cluster primarily based on:</Text>
+              {["Pro / DIY revenue split", "Sales velocity tier", "Category mix index"].map((d, i) => {
+                const pct = [78, 65, 52][i];
+                return (
+                  <div key={i} className="cr-driver-row">
+                    <div className="cr-driver-label-row">
+                      <Stack direction="row" align="center" gap={2}>
+                        <div style={{ width: 6, height: 6, borderRadius: "50%", background: cluster.color, flexShrink: 0 }} />
+                        <Text variant="micro" tone="muted" style={{ fontWeight: 600 }}>{d}</Text>
+                      </Stack>
+                      <span className="cr-driver-pct" style={{ color: cluster.color }}>{pct}%</span>
+                    </div>
+                    <div className="cr-driver-bar-track">
+                      <div className="cr-driver-bar-fill" style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${cluster.color}aa, ${cluster.color})` }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Right: cluster insights + key drivers */}
+      {/* Right 1/3: cluster insights */}
       <Stack direction="column" gap={3}>
-
-        {/* Cluster insights card */}
         <div className="cr-insight-card">
           <div className="cr-insight-card-header">
             <div style={{ width: 8, height: 8, borderRadius: "50%", background: cluster.color, boxShadow: `0 0 0 3px ${cluster.color}22` }} />
@@ -333,7 +292,7 @@ function ClusterFingerprint({ cluster, allClusters }) {
               {
                 bg: "var(--color-warning-soft)", color: "var(--color-warning)",
                 icon: <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><polygon points="7,2 9,6 13,6.5 10,9.5 10.5,13 7,11 3.5,13 4,9.5 1,6.5 5,6" fill="var(--color-warning)" opacity=".25"/><polygon points="7,3.5 8.5,6.5 12,7 9.5,9.5 10,12.5 7,11 4,12.5 4.5,9.5 2,7 5.5,6.5" fill="var(--color-warning)"/></svg>,
-                text: `Velocity ${VEL_SCORE_LABEL[Math.round(stats.velScore)] || "B"} — ${stats.velScore < NETWORK_AVERAGES.velScore ? "faster" : "slower"} than network median`,
+                text: `${velAPct}% of stores in Velocity A — ${velAPct > networkVelAPct ? "above" : "below"} network avg`,
               },
               {
                 bg: "var(--color-accent-soft)", color: "var(--color-accent)",
@@ -350,35 +309,6 @@ function ClusterFingerprint({ cluster, allClusters }) {
             ))}
           </div>
         </div>
-
-        {/* Key drivers card */}
-        <div className="cr-insight-card">
-          <div className="cr-insight-card-header">
-            <div style={{ width: 8, height: 8, borderRadius: 2, background: cluster.color }} />
-            <Text variant="caption" tone="strong" style={{ fontWeight: 700 }}>Key drivers of inclusion</Text>
-          </div>
-          <div className="cr-insight-card-body">
-            <Text variant="micro" tone="subtle" style={{ marginTop: -4, marginBottom: 4 }}>Stores are assigned to this cluster primarily based on:</Text>
-            {["Pro / DIY revenue split", "Sales velocity tier", "Category mix index"].map((d, i) => {
-              const pct = [78, 65, 52][i];
-              return (
-                <div key={i} className="cr-driver-row">
-                  <div className="cr-driver-label-row">
-                    <Stack direction="row" align="center" gap={2}>
-                      <div style={{ width: 6, height: 6, borderRadius: "50%", background: cluster.color, flexShrink: 0 }} />
-                      <Text variant="micro" tone="muted" style={{ fontWeight: 600 }}>{d}</Text>
-                    </Stack>
-                    <span className="cr-driver-pct" style={{ color: cluster.color }}>{pct}%</span>
-                  </div>
-                  <div className="cr-driver-bar-track">
-                    <div className="cr-driver-bar-fill" style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${cluster.color}aa, ${cluster.color})` }} />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
       </Stack>
     </div>
   );
@@ -490,6 +420,18 @@ function StoreManagerPanel({ managedClusters, setManagedClusters, availableStore
               <Text variant="micro" style={{ color: color.info }}>{changeLog[0]}</Text>
             </Stack>
             <Button variant="secondary" size="small" onClick={() => setChangeLog([])}>Dismiss</Button>
+          </div>
+        )}
+
+        {/* Agent cohesion comment chip */}
+        {hasChanges && (
+          <div className="cr-agent-comment">
+            <Bot size={13} style={{ color: color.primary, flexShrink: 0 }} />
+            <Text variant="micro" style={{ color: color.primary }}>
+              {clusterStats.cohesion > originalStats.cohesion
+                ? `Cohesion +${(clusterStats.cohesion - originalStats.cohesion).toFixed(2)} — cluster tightness improves after this change.`
+                : `Cohesion ${(clusterStats.cohesion - originalStats.cohesion).toFixed(2)} — monitor fit before promoting.`}
+            </Text>
           </div>
         )}
 
@@ -713,7 +655,7 @@ function StoreManagerPanel({ managedClusters, setManagedClusters, availableStore
 }
 
 /* ── Outer analytics panel with tab switcher ─────────────────────────────── */
-function ClusterAnalyticsPanel({ managedClusters, setManagedClusters, availableStores, setAvailableStores }) {
+function ClusterAnalyticsPanel({ managedClusters, setManagedClusters, availableStores, setAvailableStores, nextRunId = "CR-019" }) {
   const [tab,        setTab]        = useState("overview");
   const [fpClusterId, setFpClusterId] = useState(managedClusters[0]?.id ?? "C1");
   const fpCluster = managedClusters.find((c) => c.id === fpClusterId) || managedClusters[0];
@@ -731,7 +673,7 @@ function ClusterAnalyticsPanel({ managedClusters, setManagedClusters, availableS
         <Stack direction="column" gap={1}>
           <Stack direction="row" align="center" gap={2}>
             <Text variant="heading" tone="strong">Cluster analytics</Text>
-            <span className="cr-analytics-header-badge">CR-019 · Live</span>
+            <span className="cr-analytics-header-badge">{nextRunId} · Preview</span>
           </Stack>
           <Text variant="caption" tone="muted">Post-run analysis and store management</Text>
         </Stack>
@@ -847,7 +789,7 @@ const CLUSTER_PIPELINE = [
 
 /* ── Step 0 — Define Scope ──────────────────────────────────────────────── */
 const DEPT_OPTS    = ["All", "Wood", "Tile", "Laminate & Vinyl"];
-const CHANNEL_OPTS = ["All Stores", "Brick & Mortar", "Online"];
+const CHANNEL_OPTS = ["All Stores", "Brick & Mortar"];
 const SEASON_OPTS  = ["SS25", "FW25", "SS26", "FW26", "SS27"];
 
 function RadioList({ options, value, name, onChange }) {
@@ -944,16 +886,11 @@ function StepScope({ draft, setDraft }) {
         <div className="cr-last-run-box">
           <Stack direction="column" gap={1}>
             <Text variant="micro" tone="subtle" style={{ textTransform: "uppercase", letterSpacing: ".06em", fontWeight: 700 }}>Last live run</Text>
-            <Text variant="caption" tone="strong" style={{ fontWeight: 700 }}>CR-018 · Behavioral · {STORE_COUNT} stores</Text>
+            <Text variant="caption" tone="strong" style={{ fontWeight: 700 }}>CR-018 · Behavioral · 21 stores</Text>
             <Text variant="micro" tone="muted">Cohesion 0.80 · Jan 12, 2026</Text>
             <Text variant="micro" tone="subtle" style={{ marginTop: 2 }}>Author: D. Rivera</Text>
-          </Stack>
-        </div>
-        <div className="cr-info-box" style={{ background: "var(--color-primary-soft)", borderColor: "var(--color-primary)" }}>
-          <Stack direction="column" gap={1}>
-            <Text variant="caption" style={{ fontWeight: 600, color: "var(--color-primary)" }}>Tip</Text>
-            <Text variant="micro" style={{ color: "var(--color-primary)" }}>
-              Running with the same scope as CR-018 gives the most comparable cohesion benchmark.
+            <Text variant="micro" tone="subtle" style={{ marginTop: 4, fontStyle: "italic" }}>
+              ~250 stores in full network · 21 shown (pilot)
             </Text>
           </Stack>
         </div>
@@ -1095,6 +1032,16 @@ function StepSignals({ draft, setDraft }) {
             </Text>
           </Stack>
         </div>
+        <div className="cr-info-box" style={{ background: "var(--color-surface-sunken)" }}>
+          <Stack direction="column" gap={2}>
+            <Text variant="micro" tone="subtle">
+              Your signals power the <strong>Behavioral</strong> scenario. Geographic and DC-based are always-on baselines for comparison — they run regardless of your signal selection.
+            </Text>
+            <Text variant="micro" tone="subtle">
+              Signals decide the grouping; all clusters are then described across every attribute (Pro%, size, tile share, velocity).
+            </Text>
+          </Stack>
+        </div>
       </Stack>
     </div>
   );
@@ -1220,28 +1167,37 @@ function StepReview({ draft, runState, runProgress, runStep, onRun, nextRunId, o
             </div>
           )}
 
-          {/* Running — agentic pipeline panel */}
-          {runState === "running" && (
-            <div className="cr-agent-run">
+          {/* Running + Done — agentic pipeline panel stays visible after 100% */}
+          {(runState === "running" || runState === "done") && (
+            <div className={`cr-agent-run${runState === "done" ? " is-complete" : ""}`}>
               {/* Header */}
               <div className="cr-agent-run-head">
-                <div className="cr-agent-bot">
-                  <Bot size={20} strokeWidth={1.5} />
+                <div className={`cr-agent-bot${runState === "done" ? " is-done" : ""}`}>
+                  {runState === "done"
+                    ? <CheckCircle2 size={20} strokeWidth={2} />
+                    : <Bot size={20} strokeWidth={1.5} />}
                 </div>
                 <div className="cr-agent-run-head-txt">
-                  <Text variant="subheading" tone="primary">
-                    Agent is generating cluster scenarios…
+                  <Text variant="subheading" tone={runState === "done" ? "success" : "primary"}>
+                    {runState === "done"
+                      ? "Cluster scenarios ready · 3 options to review"
+                      : "Agent is generating cluster scenarios…"}
                   </Text>
                   <Text variant="caption" tone="muted">
-                    Step {Math.min(runStep + 1, CLUSTER_PIPELINE.length)} of {CLUSTER_PIPELINE.length} · {CLUSTER_PIPELINE[runStep]?.title ?? ""}
+                    {runState === "done"
+                      ? `All ${CLUSTER_PIPELINE.length} stages complete · Behavioral scenario recommended`
+                      : `Step ${Math.min(runStep + 1, CLUSTER_PIPELINE.length)} of ${CLUSTER_PIPELINE.length} · ${CLUSTER_PIPELINE[runStep]?.title ?? ""}`}
                   </Text>
                 </div>
-                <Text variant="kpi" tone="primary">{runProgress}%</Text>
+                <Text variant="kpi" tone={runState === "done" ? "success" : "primary"}>{runProgress}%</Text>
               </div>
 
               {/* Progress bar */}
               <div className="cr-agent-run-bar">
-                <div className="cr-agent-run-bar-fill" style={{ width: `${runProgress}%` }} />
+                <div
+                  className={`cr-agent-run-bar-fill${runState === "done" ? " is-complete" : ""}`}
+                  style={{ width: `${runProgress}%` }}
+                />
               </div>
 
               {/* Step list + console */}
@@ -1249,7 +1205,8 @@ function StepReview({ draft, runState, runProgress, runStep, onRun, nextRunId, o
                 {/* Pipeline steps */}
                 <ol className="cr-agent-steps">
                   {CLUSTER_PIPELINE.map((s, i) => {
-                    const state = i < runStep ? "done" : i === runStep ? "active" : "queued";
+                    // When done every step shows as complete
+                    const state = runState === "done" ? "done" : i < runStep ? "done" : i === runStep ? "active" : "queued";
                     const { Icon: SIcon } = s;
                     return (
                       <li key={s.id} className={`cr-agent-step is-${state}`}>
@@ -1276,29 +1233,53 @@ function StepReview({ draft, runState, runProgress, runStep, onRun, nextRunId, o
                 </ol>
 
                 {/* Terminal console */}
-                <div className="cr-agent-console">
+                <div className={`cr-agent-console${runState === "done" ? " is-complete" : ""}`}>
                   <div className="cr-agent-console-bar">
                     <span className="cr-agent-dot cr-dot-r" />
                     <span className="cr-agent-dot cr-dot-y" />
-                    <span className="cr-agent-dot cr-dot-g" />
-                    <span className="cr-agent-console-title">cluster-agent · trace</span>
+                    <span className={`cr-agent-dot cr-dot-g${runState === "done" ? " is-pulse" : ""}`} />
+                    <span className="cr-agent-console-title">
+                      cluster-agent · trace{runState === "done" ? " · complete" : ""}
+                    </span>
+                    {runState === "done" && (
+                      <span className="cr-agent-console-badge">exit 0</span>
+                    )}
                   </div>
                   <div className="cr-agent-console-body">
                     <div className="cr-agent-log cr-agent-log-muted">
                       $ cluster-agent run --dept {draft.dept} --season {draft.season} --stores {STORE_COUNT}
                     </div>
-                    {CLUSTER_PIPELINE.slice(0, runStep).map((s) => (
+                    {/* When done show full pipeline, else only completed steps */}
+                    {(runState === "done" ? CLUSTER_PIPELINE : CLUSTER_PIPELINE.slice(0, runStep)).map((s) => (
                       <div key={s.id} className="cr-agent-log">
                         <span className="cr-agent-log-ok">✓</span> {s.title}{" "}
                         <span className="cr-agent-log-muted">— {s.result(draft)}</span>
                       </div>
                     ))}
-                    {runStep < CLUSTER_PIPELINE.length && (
+                    {/* Active step cursor while running */}
+                    {runState === "running" && runStep < CLUSTER_PIPELINE.length && (
                       <div className="cr-agent-log cr-agent-log-run">
                         <span className="cr-agent-log-arrow">▸</span>{" "}
                         {CLUSTER_PIPELINE[runStep]?.title}
                         <span className="cr-agent-cursor" />
                       </div>
+                    )}
+                    {/* Completion footer when done */}
+                    {runState === "done" && (
+                      <>
+                        <div className="cr-agent-log cr-agent-log-done">
+                          ✓ 3 scenarios committed · A=Geographic · B=Behavioral ★ · C=DC-based
+                        </div>
+                        <div className="cr-agent-log cr-agent-log-muted">
+                          [ok] scenarios.write: CR-019 preview ready
+                        </div>
+                        <div className="cr-agent-log cr-agent-log-muted">
+                          [ok] cohesion.score: avg 0.80 · Behavioral highest at 0.91
+                        </div>
+                        <div className="cr-agent-log cr-agent-log-exit">
+                          Run completed · exit 0
+                        </div>
+                      </>
                     )}
                   </div>
                 </div>
@@ -1325,7 +1306,7 @@ function StepReview({ draft, runState, runProgress, runStep, onRun, nextRunId, o
               ))}
               {signalNames.length > 0 && (
                 <Stack direction="row" gap={1} wrap style={{ borderTop: "1px solid var(--color-border)", paddingTop: 8 }}>
-                  {signalNames.map((n) => <span key={n} className="cr-cat-pill">{n}</span>)}
+                  {signalNames.map((n) => <Badge key={n} variant="subtle" color="neutral" size="small" label={n} />)}
                 </Stack>
               )}
             </Stack>
@@ -1394,6 +1375,18 @@ function StepReview({ draft, runState, runProgress, runStep, onRun, nextRunId, o
                     </Stack>
                     <div className={`cr-scenario-radio${isSelected ? " is-on" : ""}`} />
                   </div>
+
+                  {/* Agent "Why I recommend B" quote — only on recommended scenario */}
+                  {sc.recommended && (
+                    <div className="cr-agent-why">
+                      <Stack direction="row" align="flex-start" gap={2}>
+                        <Bot size={12} style={{ color: "var(--color-primary)", flexShrink: 0, marginTop: 2 }} />
+                        <Text variant="micro" style={{ color: "var(--color-primary)", lineHeight: 1.5 }}>
+                          "Highest composite score (91), best balance of statistical fit and business manageability across all three framings."
+                        </Text>
+                      </Stack>
+                    </div>
+                  )}
 
                   {/* Score row */}
                   <div className="cr-scenario-scores">
@@ -1469,6 +1462,7 @@ function StepReview({ draft, runState, runProgress, runStep, onRun, nextRunId, o
               setManagedClusters={setManagedClusters}
               availableStores={availableStores ?? []}
               setAvailableStores={setAvailableStores}
+              nextRunId={nextRunId}
             />
           )}
         </Stack>
@@ -1485,11 +1479,13 @@ function ClusterRunsDashboard({ onNewRun }) {
   const totalStores  = clusters.reduce((s, c) => s + c.stores, 0);
   const avgCohesion  = (clusters.reduce((s, c) => s + c.cohesion, 0) / clusters.length).toFixed(2);
 
+  const proSpread = Math.max(...clusters.map((c) => c.proAvg)) - Math.min(...clusters.map((c) => c.proAvg));
+
   const kpis = [
-    { label: "Active clusters",  value: clusters.length,  sub: `k=${clusters.length} · live`,          accent: color.primary },
-    { label: "Stores assigned",  value: totalStores,       sub: `${totalStores} / ${STORE_COUNT} covered`, accent: color.teal    },
-    { label: "Avg cohesion",     value: avgCohesion,       sub: "good · >0.75 healthy",                  accent: Number(avgCohesion) >= 0.8 ? color.success : color.warning },
-    { label: "Next re-run",      value: "Apr 12",          sub: "quarterly cycle",                        accent: color.info    },
+    { label: "Active clusters",   value: clusters.length,   sub: `k=${clusters.length} · live`,          accent: color.primary  },
+    { label: "Stores assigned",   value: totalStores,        sub: "20/21 assigned · 3 outliers",          accent: color.teal     },
+    { label: "Avg cohesion",      value: avgCohesion,        sub: "good · >0.75 healthy",                 accent: Number(avgCohesion) >= 0.8 ? color.success : color.warning },
+    { label: "Differentiation",   value: `${proSpread}pp`,   sub: "Pro spread across clusters",           accent: color.success  },
   ];
 
   return (
@@ -1511,13 +1507,16 @@ function ClusterRunsDashboard({ onNewRun }) {
             <Stack direction="row" align="center" gap={2}>
               <Text variant="body-strong" tone="strong">Active cluster set</Text>
               <span className="cr-run-id">{ACTIVE_CLUSTER_SET.runId}</span>
-              <span className="cr-status-live">Live</span>
+              <Badge variant="subtle" color="success" size="small" label="Live" />
             </Stack>
             <Text variant="micro" tone="subtle">
               {ACTIVE_CLUSTER_SET.method} · {ACTIVE_CLUSTER_SET.attrNames.length} attributes · run {ACTIVE_CLUSTER_SET.date} by {ACTIVE_CLUSTER_SET.author}
             </Text>
           </Stack>
-          <Button variant="secondary" size="small">Re-run latest</Button>
+          <Stack direction="row" align="center" gap={2}>
+            <Text variant="micro" tone="subtle">Apr 12 · quarterly cycle</Text>
+            <Button variant="secondary" size="small">Re-run latest</Button>
+          </Stack>
         </div>
 
         <div style={{ padding: "var(--sp-4) var(--sp-5)", borderBottom: "1px solid var(--color-border)" }}>
@@ -1535,33 +1534,36 @@ function ClusterRunsDashboard({ onNewRun }) {
           </Stack>
         </div>
 
-        <div style={{ overflowX: "auto" }}>
-          <table className="cr-table" style={{ width: "100%", minWidth: 700 }}>
-            <thead>
-              <tr>
-                <th>Cluster</th><th>Stores</th><th>Pro avg</th>
-                <th style={{ minWidth: 140 }}>Cohesion</th><th>Dominant categories</th><th>SKU set</th>
-              </tr>
-            </thead>
-            <tbody>
-              {clusters.map((c) => (
-                <tr key={c.id}>
-                  <td>
-                    <Stack direction="row" align="center" gap={2}>
-                      <div style={{ width: 10, height: 10, borderRadius: "50%", background: c.color, flexShrink: 0 }} />
-                      <Text variant="caption" tone="strong" style={{ fontWeight: 600 }}>{c.name}</Text>
-                    </Stack>
-                  </td>
-                  <td><Text variant="caption" mono style={{ fontWeight: 700 }}>{c.stores}</Text></td>
-                  <td><Text variant="caption" tone="strong" style={{ fontWeight: 600 }}>{c.proAvg}%</Text></td>
-                  <td><CohesionBar value={c.cohesion} /></td>
-                  <td><CatPills cats={c.dominantCats} /></td>
-                  <td><Text variant="caption" mono tone="muted">{c.skus.toLocaleString()} SKUs</Text></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <Table
+          cardContainer
+          rowHeight="compact"
+          tableHeader=""
+          columnDefs={[
+            { field: "name", headerName: "Cluster", minWidth: 170, flex: 1,
+              cellRenderer: (p) => (
+                <Stack direction="row" align="center" gap={2} style={{ height: "100%" }}>
+                  <div style={{ width: 9, height: 9, borderRadius: "50%", background: p.data.color, flexShrink: 0 }} />
+                  <span style={{ fontWeight: 600, fontSize: "var(--fs-micro)" }}>{p.value}</span>
+                </Stack>
+              ),
+            },
+            { field: "stores",       headerName: "Stores",     width: 76,  cellStyle: { textAlign: "right", display: "flex", alignItems: "center", justifyContent: "flex-end", fontFamily: "var(--font-mono,monospace)", fontWeight: 700, fontSize: "var(--fs-micro)" } },
+            { field: "proAvg",       headerName: "Pro avg",    width: 80,  cellStyle: { textAlign: "right", display: "flex", alignItems: "center", justifyContent: "flex-end", fontWeight: 600, fontSize: "var(--fs-micro)" },
+              cellRenderer: (p) => `${p.value}%` },
+            { field: "cohesion",     headerName: "Cohesion",   width: 150,
+              cellRenderer: (p) => <CohesionBar value={p.value} /> },
+            { field: "dominantCats", headerName: "Dom. categories", minWidth: 200, flex: 1,
+              cellRenderer: (p) => <CatPills cats={p.value || []} /> },
+            { field: "skus",         headerName: "SKU set",    width: 100, cellStyle: { textAlign: "right", display: "flex", alignItems: "center", justifyContent: "flex-end", color: "var(--color-text-muted)", fontSize: "var(--fs-micro)", fontFamily: "var(--font-mono,monospace)" },
+              cellRenderer: (p) => `${p.value.toLocaleString()} SKUs` },
+          ]}
+          rowData={clusters}
+          domLayout="autoHeight"
+          defaultColDef={{ floatingFilter: false, resizable: true, sortable: true }}
+          hideTableSetting
+          hideTableActions
+          pagination={false}
+        />
       </div>
 
       {/* Run history */}
@@ -1570,35 +1572,35 @@ function ClusterRunsDashboard({ onNewRun }) {
           <Text variant="body-strong" tone="strong" style={{ flex: 1 }}>Run history</Text>
           <Button variant="secondary" size="small">Export</Button>
         </div>
-        <div style={{ overflowX: "auto" }}>
-          <table className="cr-table" style={{ width: "100%", minWidth: 640 }}>
-            <thead>
-              <tr>
-                <th>Run</th><th>Method</th><th>Attrs</th>
-                <th style={{ minWidth: 120 }}>Cohesion</th><th>Date</th><th>Author</th><th>Status</th><th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {CLUSTER_RUNS.map((run) => (
-                <tr key={run.id}>
-                  <td>
-                    <Stack direction="column" gap={0.5}>
-                      <span className="cr-run-id">{run.id}</span>
-                      <Text variant="micro" tone="muted" style={{ maxWidth: 200 }} truncate>{run.name}</Text>
-                    </Stack>
-                  </td>
-                  <td><Text variant="caption" tone="muted">{run.method}</Text></td>
-                  <td><Text variant="caption" mono tone="muted">{run.attrs}</Text></td>
-                  <td><CohesionBar value={run.cohesion} /></td>
-                  <td><Text variant="caption" tone="muted">{run.date}</Text></td>
-                  <td><Text variant="caption" tone="muted">{run.author}</Text></td>
-                  <td><StatusPill status={run.status} /></td>
-                  <td><Button variant="secondary" size="small">Open</Button></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <Table
+          cardContainer
+          rowHeight="compact"
+          tableHeader=""
+          columnDefs={[
+            { field: "id", headerName: "Run", minWidth: 130,
+              cellRenderer: (p) => (
+                <Stack direction="column" gap={0} style={{ height: "100%", justifyContent: "center" }}>
+                  <span className="cr-run-id">{p.value}</span>
+                  <span style={{ fontSize: "var(--fs-micro)", color: "var(--color-text-muted)", maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.data.name}</span>
+                </Stack>
+              ),
+            },
+            { field: "method",   headerName: "Method",   width: 110, cellStyle: { color: "var(--color-text-muted)", fontSize: "var(--fs-micro)", display: "flex", alignItems: "center" } },
+            { field: "attrs",    headerName: "Attrs",    width: 68,  cellStyle: { textAlign: "right", fontFamily: "var(--font-mono,monospace)", display: "flex", alignItems: "center", justifyContent: "flex-end", color: "var(--color-text-muted)", fontSize: "var(--fs-micro)" } },
+            { field: "cohesion", headerName: "Cohesion", width: 140, cellRenderer: (p) => <CohesionBar value={p.value} /> },
+            { field: "date",     headerName: "Date",     width: 96,  cellStyle: { color: "var(--color-text-muted)", fontSize: "var(--fs-micro)", display: "flex", alignItems: "center" } },
+            { field: "author",   headerName: "Author",   width: 96,  cellStyle: { color: "var(--color-text-muted)", fontSize: "var(--fs-micro)", display: "flex", alignItems: "center" } },
+            { field: "status",   headerName: "Status",   width: 92,  cellRenderer: (p) => <StatusPill status={p.value} /> },
+            { field: "id",       headerName: "",         width: 68, colId: "actions",
+              cellRenderer: () => <Button variant="secondary" size="small">Open</Button> },
+          ]}
+          rowData={CLUSTER_RUNS}
+          domLayout="autoHeight"
+          defaultColDef={{ floatingFilter: false, resizable: true, sortable: true }}
+          hideTableSetting
+          hideTableActions
+          pagination={false}
+        />
       </div>
     </Stack>
   );

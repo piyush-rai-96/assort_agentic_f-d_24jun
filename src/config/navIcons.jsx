@@ -214,3 +214,16 @@ export const OthersIcon = () => (
     <circle cx="19" cy="12" r="1.5" fill="currentColor" stroke="none" />
   </Icon>
 );
+
+/* Option Recommendation — target/bullseye (hit the right option count) */
+export const OptionRecIcon = () => (
+  <Icon>
+    <circle cx="12" cy="12" r="9" />
+    <circle cx="12" cy="12" r="5" />
+    <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none" />
+    <line x1="12" y1="2" x2="12" y2="4.5" strokeWidth="2" />
+    <line x1="12" y1="19.5" x2="12" y2="22" strokeWidth="2" />
+    <line x1="2" y1="12" x2="4.5" y2="12" strokeWidth="2" />
+    <line x1="19.5" y1="12" x2="22" y2="12" strokeWidth="2" />
+  </Icon>
+);

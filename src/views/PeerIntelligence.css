@@ -13,6 +13,20 @@
   align-items: center;
 }
 
+/* Hero money tiles */
+.pi-hero-tile {
+  padding: var(--sp-4) var(--sp-5);
+  border-radius: var(--r);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  box-shadow: var(--sh);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+.pi-hero-tile--win  { border-top: 3px solid var(--color-success); }
+.pi-hero-tile--risk { border-top: 3px solid var(--color-error); }
+
 /* Comparison table rows. */
 .pi-cmp-row {
   align-items: center;
@@ -22,12 +36,11 @@
 .pi-cmp-row:last-child {
   border-bottom: none;
 }
-.pi-cmp-row.win {
-  background: var(--color-success-soft);
-}
-.pi-cmp-row.loser {
-  background: var(--color-error-soft);
-}
+.pi-cmp-row.miss        { background: var(--color-error-soft); }
+.pi-cmp-row.opportunity { background: var(--color-warning-soft); }
+.pi-cmp-row.loser       { background: var(--color-error-soft); }
+/* keep legacy win class harmless */
+.pi-cmp-row.win { background: var(--color-surface-alt); }
 
 /* SKU drill-down list rows. */
 .pi-sku {
@@ -96,6 +109,10 @@
 .pi-heat-cell.is-me {
   border: 2px solid var(--color-primary);
 }
+.pi-heat-cell.is-me.is-gap {
+  border: 2px solid var(--color-error);
+  box-shadow: inset 0 0 0 2px rgba(var(--color-error-rgb, 220,50,50), 0.08);
+}
 .pi-heat-you {
   position: absolute;
   top: -8px;
@@ -106,6 +123,14 @@
   font-weight: var(--fw-bold);
   padding: 1px 5px;
   border-radius: 9999px;
+}
+.pi-heat-gap {
+  display: block;
+  margin-top: 3px;
+  font-size: 8px;
+  font-weight: 700;
+  color: var(--color-error);
+  line-height: 1.2;
 }
 .pi-legend-bar {
   width: 80px;

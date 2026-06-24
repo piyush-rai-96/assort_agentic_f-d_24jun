@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
-import { Card, Button, Badge, Modal, Chips, FiltersStrip, FilterPanel } from "impact-ui";
+import { Card, Button, Badge, Modal, Chips, FiltersStrip, FilterPanel, ProgressBar } from "impact-ui";
+import { BarChart2, TrendingUp, TrendingDown, Grid as GridIcon } from "lucide-react";
 import FdSelect from "../components/FdSelect.jsx";
 import Text from "../components/Text.jsx";
 import Stack from "../components/Stack.jsx";
@@ -17,26 +18,32 @@ import {
   FLAG_META,
   heatColor,
 } from "../data/peer.js";
+
+const fmtMoney = (n) => `$${Math.round(Math.abs(n) / 1000)}k`;
 import "./PeerIntelligence.css";
-import { panelSx } from "../styles/panelSx.js";
+import { panelSx, softSx } from "../styles/panelSx.js";
 
 
 function ConfidenceBar({ score, width = 64 }) {
-  const role = score >= 75 ? "success" : score >= 50 ? "warning" : "error";
+  const color = score >= 75 ? "success" : score >= 50 ? "warning" : "error";
   return (
-    <Stack direction="row" align="center" gap={2}>
-      <div className="pi-conf-track" style={{ width }}>
-        <div className="pi-conf-fill" style={{ width: `${score}%`, background: `var(--color-${role})` }} />
-      </div>
-      <Text variant="micro" tone="muted" mono>{score}</Text>
+    <Stack direction="column" gap={0.5} align="flex-end" style={{ minWidth: width }}>
+      <Text variant="micro" tone="subtle" style={{ textTransform: "uppercase", letterSpacing: ".05em", fontWeight: 700, fontSize: 9 }}>conf {score}</Text>
+      <ProgressBar value={score} max={100} color={color} size="small" sx={{ width: "100%" }} />
     </Stack>
   );
 }
 
+const GLYPH_ICON = { "≋": BarChart2, "↑": TrendingUp, "↓": TrendingDown, "▦": GridIcon };
+
 function IconBadge({ tone, glyph }) {
+  const IconCmp = GLYPH_ICON[glyph];
   return (
     <span className="pi-icon-badge" style={{ background: `var(--color-${tone}-soft)`, color: `var(--color-${tone})` }}>
-      <Text variant="caption" tone="inherit" style={{ fontWeight: 700 }}>{glyph}</Text>
+      {IconCmp
+        ? <IconCmp size={14} strokeWidth={2} aria-hidden="true" />
+        : <Text variant="caption" tone="inherit" style={{ fontWeight: 700 }}>{glyph}</Text>
+      }
     </span>
   );
 }
@@ -51,6 +58,7 @@ export default function PeerIntelligence() {
   const [exportDone, setExportDone] = useState(false);
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
   const [activeFilterTab, setActiveFilterTab] = useState("category");
+  const [compStoreId, setCompStoreId] = useState(null);
 
   const piFilterTags = useMemo(() => {
     if (category === "all") return [];
@@ -82,6 +90,17 @@ export default function PeerIntelligence() {
     });
 
   const chips = [{ id: "all", name: "All" }, ...CATEGORIES];
+
+  /* Comp-store options (excluding MY store) */
+  const COMP_STORE_OPTIONS = [
+    { value: null, label: "None — compare to cluster avg only" },
+    ...HEATMAP_STORES.filter((s) => !s.isMe).map((s) => ({ value: s.id, label: s.name })),
+  ];
+  const compStoreData = compStoreId ? HEATMAP_STORES.find((s) => s.id === compStoreId) : null;
+
+  /* Hero tile totals — computed from SKUS data */
+  const winnerOpp    = SKUS.filter((s) => s.flag === "network-win").reduce((a, s) => a + (s.revOpp || 0), 0);
+  const trappedTotal = SKUS.filter((s) => s.flag === "network-loser" || s.flag === "stale").reduce((a, s) => a + (s.trapped || 0), 0);
 
   return (
     <Stack direction="column" gap={4}>
@@ -153,48 +172,98 @@ export default function PeerIntelligence() {
         onSecondaryButtonClick={() => setCategory("all")}
       />
 
+      {/* Hero money tiles */}
+      <Grid columns={2} gap={3}>
+        <Card sx={{ ...softSx, padding: "var(--sp-5)", borderLeft: "4px solid var(--color-success)" }} className="pi-hero-tile pi-hero-tile--win">
+          <Text variant="overline" tone="subtle">Winner opportunity</Text>
+          <Text variant="kpi" tone="success">{fmtMoney(winnerOpp)}</Text>
+          <Text variant="caption" tone="muted">{WINNER_TOTAL} network winners not in your range</Text>
+        </Card>
+        <Card sx={{ ...softSx, padding: "var(--sp-5)", borderLeft: "4px solid var(--color-error)" }} className="pi-hero-tile pi-hero-tile--risk">
+          <Text variant="overline" tone="subtle">Trapped capital</Text>
+          <Text variant="kpi" tone="error">{fmtMoney(trappedTotal)}</Text>
+          <Text variant="caption" tone="muted">{LOSER_TOTAL} losers still carried</Text>
+        </Card>
+      </Grid>
+
       {/* My Store vs Cluster comparison */}
-      <div className="pi-card">
+      <Card sx={panelSx} className="pi-card">
         <Stack className="pi-card-head" direction="row" gap={3} wrap>
           <IconBadge tone="primary" glyph="≋" />
           <Stack direction="column" gap={0} flex="1 1 auto" style={{ minWidth: 0 }}>
             <Text variant="body-strong" tone="strong">My Store vs Cluster</Text>
             <Text variant="micro" tone="subtle">{PEER_CONTEXT.category} category — {PEER_CONTEXT.networkSkus.toLocaleString()} SKUs network-wide</Text>
           </Stack>
-          <Badge variant="subtle" size="small" color="info" label={`Macro · ${PEER_CONTEXT.cluster}`} />
+          <Stack direction="row" align="center" gap={2} wrap>
+            <FdSelect
+              label="Compare to peer store"
+              value={compStoreId}
+              options={COMP_STORE_OPTIONS}
+              onChange={(v) => setCompStoreId(v || null)}
+              width={220}
+            />
+            <Badge variant="subtle" size="small" color="info" label={PEER_CONTEXT.cluster} />
+          </Stack>
         </Stack>
 
-        <Grid columns="2fr 1fr 1fr 1fr" gap={2} style={{ padding: "10px 16px", borderBottom: "1px solid var(--color-border)" }}>
+        <Grid
+          columns={compStoreData ? "2fr 1fr 1fr 1fr 1fr" : "2fr 1fr 1fr 1fr"}
+          gap={2}
+          style={{ padding: "10px 16px", borderBottom: "1px solid var(--color-border)" }}
+        >
           <Text variant="overline" tone="subtle">Metric</Text>
           <Text variant="overline" tone="subtle" style={{ textAlign: "right" }}>My Store</Text>
+          {compStoreData && (
+            <Text variant="overline" style={{ textAlign: "right", color: "var(--color-primary)", fontWeight: 700 }}>
+              {compStoreData.name}
+            </Text>
+          )}
           <Text variant="overline" tone="subtle" style={{ textAlign: "right" }}>Cluster Avg</Text>
           <Text variant="overline" tone="subtle" style={{ textAlign: "right" }}>Top Quartile</Text>
         </Grid>
 
-        {COMPARE_ROWS.map((r) => (
-          <Grid
-            key={r.metric}
-            columns="2fr 1fr 1fr 1fr"
-            gap={2}
-            align="center"
-            className={`pi-cmp-row${r.highlight ? ` ${r.highlight}` : ""}`}
-          >
-            <Text variant="caption" tone="strong">{r.metric}</Text>
-            <Stack direction="row" align="center" justify="flex-end" gap={2}>
-              {r.highlight === "win" ? <Text variant="micro" tone="success">▲</Text> : null}
-              {r.highlight === "loser" ? <Text variant="micro" tone="error">▼</Text> : null}
-              <Text variant="caption" tone="strong" mono>{r.a}</Text>
-            </Stack>
-            <Text variant="caption" tone="muted" mono style={{ textAlign: "right" }}>{r.b}</Text>
-            <Text variant="caption" tone="muted" mono style={{ textAlign: "right" }}>{r.c}</Text>
-          </Grid>
-        ))}
-      </div>
+        {COMPARE_ROWS.map((r, idx) => {
+          const compVal = compStoreData?.compValues
+            ? [
+                compStoreData.compValues.skus,
+                compStoreData.compValues.st,
+                compStoreData.compValues.winnersCarried,
+                compStoreData.compValues.winnersNotCarried,
+                compStoreData.compValues.losers,
+                compStoreData.compValues.trapped,
+              ][idx]
+            : null;
+          return (
+            <Grid
+              key={r.metric}
+              columns={compStoreData ? "2fr 1fr 1fr 1fr 1fr" : "2fr 1fr 1fr 1fr"}
+              gap={2}
+              align="center"
+              className={`pi-cmp-row${r.highlight ? ` ${r.highlight}` : ""}`}
+            >
+              <Text variant="caption" tone="strong">{r.metric}</Text>
+              <Stack direction="row" align="center" justify="flex-end" gap={2}>
+                {r.highlight === "miss"        && <Text variant="micro" tone="error">▼</Text>}
+                {r.highlight === "opportunity" && <Text variant="micro" style={{ color: "var(--color-warning)", fontWeight: 700 }}>◈</Text>}
+                {r.highlight === "loser"       && <Text variant="micro" tone="error">▼</Text>}
+                <Text variant="caption" tone="strong" mono>{r.a}</Text>
+              </Stack>
+              {compStoreData && (
+                <Text variant="caption" mono style={{ textAlign: "right", color: "var(--color-primary)", fontWeight: 600 }}>
+                  {compVal ?? "—"}
+                </Text>
+              )}
+              <Text variant="caption" tone="muted" mono style={{ textAlign: "right" }}>{r.b}</Text>
+              <Text variant="caption" tone="muted" mono style={{ textAlign: "right" }}>{r.c}</Text>
+            </Grid>
+          );
+        })}
+      </Card>
 
       {/* SKU drill-downs */}
       <Grid min={360} gap={4}>
         {/* Network Winners — Not Carried */}
-        <div className="pi-card">
+        <Card sx={panelSx} className="pi-card">
           <Stack className="pi-card-head" direction="row" gap={3} wrap>
             <IconBadge tone="success" glyph="↑" />
             <Stack direction="column" gap={0} flex="1 1 auto" style={{ minWidth: 0 }}>
@@ -244,10 +313,13 @@ export default function PeerIntelligence() {
             <Button variant="tertiary" size="small">View all {WINNER_TOTAL} →</Button>
             <Button variant="secondary" size="small" onClick={addAllWinners}>Add all to Review List</Button>
           </Stack>
-        </div>
+          <div style={{ padding: "var(--sp-2) var(--sp-4)", background: "var(--color-surface-sunken)", borderTop: "1px solid var(--color-border)" }}>
+            <Text variant="micro" tone="subtle">Items added to the Review List flow directly into the next PLR curation cycle.</Text>
+          </div>
+        </Card>
 
         {/* Losers — Still Carried */}
-        <div className="pi-card">
+        <Card sx={panelSx} className="pi-card">
           <Stack className="pi-card-head" direction="row" gap={3} wrap>
             <IconBadge tone="error" glyph="↓" />
             <Stack direction="column" gap={0} flex="1 1 auto" style={{ minWidth: 0 }}>
@@ -298,16 +370,21 @@ export default function PeerIntelligence() {
             <Button variant="tertiary" size="small">View all {LOSER_TOTAL} →</Button>
             <Button variant="secondary" size="small" onClick={flagAllExits}>Flag all for exit review</Button>
           </Stack>
-        </div>
+          <div style={{ padding: "var(--sp-2) var(--sp-4)", background: "var(--color-surface-sunken)", borderTop: "1px solid var(--color-border)" }}>
+            <Text variant="micro" tone="subtle">Flagged items route to exit review and inform the next PLR curation cycle.</Text>
+          </div>
+        </Card>
       </Grid>
 
-      {/* Cross-store variance heatmap */}
-      <div className="pi-card">
+      {/* Sell-Through heatmap */}
+      <Card sx={panelSx} className="pi-card">
         <Stack className="pi-card-head" direction="row" gap={3} wrap>
           <IconBadge tone="accent" glyph="▦" />
           <Stack direction="column" gap={0} flex="1 1 auto" style={{ minWidth: 0 }}>
-            <Text variant="body-strong" tone="strong">Cross-Store Sell-Through Variance</Text>
-            <Text variant="micro" tone="subtle">{PEER_CONTEXT.cluster} · {PEER_CONTEXT.clusterStores} stores · {CATEGORIES.length} categories</Text>
+            <Text variant="body-strong" tone="strong">Sell-Through by Store &amp; Category</Text>
+            <Text variant="micro" tone="subtle">
+              {PEER_CONTEXT.cluster} · 6 of {PEER_CONTEXT.clusterStores} stores shown · {CATEGORIES.length} categories
+            </Text>
           </Stack>
           <Stack direction="row" align="center" gap={2}>
             <Text variant="micro" tone="subtle">Low</Text>
@@ -325,27 +402,45 @@ export default function PeerIntelligence() {
                 <Text variant="micro" tone="subtle" mono>{st.id}</Text>
               </Stack>
             ))}
-            {CATEGORIES.map((c, ci) => (
-              <React.Fragment key={c.id}>
-                <Stack direction="row" align="center" gap={2} style={{ padding: "6px 0" }}>
-                  <Text variant="caption" tone="primary">{c.icon}</Text>
-                  <Text variant="caption" tone="strong">{c.name}</Text>
-                </Stack>
-                {HEATMAP_STORES.map((st, si) => {
-                  const v = ((ci * 37 + si * 13) % 100) / 100;
-                  const pct = Math.round(40 + v * 50);
-                  return (
-                    <div key={st.id} className={`pi-heat-cell${st.isMe ? " is-me" : ""}`} style={{ background: heatColor(v) }}>
+            {CATEGORIES.map((c, ci) => {
+              /* Compute per-row values to find max and the YOU gap */
+              const rowVals = HEATMAP_STORES.map((st, si) => {
+                const v = ((ci * 37 + si * 13) % 100) / 100;
+                return { st, v, pct: Math.round(40 + v * 50) };
+              });
+              const myCell   = rowVals.find((r) => r.st.isMe);
+              const maxCell  = rowVals.reduce((best, r) => r.pct > best.pct ? r : best, rowVals[0]);
+              const gap      = myCell && maxCell ? maxCell.pct - myCell.pct : 0;
+              const isWorstGap = myCell && gap >= 20 && myCell.pct === Math.min(...rowVals.map((r) => r.pct));
+              return (
+                <React.Fragment key={c.id}>
+                  <Stack direction="row" align="center" gap={2} style={{ padding: "6px 0" }}>
+                    <Text variant="caption" tone="primary">{c.icon}</Text>
+                    <Text variant="caption" tone="strong">{c.name}</Text>
+                  </Stack>
+                  {rowVals.map(({ st, v, pct }) => (
+                    <div
+                      key={st.id}
+                      className={`pi-heat-cell${st.isMe ? " is-me" : ""}${st.isMe && isWorstGap ? " is-gap" : ""}`}
+                      style={{ background: heatColor(v), border: st.isMe && isWorstGap ? "2px solid var(--color-error)" : undefined }}
+                    >
                       <Text variant="caption" tone="strong" mono>{pct}%</Text>
-                      {st.isMe ? <span className="pi-heat-you">YOU</span> : null}
+                      {st.isMe && <span className="pi-heat-you">YOU</span>}
+                      {st.isMe && isWorstGap && (
+                        <span className="pi-heat-gap">−{gap}pp vs best</span>
+                      )}
                     </div>
-                  );
-                })}
-              </React.Fragment>
-            ))}
+                  ))}
+                </React.Fragment>
+              );
+            })}
           </Grid>
         </div>
-      </div>
+
+        <div style={{ padding: "var(--sp-2) var(--sp-4)", background: "var(--color-surface-sunken)", borderTop: "1px solid var(--color-border)" }}>
+          <Text variant="micro" tone="subtle">Shading is within each category row (each row's own low → high). Outlined cells show the largest gap between your store and the top peer in that category.</Text>
+        </div>
+      </Card>
 
       {/* SKU detail modal */}
       <Modal
@@ -383,7 +478,7 @@ function SkuDetail({ sku, inReview, flagged, onReview, onFlag }) {
     { label: "Data completeness", score: 92 },
     { label: "Peer agreement strength", score: sku.peerCarry },
     { label: "Trend significance (4w)", score: 78 },
-    { label: "Annotation overrides", score: 88 },
+    { label: "Field-intel overrides", score: 88 },
   ];
   return (
     <Stack direction="column" gap={3}>
