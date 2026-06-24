@@ -238,16 +238,28 @@ export default function National({ onNavigate }) {
       return { ...prev, natDecisions: nd };
     }), []);
 
+  /*
+   * National Core target = 16 SKUs total:
+   *   - All mandatory Core/BG SKUs (5) — always included
+   *   - Top 11 non-mandatory SKUs by agent score → exactly 16 total
+   *
+   * This aligns with Option Rec national split (40% × 40 total = 16).
+   */
+  const NAT_NON_MANDATORY_CAP = 11;
+
   /* ── Enriched SKU list ─────────────────────────────────────────────────── */
   const enrichedSkus = useMemo(() => {
     const agentRecs = plan.agentNatRecs;
-    return FD_SKUS.map((s) => {
+
+    const allEnriched = FD_SKUS.map((s) => {
       const isHard  = s.tag === "Core" || s.tag === "BG";
       const rows    = FD_ASSORTMENT.filter((r) => r.sku === s.sku);
       const stores  = new Set(rows.map((r) => r.storeId));
       const sqftSum = rows.reduce((a, r) => a + (r.r13Sqft || 0), 0);
       const avgR13  = stores.size ? sqftSum / stores.size : 0;
       const carryPct = (stores.size / FD_STORES.length) * 100;
+      /* Agent score (mirrors catalogue.js natScore) */
+      const score   = Math.round(carryPct * 0.4 + avgR13 * 0.6);
 
       /* Dominant velocity */
       const vCounts = {};
@@ -256,11 +268,8 @@ export default function National({ onNavigate }) {
 
       const agentRec = agentRecs.find((r) => r.sku.sku === s.sku) || null;
       const dec      = plan.natDecisions[s.sku] ?? null;
-      /* Effective decision */
-      const effDec = isHard ? "core" : dec ?? (agentRec ? "core" : null);
-
-      /* Intel modifier */
-      const intel = apIntelModifier(s.sku, INTEL_SEED);
+      const effDec   = isHard ? "core" : dec ?? (agentRec ? "core" : null);
+      const intel    = apIntelModifier(s.sku, INTEL_SEED);
 
       /* Full 3-way agent recommendation */
       const rec = getNationalRec({
@@ -272,25 +281,35 @@ export default function National({ onNavigate }) {
       });
 
       return {
-        sku:       s.sku,
-        desc:      s.desc,
-        dept:      s.dept,
-        price:     s.price,
-        tag:       s.tag,
-        status:    s.status,
+        sku:        s.sku,
+        desc:       s.desc,
+        dept:       s.dept,
+        price:      s.price,
+        tag:        s.tag,
+        status:     s.status,
         isHard,
-        avgR13:    Math.round(avgR13),
-        carryPct:  Math.round(carryPct),
+        score,
+        avgR13:     Math.round(avgR13),
+        carryPct:   Math.round(carryPct),
         storeCount: stores.size,
-        velocity:  vel,
-        agentRec:  agentRec ? "core" : null,
+        velocity:   vel,
+        agentRec:   agentRec ? "core" : null,
         agentRecReason: agentRec?.reason ?? null,
-        rec,       /* full 3-way rec: { action, confidence, reason, detail } */
+        rec,
         dec,
         effDec,
         intel,
       };
     });
+
+    /* ── Cap non-mandatory to top 11 by score ─────────────────────────────── */
+    const mandatory    = allEnriched.filter((s) => s.isHard);
+    const nonMandatory = allEnriched
+      .filter((s) => !s.isHard)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, NAT_NON_MANDATORY_CAP);
+
+    return [...mandatory, ...nonMandatory];
   }, [plan]);
 
   /* ── Filtered + sorted for table ─────────────────────────────────────── */
@@ -371,7 +390,7 @@ export default function National({ onNavigate }) {
               <div>
                 <Text variant="title" style={{ color: "#fff", fontWeight: 800, display: "block", lineHeight: 1.2 }}>National Core</Text>
                 <Text variant="micro" style={{ color: "#4A7A4A", display: "block", marginTop: 2 }}>
-                  Agent recommends Keep / Drop per SKU · override only where needed · decisions cascade to cluster &amp; store
+                  16 SKUs · 5 mandatory + 11 for Keep / Modify / Drop · decisions cascade to cluster &amp; store
                 </Text>
               </div>
             </Stack>
