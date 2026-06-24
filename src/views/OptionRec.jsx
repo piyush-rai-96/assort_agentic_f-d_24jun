@@ -3,7 +3,7 @@
  * Agent-computed option count by cluster and assortment tier.
  */
 import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
-import { Card, Badge, Button, Table, Input } from "impact-ui";
+import { Card, Badge, Button, Input } from "impact-ui";
 import {
   Target, Bot, Calculator, Layers, BookOpen,
   ArrowRight, CheckCircle2, TrendingUp, AlertTriangle,
@@ -356,57 +356,98 @@ function SplitTiles({ optionCalc }) {
 }
 
 /* ── Cluster breakdown table ──────────────────────────────────────────────── */
-function ClusterTable({ optionCalc }) {
-  const cols = useMemo(() => [
-    {
-      field: "label", headerName: "Cluster", minWidth: 180, flex: 1,
-      cellRenderer: (p) => (
-        <Stack direction="row" align="center" gap={2} style={{ height: "100%" }}>
-          <span style={{ width: 10, height: 10, borderRadius: "50%", background: p.data.color, flexShrink: 0, display: "inline-block" }} />
-          <span style={{ fontWeight: 600, fontSize: "var(--fs-micro)" }}>{p.value}</span>
-        </Stack>
-      ),
-    },
-    {
-      field: "tier", headerName: "Tier", width: 80,
-      cellRenderer: (p) => (
-        <div style={{ height: "100%", display: "flex", alignItems: "center" }}>
-          <Badge variant="subtle" size="small"
-            color={p.value === "high" ? "success" : p.value === "mid" ? "info" : "warning"}
-            label={p.value ? p.value.charAt(0).toUpperCase() + p.value.slice(1) : "—"} />
-        </div>
-      ),
-    },
-    { field: "stores",   headerName: "Stores",   width: 72,  cellStyle: { textAlign: "right", display: "flex", alignItems: "center", justifyContent: "flex-end", fontSize: "var(--fs-micro)", color: "var(--color-text-muted)" } },
-    { field: "ros",      headerName: "ROS",       width: 72,  cellStyle: { textAlign: "right", fontFamily: "var(--font-mono,monospace)", display: "flex", alignItems: "center", justifyContent: "flex-end", fontSize: "var(--fs-micro)" } },
-    {
-      field: "opts", headerName: "Total opts", width: 96,
-      cellStyle: { textAlign: "right", display: "flex", alignItems: "center", justifyContent: "flex-end" },
-      cellRenderer: (p) => (
-        <span style={{ fontWeight: 800, fontSize: "var(--fs-caption)", color: p.data.id === "__total__" ? "var(--color-text-strong)" : p.data.color }}>
-          {p.value}
-        </span>
-      ),
-    },
-    { field: "national", headerName: "National",  width: 94,  cellStyle: { textAlign: "right", display: "flex", alignItems: "center", justifyContent: "flex-end", color: "#059669", fontWeight: 600, fontSize: "var(--fs-micro)" } },
-    { field: "regional", headerName: "Cluster",   width: 84,  cellStyle: { textAlign: "right", display: "flex", alignItems: "center", justifyContent: "flex-end", color: "#2563EB", fontWeight: 600, fontSize: "var(--fs-micro)" } },
-    { field: "store",    headerName: "Store",     width: 76,  cellStyle: { textAlign: "right", display: "flex", alignItems: "center", justifyContent: "flex-end", color: "#D97706", fontWeight: 600, fontSize: "var(--fs-micro)" } },
-  ], []);
+const TIER_META = {
+  high: { label: "High",   bg: "#DCFCE7", c: "#166534", border: "#86EFAC" },
+  mid:  { label: "Mid",    bg: "#DBEAFE", c: "#1E40AF", border: "#93C5FD" },
+  low:  { label: "Low",    bg: "#FEF3C7", c: "#92400E", border: "#FCD34D" },
+};
 
+function ClusterTable({ optionCalc }) {
   const { clusters, total, totalPositions, ros, national, regional, store } = optionCalc;
-  const totalsRow = { id: "__total__", label: "Total", color: "transparent", tier: "", stores: totalPositions, ros, opts: total, national, regional, store };
-  const rows = [...clusters, totalsRow];
+
+  const maxOpts = Math.max(...clusters.map((c) => c.opts), 1);
 
   return (
-    <Table
-      cardContainer rowHeight="compact" tableHeader=""
-      columnDefs={cols} rowData={rows} domLayout="autoHeight"
-      defaultColDef={{ floatingFilter: false, resizable: true, sortable: true }}
-      hideTableSetting hideTableActions pagination={false}
-      getRowStyle={(p) => p.data.id === "__total__"
-        ? { background: "var(--color-surface-alt)", fontWeight: 700, borderTop: "1px solid var(--color-border)" }
-        : undefined}
-    />
+    <div className="or-table-card">
+      {/* Column header */}
+      <div className="or-table-head">
+        <div className="or-th or-th-cluster">Cluster</div>
+        <div className="or-th or-th-tier">Tier</div>
+        <div className="or-th or-th-num">Stores</div>
+        <div className="or-th or-th-num">ROS</div>
+        <div className="or-th or-th-num">Total opts</div>
+        <div className="or-th or-th-nat">
+          National Core
+          <span className="or-th-mandatory">Mandatory</span>
+        </div>
+        <div className="or-th or-th-num" style={{ color: "#2563EB" }}>Cluster</div>
+        <div className="or-th or-th-num" style={{ color: "#D97706" }}>Store</div>
+      </div>
+
+      {/* Cluster rows */}
+      {clusters.map((cl, i) => {
+        const tier = TIER_META[cl.tier] || TIER_META.mid;
+        const barW = Math.round((cl.opts / maxOpts) * 100);
+        return (
+          <div key={cl.id} className={`or-table-row${i % 2 === 1 ? " or-row-alt" : ""}`}>
+            {/* Cluster name */}
+            <div className="or-td or-td-cluster">
+              <span className="or-td-cluster-bar" style={{ background: cl.color }} />
+              <span className="or-td-cluster-dot" style={{ background: cl.color }} />
+              <span className="or-td-cluster-name">{cl.label}</span>
+            </div>
+            {/* Tier badge */}
+            <div className="or-td or-td-tier">
+              <span className="or-tier-chip" style={{ background: tier.bg, color: tier.c, border: `1px solid ${tier.border}` }}>
+                {tier.label}
+              </span>
+            </div>
+            {/* Stores */}
+            <div className="or-td or-td-num or-td-muted">{cl.stores}</div>
+            {/* ROS */}
+            <div className="or-td or-td-num or-td-mono">{cl.ros}</div>
+            {/* Total opts + bar */}
+            <div className="or-td or-td-num">
+              <div className="or-td-opts-wrap">
+                <span className="or-td-opts-num" style={{ color: cl.color }}>{cl.opts}</span>
+                <div className="or-td-opts-bar-track">
+                  <div className="or-td-opts-bar-fill" style={{ width: `${barW}%`, background: cl.color }} />
+                </div>
+              </div>
+            </div>
+            {/* National Core — Mandatory */}
+            <div className="or-td or-td-national">
+              <span className="or-td-nat-num">{cl.national}</span>
+              <span className="or-td-nat-pill">Mandatory</span>
+            </div>
+            {/* Cluster-specific */}
+            <div className="or-td or-td-num" style={{ color: "#2563EB", fontWeight: 700 }}>{cl.regional}</div>
+            {/* Store picks */}
+            <div className="or-td or-td-num" style={{ color: "#D97706", fontWeight: 700 }}>{cl.store}</div>
+          </div>
+        );
+      })}
+
+      {/* Totals row */}
+      <div className="or-table-row or-row-total">
+        <div className="or-td or-td-cluster">
+          <span className="or-td-cluster-bar" style={{ background: "transparent" }} />
+          <span className="or-td-total-label">Network Total</span>
+        </div>
+        <div className="or-td or-td-tier" />
+        <div className="or-td or-td-num or-td-muted">{totalPositions}</div>
+        <div className="or-td or-td-num or-td-mono">{ros}</div>
+        <div className="or-td or-td-num">
+          <span className="or-td-opts-num" style={{ color: "var(--color-text-strong)", fontSize: "var(--fs-subheading)" }}>{total}</span>
+        </div>
+        <div className="or-td or-td-national">
+          <span className="or-td-nat-num">{national}</span>
+          <span className="or-td-nat-pill">Mandatory</span>
+        </div>
+        <div className="or-td or-td-num" style={{ color: "#2563EB", fontWeight: 800 }}>{regional}</div>
+        <div className="or-td or-td-num" style={{ color: "#D97706", fontWeight: 800 }}>{store}</div>
+      </div>
+    </div>
   );
 }
 

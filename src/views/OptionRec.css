@@ -326,6 +326,166 @@
 .or-ctx-stat-lbl { font-size: 9px; font-weight: var(--fw-bold); color: var(--color-text-muted); text-transform: uppercase; letter-spacing: .04em; margin-top: 2px; }
 
 /* ══════════════════════════════════════════════════════════════════════════
+   Cluster breakdown table (custom)
+   ══════════════════════════════════════════════════════════════════════════ */
+.or-table-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--r);
+  overflow: hidden;
+  box-shadow: var(--sh);
+}
+
+/* Header */
+.or-table-head {
+  display: grid;
+  grid-template-columns: 1fr 72px 60px 60px 110px 160px 72px 72px;
+  align-items: center;
+  padding: 0 var(--sp-4);
+  background: var(--color-surface-alt);
+  border-bottom: 1.5px solid var(--color-border);
+}
+.or-th {
+  padding: var(--sp-3) var(--sp-2);
+  font-size: 10px;
+  font-weight: var(--fw-bold);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  white-space: nowrap;
+}
+.or-th-cluster { padding-left: var(--sp-5); }
+.or-th-num { text-align: right; }
+.or-th-tier { text-align: center; }
+.or-th-nat {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  color: #166534;
+}
+.or-th-mandatory {
+  font-size: 8px;
+  font-weight: var(--fw-bold);
+  color: #fff;
+  background: #059669;
+  border-radius: 99px;
+  padding: 1px 7px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+/* Rows */
+.or-table-row {
+  display: grid;
+  grid-template-columns: 1fr 72px 60px 60px 110px 160px 72px 72px;
+  align-items: center;
+  padding: 0 var(--sp-4);
+  border-bottom: 1px solid var(--color-border);
+  transition: background .12s;
+  position: relative;
+}
+.or-table-row:hover { background: var(--color-surface-alt); }
+.or-row-alt { background: rgba(0,0,0,.015); }
+.or-row-total {
+  background: var(--color-surface-alt) !important;
+  border-top: 2px solid var(--color-border);
+  border-bottom: none;
+}
+.or-row-total:hover { background: var(--color-surface-alt) !important; }
+
+/* Cells */
+.or-td { padding: var(--sp-3) var(--sp-2); font-size: var(--fs-micro); }
+.or-td-num { text-align: right; font-size: var(--fs-micro); }
+.or-td-muted { color: var(--color-text-muted); }
+.or-td-mono { font-family: var(--font-mono, monospace); color: var(--color-text-strong); }
+
+/* Cluster name cell */
+.or-td-cluster {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding-left: 0;
+}
+.or-td-cluster-bar {
+  width: 3px;
+  align-self: stretch;
+  border-radius: 2px;
+  flex-shrink: 0;
+  margin-right: var(--sp-1);
+}
+.or-td-cluster-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: inline-block;
+}
+.or-td-cluster-name {
+  font-weight: var(--fw-semibold);
+  color: var(--color-text-strong);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.or-td-total-label {
+  font-weight: var(--fw-bold);
+  color: var(--color-text-strong);
+  padding-left: var(--sp-3);
+  font-size: var(--fs-micro);
+}
+
+/* Tier chip */
+.or-td-tier { text-align: center; }
+.or-tier-chip {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: var(--fw-bold);
+  border-radius: 99px;
+  padding: 2px 8px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  white-space: nowrap;
+}
+
+/* Total opts with mini bar */
+.or-td-opts-wrap { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+.or-td-opts-num { font-weight: 800; font-size: var(--fs-caption); font-family: var(--font-mono, monospace); line-height: 1; }
+.or-td-opts-bar-track { width: 60px; height: 3px; background: var(--color-border); border-radius: 2px; overflow: hidden; }
+.or-td-opts-bar-fill  { height: 100%; border-radius: 2px; transition: width .4s ease; }
+
+/* National Core cell */
+.or-td-national {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: var(--sp-2);
+  border-left: 1px solid #86EFAC;
+  border-right: 1px solid #86EFAC;
+  background: linear-gradient(180deg, #F0FDF4, #fff);
+}
+.or-td-nat-num {
+  font-size: var(--fs-subheading);
+  font-weight: 800;
+  color: #166534;
+  font-family: var(--font-mono, monospace);
+  line-height: 1;
+}
+.or-td-nat-pill {
+  font-size: 8px;
+  font-weight: var(--fw-bold);
+  color: #059669;
+  background: #DCFCE7;
+  border: 1px solid #86EFAC;
+  border-radius: 99px;
+  padding: 1px 7px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  white-space: nowrap;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
    Working Plan
    ══════════════════════════════════════════════════════════════════════════ */
 .or-wp-section {
