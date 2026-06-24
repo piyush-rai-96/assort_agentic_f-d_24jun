@@ -1481,9 +1481,10 @@ function ClusterRunsDashboard({ onNewRun }) {
 
   const proSpread = Math.max(...clusters.map((c) => c.proAvg)) - Math.min(...clusters.map((c) => c.proAvg));
 
+  const assignedCount = PREVIEW_CLUSTER_STORES.filter((s) => s.clusterId !== null).length;
   const kpis = [
-    { label: "Active clusters",   value: clusters.length,   sub: `k=${clusters.length} · live`,          accent: color.primary  },
-    { label: "Stores assigned",   value: totalStores,        sub: "20/21 assigned · 3 outliers",          accent: color.teal     },
+    { label: "Active clusters",   value: clusters.length,   sub: `k=${clusters.length} · live`,                       accent: color.primary  },
+    { label: "Stores assigned",   value: totalStores,        sub: `${totalStores}/${STORE_COUNT} assigned`,             accent: color.teal     },
     { label: "Avg cohesion",      value: avgCohesion,        sub: "good · >0.75 healthy",                 accent: Number(avgCohesion) >= 0.8 ? color.success : color.warning },
     { label: "Differentiation",   value: `${proSpread}pp`,   sub: "Pro spread across clusters",           accent: color.success  },
   ];

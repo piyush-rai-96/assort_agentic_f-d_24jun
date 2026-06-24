@@ -92,27 +92,27 @@ export function scenarioTagline(name) {
 /* ── Cluster Run Management ──────────────────────────────────────────────── */
 
 export const ACTIVE_CLUSTER_SET = {
-  runId: "CR-018",
-  name: "Network 5-cluster (k-means)",
+  runId: "CR-019",
+  name: "Behavioral 4-cluster (k-means)",
   method: "k-means",
-  attrNames: ["Pro / DIY mix", "Climate zone", "Sales velocity", "Category mix"],
-  date: "2026-01-12",
+  attrNames: ["Pro / DIY mix", "Sales velocity", "Category mix", "Climate zone"],
+  date: "2026-04-10",
   author: "D. Rivera",
-  cohesion: 0.80,
+  cohesion: 0.91,
   clusters: [
-    { id: "C1", name: "Pro-Heavy South",   stores: 4, proAvg: 71, cohesion: 0.84, color: color.primary, dominantCats: ["Tile", "Installation Materials", "Stone"],  skus: 1124 },
-    { id: "C2", name: "DIY-Heavy West",    stores: 4, proAvg: 29, cohesion: 0.78, color: color.teal,    dominantCats: ["LVP", "Laminate", "Tools"],                  skus: 986  },
-    { id: "C3", name: "DIY-Heavy South",   stores: 4, proAvg: 32, cohesion: 0.81, color: color.info,    dominantCats: ["Tile", "Grout", "Accessories"],              skus: 1042 },
-    { id: "C4", name: "Mixed Urban East",  stores: 4, proAvg: 51, cohesion: 0.76, color: color.accent,  dominantCats: ["Stone", "Mosaic", "Natural Stone"],          skus: 874  },
-    { id: "C5", name: "Pro-Heavy Midwest", stores: 4, proAvg: 65, cohesion: 0.79, color: color.warning, dominantCats: ["Industrial", "Commercial Tile", "Install"],  skus: 756  },
+    { id: "B1", name: "High-Velocity Pro Markets",  stores: 5, proAvg: 72, cohesion: 0.88, color: "#2D6A2D", dominantCats: ["Tile", "Stone", "Installation Materials"], skus: 1180 },
+    { id: "B2", name: "Mid-Velocity Suburban",      stores: 8, proAvg: 38, cohesion: 0.84, color: "#0B7A6C", dominantCats: ["LVP", "Tile", "Accessories"],               skus: 1024 },
+    { id: "B3", name: "Volume / Value Stores",      stores: 6, proAvg: 31, cohesion: 0.80, color: "#D97706", dominantCats: ["LVP", "Laminate", "Basics"],                 skus:  892 },
+    { id: "B4", name: "Developing / Transitional",  stores: 2, proAvg: 23, cohesion: 0.72, color: "#DC2626", dominantCats: ["LVP", "Entry Tile", "Grout"],                skus:  624 },
   ],
 };
 
 export const CLUSTER_RUNS = [
-  { id: "CR-018", name: "Network 5-cluster (k-means)", method: "k-means · k=5",   attrs: 4, stores: 21, status: "live",     date: "2026-01-12", author: "D. Rivera", cohesion: 0.80 },
-  { id: "CR-017", name: "Network 4-cluster (k-means)", method: "k-means · k=4",   attrs: 4, stores: 21, status: "archived", date: "2025-10-08", author: "S. Patel",  cohesion: 0.74 },
-  { id: "CR-016", name: "Regional behavioral run",     method: "k-means · k=6",   attrs: 5, stores: 21, status: "archived", date: "2025-07-15", author: "D. Rivera", cohesion: 0.77 },
-  { id: "CR-015", name: "DC-aligned baseline",         method: "hierarchical",     attrs: 3, stores: 21, status: "archived", date: "2025-04-02", author: "T. Nguyen", cohesion: 0.68 },
+  { id: "CR-019", name: "Behavioral 4-cluster (k-means)", method: "k-means · k=4",   attrs: 4, stores: 21, status: "live",     date: "2026-04-10", author: "D. Rivera", cohesion: 0.91 },
+  { id: "CR-018", name: "Network 5-cluster (k-means)",    method: "k-means · k=5",   attrs: 4, stores: 21, status: "archived", date: "2026-01-12", author: "D. Rivera", cohesion: 0.80 },
+  { id: "CR-017", name: "Network 4-cluster (k-means)",    method: "k-means · k=4",   attrs: 4, stores: 21, status: "archived", date: "2025-10-08", author: "S. Patel",  cohesion: 0.74 },
+  { id: "CR-016", name: "Regional behavioral run",        method: "k-means · k=6",   attrs: 5, stores: 21, status: "archived", date: "2025-07-15", author: "D. Rivera", cohesion: 0.77 },
+  { id: "CR-015", name: "DC-aligned baseline",            method: "hierarchical",     attrs: 3, stores: 21, status: "archived", date: "2025-04-02", author: "T. Nguyen", cohesion: 0.68 },
 ];
 
 export const CLUSTER_ATTRIBUTES = [
@@ -135,7 +135,7 @@ export const WIZARD_DEFAULTS = {
   notes: "",
   scope: "network",
   method: "kmeans",
-  k: 5,
+  k: 4,
   attrs: ["pro_split", "climate", "sales_velocity", "cat_mix"],
   dept: "All",
   channel: "All Stores",
@@ -169,12 +169,20 @@ export const RUN_STATUS_PHASES = [
  * PREVIEW_CLUSTER_STORES — sample store-level records used for analytics and
  * store management inside the Cluster Run wizard (Step 3 done-state).
  *
+ * Aligned with ACTIVE_CLUSTER_SET: 4 behavioral clusters B1–B4.
+ *   B1 (High-Velocity Pro Markets)  — 5 stores, Vel A, high pro mix
+ *   B2 (Mid-Velocity Suburban)      — 8 stores, Vel B, balanced
+ *   B3 (Volume / Value Stores)      — 6 stores, Vel C, DIY/value
+ *   B4 (Developing / Transitional)  — 2 stores, Vel D, low velocity
+ *   Unassigned                      — 2 stores (available to add)
+ *   Total assigned: 21
+ *
  * Fields:
  *   id            — unique store key
  *   name          — display name
  *   state         — 2-char state code
  *   region        — operational region
- *   clusterId     — 'C1'–'C5' or null (unassigned / available to add)
+ *   clusterId     — 'B1'–'B4' or null (unassigned / available to add)
  *   proSplit      — % revenue from Pro contractor accounts (0-100)
  *   sqftK         — selling area in thousands of sq ft
  *   velScore      — 1(A best)–4(D worst)
@@ -184,40 +192,38 @@ export const RUN_STATUS_PHASES = [
  *   hhi           — median household income (USD)
  */
 export const PREVIEW_CLUSTER_STORES = [
-  /* ── C1: Pro-Heavy South ────── */
-  { id:"PS101", name:"Austin Central",      state:"TX", region:"Southwest", clusterId:"C1", proSplit:75, sqftK:85, velScore:1, cohesionContrib:0.88, catTile:52, catLvp:28, hhi:71000 },
-  { id:"PS102", name:"Dallas Uptown",       state:"TX", region:"Southwest", clusterId:"C1", proSplit:70, sqftK:78, velScore:1, cohesionContrib:0.85, catTile:55, catLvp:22, hhi:68000 },
-  { id:"PS103", name:"Houston South",       state:"TX", region:"Southwest", clusterId:"C1", proSplit:68, sqftK:91, velScore:1, cohesionContrib:0.82, catTile:48, catLvp:31, hhi:64000 },
-  { id:"PS104", name:"San Antonio Pro",     state:"TX", region:"Southwest", clusterId:"C1", proSplit:72, sqftK:73, velScore:2, cohesionContrib:0.80, catTile:50, catLvp:30, hhi:58000 },
+  /* ── B1: High-Velocity Pro Markets (5 stores, Vel A, pro mix ≥68%) ── */
+  { id:"PS101", name:"Dallas Uptown",       state:"TX", region:"Southwest", clusterId:"B1", proSplit:74, sqftK:85, velScore:1, cohesionContrib:0.90, catTile:55, catLvp:22, hhi:68000 },
+  { id:"PS102", name:"Houston South",       state:"TX", region:"Southwest", clusterId:"B1", proSplit:71, sqftK:91, velScore:1, cohesionContrib:0.87, catTile:52, catLvp:26, hhi:64000 },
+  { id:"PS103", name:"Atlanta Buckhead",    state:"GA", region:"Southeast", clusterId:"B1", proSplit:69, sqftK:78, velScore:1, cohesionContrib:0.85, catTile:54, catLvp:24, hhi:82000 },
+  { id:"PS104", name:"NYC Brooklyn",        state:"NY", region:"Northeast", clusterId:"B1", proSplit:76, sqftK:48, velScore:1, cohesionContrib:0.88, catTile:58, catLvp:18, hhi:92000 },
+  { id:"PS105", name:"LA Santa Ana",        state:"CA", region:"Pacific",   clusterId:"B1", proSplit:72, sqftK:82, velScore:1, cohesionContrib:0.86, catTile:56, catLvp:20, hhi:79000 },
 
-  /* ── C2: DIY-Heavy West ─────── */
-  { id:"PS201", name:"Phoenix West",        state:"AZ", region:"Southwest", clusterId:"C2", proSplit:25, sqftK:68, velScore:2, cohesionContrib:0.80, catTile:38, catLvp:44, hhi:62000 },
-  { id:"PS202", name:"Las Vegas NW",        state:"NV", region:"West",      clusterId:"C2", proSplit:30, sqftK:72, velScore:2, cohesionContrib:0.77, catTile:42, catLvp:40, hhi:59000 },
-  { id:"PS203", name:"Denver Tech",         state:"CO", region:"Mountain",  clusterId:"C2", proSplit:28, sqftK:65, velScore:2, cohesionContrib:0.78, catTile:35, catLvp:48, hhi:75000 },
-  { id:"PS204", name:"Seattle East",        state:"WA", region:"Northwest", clusterId:"C2", proSplit:32, sqftK:61, velScore:3, cohesionContrib:0.74, catTile:33, catLvp:50, hhi:82000 },
+  /* ── B2: Mid-Velocity Suburban (8 stores, Vel B, balanced mix) ─── */
+  { id:"PS201", name:"Austin Central",      state:"TX", region:"Southwest", clusterId:"B2", proSplit:41, sqftK:75, velScore:2, cohesionContrib:0.83, catTile:43, catLvp:36, hhi:71000 },
+  { id:"PS202", name:"Charlotte South",     state:"NC", region:"Southeast", clusterId:"B2", proSplit:38, sqftK:74, velScore:2, cohesionContrib:0.82, catTile:44, catLvp:38, hhi:66000 },
+  { id:"PS203", name:"Orlando West",        state:"FL", region:"Southeast", clusterId:"B2", proSplit:36, sqftK:80, velScore:2, cohesionContrib:0.84, catTile:42, catLvp:39, hhi:62000 },
+  { id:"PS204", name:"Boston Cambridge",    state:"MA", region:"Northeast", clusterId:"B2", proSplit:42, sqftK:52, velScore:2, cohesionContrib:0.81, catTile:48, catLvp:30, hhi:98000 },
+  { id:"PS205", name:"Denver Tech",         state:"CO", region:"Mountain",  clusterId:"B2", proSplit:39, sqftK:65, velScore:2, cohesionContrib:0.80, catTile:38, catLvp:44, hhi:75000 },
+  { id:"PS206", name:"Seattle East",        state:"WA", region:"Northwest", clusterId:"B2", proSplit:35, sqftK:61, velScore:2, cohesionContrib:0.79, catTile:36, catLvp:46, hhi:82000 },
+  { id:"PS207", name:"Philadelphia Center", state:"PA", region:"Northeast", clusterId:"B2", proSplit:40, sqftK:55, velScore:2, cohesionContrib:0.82, catTile:44, catLvp:34, hhi:71000 },
+  { id:"PS208", name:"Phoenix West",        state:"AZ", region:"Southwest", clusterId:"B2", proSplit:37, sqftK:68, velScore:2, cohesionContrib:0.80, catTile:40, catLvp:42, hhi:62000 },
 
-  /* ── C3: DIY-Heavy South ────── */
-  { id:"PS301", name:"Charlotte South",     state:"NC", region:"Southeast", clusterId:"C3", proSplit:30, sqftK:74, velScore:2, cohesionContrib:0.83, catTile:44, catLvp:40, hhi:66000 },
-  { id:"PS302", name:"Raleigh West",        state:"NC", region:"Southeast", clusterId:"C3", proSplit:35, sqftK:70, velScore:2, cohesionContrib:0.82, catTile:46, catLvp:38, hhi:72000 },
-  { id:"PS303", name:"Nashville DIY",       state:"TN", region:"Southeast", clusterId:"C3", proSplit:29, sqftK:77, velScore:2, cohesionContrib:0.80, catTile:40, catLvp:45, hhi:61000 },
-  { id:"PS304", name:"Memphis Whitehaven",  state:"TN", region:"Southeast", clusterId:"C3", proSplit:33, sqftK:66, velScore:3, cohesionContrib:0.76, catTile:38, catLvp:47, hhi:55000 },
+  /* ── B3: Volume / Value Stores (6 stores, Vel C, DIY-heavy) ──────── */
+  { id:"PS301", name:"San Antonio North",   state:"TX", region:"Southwest", clusterId:"B3", proSplit:29, sqftK:73, velScore:3, cohesionContrib:0.80, catTile:38, catLvp:48, hhi:58000 },
+  { id:"PS302", name:"Raleigh West",        state:"NC", region:"Southeast", clusterId:"B3", proSplit:32, sqftK:70, velScore:3, cohesionContrib:0.78, catTile:40, catLvp:46, hhi:72000 },
+  { id:"PS303", name:"Nashville DIY",       state:"TN", region:"Southeast", clusterId:"B3", proSplit:28, sqftK:77, velScore:3, cohesionContrib:0.79, catTile:37, catLvp:50, hhi:61000 },
+  { id:"PS304", name:"Las Vegas NW",        state:"NV", region:"West",      clusterId:"B3", proSplit:30, sqftK:72, velScore:3, cohesionContrib:0.77, catTile:36, catLvp:48, hhi:59000 },
+  { id:"PS305", name:"Columbus DIY",        state:"OH", region:"Midwest",   clusterId:"B3", proSplit:31, sqftK:75, velScore:3, cohesionContrib:0.78, catTile:39, catLvp:47, hhi:57000 },
+  { id:"PS306", name:"Memphis Whitehaven",  state:"TN", region:"Southeast", clusterId:"B3", proSplit:27, sqftK:66, velScore:3, cohesionContrib:0.76, catTile:35, catLvp:52, hhi:55000 },
 
-  /* ── C4: Mixed Urban East ───── */
-  { id:"PS401", name:"NYC Brooklyn",        state:"NY", region:"Northeast", clusterId:"C4", proSplit:54, sqftK:48, velScore:2, cohesionContrib:0.78, catTile:48, catLvp:30, hhi:92000 },
-  { id:"PS402", name:"Boston Cambridge",    state:"MA", region:"Northeast", clusterId:"C4", proSplit:50, sqftK:52, velScore:2, cohesionContrib:0.77, catTile:50, catLvp:28, hhi:98000 },
-  { id:"PS403", name:"Philadelphia Center", state:"PA", region:"Northeast", clusterId:"C4", proSplit:47, sqftK:55, velScore:3, cohesionContrib:0.74, catTile:45, catLvp:33, hhi:71000 },
-  { id:"PS404", name:"Washington DC East",  state:"DC", region:"Mid-Atl",   clusterId:"C4", proSplit:52, sqftK:58, velScore:2, cohesionContrib:0.75, catTile:47, catLvp:32, hhi:95000 },
+  /* ── B4: Developing / Transitional (2 stores, Vel D, monitoring) ─── */
+  { id:"PS401", name:"Tampa Bay North",     state:"FL", region:"Southeast", clusterId:"B4", proSplit:22, sqftK:64, velScore:4, cohesionContrib:0.72, catTile:32, catLvp:54, hhi:54000 },
+  { id:"PS402", name:"Indianapolis South",  state:"IN", region:"Midwest",   clusterId:"B4", proSplit:24, sqftK:69, velScore:4, cohesionContrib:0.70, catTile:30, catLvp:56, hhi:57000 },
 
-  /* ── C5: Pro-Heavy Midwest ──── */
-  { id:"PS501", name:"Chicago South Loop",  state:"IL", region:"Midwest",   clusterId:"C5", proSplit:68, sqftK:80, velScore:1, cohesionContrib:0.82, catTile:50, catLvp:30, hhi:64000 },
-  { id:"PS502", name:"Columbus Pro",        state:"OH", region:"Midwest",   clusterId:"C5", proSplit:63, sqftK:75, velScore:2, cohesionContrib:0.79, catTile:48, catLvp:32, hhi:59000 },
-  { id:"PS503", name:"Indianapolis North",  state:"IN", region:"Midwest",   clusterId:"C5", proSplit:66, sqftK:82, velScore:1, cohesionContrib:0.80, catTile:52, catLvp:28, hhi:62000 },
-  { id:"PS504", name:"Detroit West",        state:"MI", region:"Midwest",   clusterId:"C5", proSplit:62, sqftK:69, velScore:2, cohesionContrib:0.77, catTile:46, catLvp:35, hhi:57000 },
-
-  /* ── Available (unassigned) — can be added to any cluster ── */
-  { id:"PS601", name:"Tampa Bay North",     state:"FL", region:"Southeast", clusterId:null,  proSplit:55, sqftK:76, velScore:2, cohesionContrib:null, catTile:44, catLvp:38, hhi:66000 },
-  { id:"PS602", name:"Orlando Pro Center",  state:"FL", region:"Southeast", clusterId:null,  proSplit:62, sqftK:84, velScore:1, cohesionContrib:null, catTile:52, catLvp:28, hhi:70000 },
-  { id:"PS603", name:"Kansas City West",    state:"MO", region:"Midwest",   clusterId:null,  proSplit:40, sqftK:71, velScore:2, cohesionContrib:null, catTile:40, catLvp:42, hhi:61000 },
+  /* ── Unassigned — available to add to any cluster ─────────────────── */
+  { id:"PS501", name:"Kansas City West",    state:"MO", region:"Midwest",   clusterId:null,  proSplit:45, sqftK:71, velScore:2, cohesionContrib:null, catTile:40, catLvp:42, hhi:61000 },
+  { id:"PS502", name:"Washington DC East",  state:"DC", region:"Mid-Atl",   clusterId:null,  proSplit:52, sqftK:58, velScore:2, cohesionContrib:null, catTile:47, catLvp:32, hhi:95000 },
 ];
 
 /* Network-wide averages used as radar baseline. */
