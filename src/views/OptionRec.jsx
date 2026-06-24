@@ -1,22 +1,17 @@
 /**
  * Option Recommendation — standalone screen
  *
- * Self-contained agent option-count planning tool.
- * Positioned after Catalogue in the Line Review · PLR → Build sub-group.
- *
- * Sections:
- *   1. Dark header  — title + dept selector + scenario tabs
- *   2. Main two-col — formula/results (left) + context panel (right)
- *   3. Cluster breakdown table (Impact UI Table)
- *   4. Working Plan two-col — agent rec (dark) vs merchant override (light)
- *   5. Action bar   — Apply to PLR / Continue to National Core
+ * Agent-computed option count by cluster and assortment tier.
+ * Scenario tabs appear below the dark header as a proper tab bar.
+ * Agent run follows the same pipeline-animation pattern as Clustering.
  */
-import React, { useState, useMemo, useCallback } from "react";
-import { Card, Badge, Button, Table, Chips, Input, EmptyState } from "impact-ui";
+import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { Card, Badge, Button, Table, Chips, Input } from "impact-ui";
 import {
   Target, Bot, Calculator, Layers, BookOpen,
   ArrowRight, CheckCircle2, TrendingUp, AlertTriangle,
   RefreshCw, Grid3X3, TreePine, Columns2, Mountain, Sparkles,
+  Database, Check, Play,
 } from "lucide-react";
 import FdSelect        from "../components/FdSelect.jsx";
 import Text            from "../components/Text.jsx";
@@ -40,17 +35,48 @@ const DEPT_ICON_CMP = {
   "Decorative Accessories": Sparkles,
 };
 
-const SCENARIO_BADGE = {
-  A: { label: "Geographic",   color: "neutral" },
-  B: { label: "Behavioral",   color: "success" },
-  C: { label: "Operational",  color: "info"    },
-};
-
 const SPLIT_META = [
-  { key: "national", label: "National core",     desc: "Same SKUs across all stores", bg: "#DCFCE7", c: "#166534" },
-  { key: "regional", label: "Regional / cluster", desc: "Varies by cluster behaviour", bg: "#DBEAFE", c: "#1E40AF" },
-  { key: "store",    label: "Store curated",      desc: "Store-level buyer picks",      bg: "#FEF3C7", c: "#92400E" },
+  { key: "national", label: "National Core",      desc: "Same SKUs across all stores",  bg: "#DCFCE7", c: "#166534" },
+  { key: "regional", label: "Regional / Cluster", desc: "Varies by cluster behaviour",  bg: "#DBEAFE", c: "#1E40AF" },
+  { key: "store",    label: "Store Curated",       desc: "Store-level buyer picks",       bg: "#FEF3C7", c: "#92400E" },
 ];
+
+/* ── Agent pipeline steps ─────────────────────────────────────────────────── */
+const OPTION_PIPELINE = [
+  {
+    id: "data", Icon: Database, tone: "info",
+    title: "Loading prior season data",
+    sub: "Fetching sales units, store positions, and season calendar…",
+    result: () => "Sales 53,283 sqft · 26 weeks · data validated",
+  },
+  {
+    id: "ros", Icon: Calculator, tone: "primary",
+    title: "Computing ROS by cluster",
+    sub: "Historical rates-of-sale per cluster from prior season…",
+    result: (ctx) => `ROS 7.51 computed · Scenario ${ctx.scenario}`,
+  },
+  {
+    id: "positions", Icon: Layers, tone: "info",
+    title: "Applying store positions",
+    sub: "Mapping cluster positions to network store footprints…",
+    result: (ctx) => `${ctx.positions} store positions mapped across ${ctx.clusterCount} clusters`,
+  },
+  {
+    id: "calc", Icon: Bot, tone: "primary",
+    title: "Calculating option counts",
+    sub: "Options = Sales U ÷ (Weeks × Positions × ROS)…",
+    result: (ctx) => `${ctx.total} total options computed`,
+  },
+  {
+    id: "ready", Icon: CheckCircle2, tone: "success",
+    title: "Results ready for review",
+    sub: "Splitting into National Core, Regional, and Store tiers…",
+    result: (ctx) => `Nat ${ctx.national} · Cluster ${ctx.regional} · Store ${ctx.store} — split complete`,
+  },
+];
+
+const STEP_DURATION_MS = 1600; // ms per step
+const TOTAL_STEPS = OPTION_PIPELINE.length;
 
 /* ── Helper: find the active PLR for a dept ─────────────────────────────── */
 function getActivePlrRef(dept) {
@@ -62,14 +88,13 @@ function getActivePlrRef(dept) {
 
 /* ── Context panel ───────────────────────────────────────────────────────── */
 function ContextPanel({ dept, clustScenario, optionCalc }) {
-  const ref    = getActivePlrRef(dept);
-  const sc     = FD_CLUST_SCENARIOS[clustScenario];
+  const ref = getActivePlrRef(dept);
+  const sc  = FD_CLUST_SCENARIOS[clustScenario];
   const accKey = CLUSTER_ACCEPTANCE.acceptedScenario;
-
   const DeptIconCmp = DEPT_ICON_CMP[dept] || Target;
+
   return (
     <div className="or-context-panel">
-      {/* Active PLR card */}
       <Card sx={{ ...softSx, padding: "var(--sp-4)" }}>
         <Stack direction="row" align="center" gap={2} style={{ marginBottom: "var(--sp-2)" }}>
           <BookOpen size={13} style={{ color: "var(--color-primary)", flexShrink: 0 }} aria-hidden="true" />
@@ -77,34 +102,23 @@ function ContextPanel({ dept, clustScenario, optionCalc }) {
         </Stack>
         {ref ? (
           <>
-            <Text variant="caption" tone="strong" style={{ fontWeight: 700, display: "block", marginBottom: 3 }}>
-              {ref.calRow.name}
-            </Text>
-            <Text variant="micro" tone="muted" style={{ display: "block" }}>
-              Pres: {ref.calRow.presDate} · Due: {ref.calRow.dueDate}
-            </Text>
-            {ref.plan ? (
-              <div style={{ marginTop: "var(--sp-2)" }}>
-                <Badge variant="subtle" size="small"
-                  color={ref.plan.status === "in-progress" ? "info" : ref.plan.status === "approved" ? "success" : "neutral"}
-                  label={ref.plan.status === "in-progress" ? "In progress" : ref.plan.status === "approved" ? "Approved" : "Draft"} />
-              </div>
-            ) : (
-              <div style={{ marginTop: "var(--sp-2)" }}>
-                <Badge variant="subtle" size="small" color="neutral" label="No plan version" />
-              </div>
-            )}
+            <Text variant="caption" tone="strong" style={{ fontWeight: 700, display: "block", marginBottom: 3 }}>{ref.calRow.name}</Text>
+            <Text variant="micro" tone="muted" style={{ display: "block" }}>Pres: {ref.calRow.presDate} · Due: {ref.calRow.dueDate}</Text>
+            <div style={{ marginTop: "var(--sp-2)" }}>
+              <Badge variant="subtle" size="small"
+                color={ref.plan?.status === "in-progress" ? "info" : ref.plan?.status === "approved" ? "success" : "neutral"}
+                label={ref.plan?.status === "in-progress" ? "In progress" : ref.plan?.status === "approved" ? "Approved" : "No plan version"} />
+            </div>
           </>
         ) : (
           <Text variant="micro" tone="muted">No open PLR for {dept}</Text>
         )}
       </Card>
 
-      {/* Cluster scenario card */}
       <Card sx={{ ...softSx, padding: "var(--sp-4)" }}>
         <Stack direction="row" align="center" gap={2} style={{ marginBottom: "var(--sp-2)" }}>
           <Layers size={13} style={{ color: "var(--color-primary)", flexShrink: 0 }} aria-hidden="true" />
-          <Text variant="micro" tone="primary" style={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em" }}>Cluster scenario</Text>
+          <Text variant="micro" tone="primary" style={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em" }}>Cluster Scenario</Text>
         </Stack>
         {sc ? (
           <>
@@ -117,9 +131,7 @@ function ContextPanel({ dept, clustScenario, optionCalc }) {
             </Text>
             <div className="or-cluster-pills">
               {sc.clusters.map((cl) => (
-                <span key={cl.id} className="or-cluster-pill" style={{ borderLeftColor: cl.color }}>
-                  {cl.label}
-                </span>
+                <span key={cl.id} className="or-cluster-pill" style={{ borderLeftColor: cl.color }}>{cl.label}</span>
               ))}
             </div>
           </>
@@ -128,7 +140,6 @@ function ContextPanel({ dept, clustScenario, optionCalc }) {
         )}
       </Card>
 
-      {/* Formula reference */}
       <Card sx={{ ...softSx, padding: "var(--sp-4)", background: "var(--color-primary-soft)", border: "1px solid var(--color-primary-border, rgba(59,130,246,.2))" }}>
         <Stack direction="row" align="center" gap={2} style={{ marginBottom: "var(--sp-2)" }}>
           <Calculator size={13} style={{ color: "var(--color-primary)", flexShrink: 0 }} aria-hidden="true" />
@@ -140,22 +151,137 @@ function ContextPanel({ dept, clustScenario, optionCalc }) {
         </Text>
       </Card>
 
-      {/* Department icon badge */}
       <Card sx={{ ...softSx, padding: "var(--sp-4)" }}>
         <Stack direction="row" align="center" gap={2} style={{ marginBottom: "var(--sp-1)" }}>
           <DeptIconCmp size={13} style={{ color: "var(--color-primary)", flexShrink: 0 }} aria-hidden="true" />
           <Text variant="micro" tone="primary" style={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em" }}>Department</Text>
         </Stack>
         <Text variant="caption" tone="strong" style={{ fontWeight: 700, display: "block" }}>{dept}</Text>
-        <Text variant="micro" tone="muted" style={{ display: "block", marginTop: 2 }}>Currently selected for this recommendation</Text>
+        <Text variant="micro" tone="muted" style={{ display: "block", marginTop: 2 }}>Selected for this recommendation</Text>
       </Card>
+    </div>
+  );
+}
+
+/* ── Agent run pipeline panel ─────────────────────────────────────────────── */
+function AgentRunPanel({ runState, runStep, runProgress, optionCalc, clustScenario }) {
+  const ctx = optionCalc ? {
+    scenario:     clustScenario,
+    positions:    optionCalc.totalPositions,
+    clusterCount: optionCalc.clusters?.length ?? 0,
+    total:        optionCalc.total,
+    national:     optionCalc.national,
+    regional:     optionCalc.regional,
+    store:        optionCalc.store,
+  } : { scenario: clustScenario, positions: "—", clusterCount: "—", total: "—", national: "—", regional: "—", store: "—" };
+
+  const CONSOLE_LINES_RUNNING = [
+    `[agent] Initialising option-count model v2.4`,
+    `[data]  Loading prior season sales → 53,283 sqft`,
+    `[data]  Season calendar: 26 weeks confirmed`,
+    `[ros]   Computing ROS per cluster using Scenario ${clustScenario}…`,
+    `[pos]   Store positions lookup → network map`,
+    `[calc]  Running formula: Sales U ÷ (Wks × Pos × ROS)`,
+  ];
+  const CONSOLE_LINES_DONE = [
+    ...CONSOLE_LINES_RUNNING,
+    `[calc]  Total options = ${ctx.total}`,
+    `[split] National ${ctx.national} · Cluster ${ctx.regional} · Store ${ctx.store}`,
+    `[done]  Exit 0 — results ready`,
+  ];
+
+  const lines = runState === "done" ? CONSOLE_LINES_DONE : CONSOLE_LINES_RUNNING.slice(0, Math.min(runStep + 2, CONSOLE_LINES_RUNNING.length));
+
+  return (
+    <div className={`or-agent-run${runState === "done" ? " is-complete" : ""}`}>
+      {/* Header */}
+      <div className="or-agent-run-head">
+        <div className={`or-agent-bot${runState === "done" ? " is-done" : ""}`}>
+          {runState === "done"
+            ? <CheckCircle2 size={20} strokeWidth={2} />
+            : <Bot size={20} strokeWidth={1.5} />}
+        </div>
+        <div className="or-agent-run-head-txt">
+          <Text variant="subheading" tone={runState === "done" ? "success" : "primary"}>
+            {runState === "done"
+              ? `Option recommendation ready · ${ctx.total} options for Scenario ${clustScenario}`
+              : "Agent is computing option recommendation…"}
+          </Text>
+          <Text variant="caption" tone="muted">
+            {runState === "done"
+              ? `All ${TOTAL_STEPS} stages complete · ${ctx.national} National · ${ctx.regional} Cluster · ${ctx.store} Store`
+              : `Step ${Math.min(runStep + 1, TOTAL_STEPS)} of ${TOTAL_STEPS} · ${OPTION_PIPELINE[runStep]?.title ?? ""}`}
+          </Text>
+        </div>
+        <Text variant="kpi" tone={runState === "done" ? "success" : "primary"}>{runProgress}%</Text>
+      </div>
+
+      {/* Progress bar */}
+      <div className="or-agent-run-bar">
+        <div className={`or-agent-run-bar-fill${runState === "done" ? " is-complete" : ""}`} style={{ width: `${runProgress}%` }} />
+      </div>
+
+      {/* Steps + console */}
+      <div className="or-agent-run-grid">
+        <ol className="or-agent-steps">
+          {OPTION_PIPELINE.map((s, i) => {
+            const state = runState === "done" ? "done" : i < runStep ? "done" : i === runStep ? "active" : "queued";
+            const { Icon: SIcon } = s;
+            return (
+              <li key={s.id} className={`or-agent-step is-${state}`}>
+                <span className={`or-agent-step-ico tone-${s.tone}`}>
+                  {state === "done"
+                    ? <Check size={12} strokeWidth={2.5} />
+                    : state === "active"
+                      ? <span className="or-agent-spin" />
+                      : <SIcon size={12} strokeWidth={1.75} />}
+                </span>
+                <div className="or-agent-step-body">
+                  <span className="or-agent-step-title">{s.title}</span>
+                  <span className="or-agent-step-sub">
+                    {state === "active"
+                      ? <>{s.sub}<span className="or-agent-dots" /></>
+                      : state === "done"
+                        ? s.result(ctx)
+                        : "Waiting…"}
+                  </span>
+                </div>
+              </li>
+            );
+          })}
+        </ol>
+
+        <div className={`or-agent-console${runState === "done" ? " is-complete" : ""}`}>
+          <div className="or-agent-console-bar">
+            <span className="or-agent-dot or-dot-r" />
+            <span className="or-agent-dot or-dot-y" />
+            <span className={`or-agent-dot or-dot-g${runState === "done" ? " is-pulse" : ""}`} />
+            <span className="or-agent-console-title">option-agent · trace{runState === "done" ? " · complete" : ""}</span>
+            {runState === "done" && <span className="or-agent-console-badge">exit 0</span>}
+          </div>
+          <div className="or-agent-console-body">
+            {lines.map((ln, i) => (
+              <div key={i} className={`or-agent-log${ln.startsWith("[done]") || ln.startsWith("[calc]  Total") ? " or-agent-log-success" : ln.startsWith("[agent]") ? " or-agent-log-muted" : ""}`}>
+                <span className="or-agent-log-prompt">$</span>
+                <span>{ln}</span>
+              </div>
+            ))}
+            {runState !== "done" && (
+              <div className="or-agent-log or-agent-log-muted">
+                <span className="or-agent-log-prompt">$</span>
+                <span className="or-agent-cursor" />
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
 
 /* ── Hero result card ─────────────────────────────────────────────────────── */
 function HeroCard({ optionCalc, onRerun }) {
-  const { total, national, regional, store, formula, ros, weeks, totalPositions } = optionCalc;
+  const { total, formula, ros, weeks, totalPositions } = optionCalc;
   return (
     <div className="or-hero-card">
       <div className="or-hero-left">
@@ -232,16 +358,10 @@ function ClusterTable({ optionCalc }) {
 
   return (
     <Table
-      cardContainer
-      rowHeight="compact"
-      tableHeader=""
-      columnDefs={cols}
-      rowData={rows}
-      domLayout="autoHeight"
+      cardContainer rowHeight="compact" tableHeader=""
+      columnDefs={cols} rowData={rows} domLayout="autoHeight"
       defaultColDef={{ floatingFilter: false, resizable: true, sortable: true }}
-      hideTableSetting
-      hideTableActions
-      pagination={false}
+      hideTableSetting hideTableActions pagination={false}
       getRowStyle={(p) => p.data.id === "__total__" ? { background: "var(--color-surface-alt)", fontWeight: 700 } : undefined}
     />
   );
@@ -250,7 +370,7 @@ function ClusterTable({ optionCalc }) {
 /* ── Working Plan two-col ─────────────────────────────────────────────────── */
 function WorkingPlan({ optionCalc, wpCount, onWpChange }) {
   const { total, national: agNat, regional: agReg, store: agSto, formula } = optionCalc;
-  const wpVal    = parseInt(wpCount) || total;
+  const wpVal      = parseInt(wpCount) || total;
   const isOverride = parseInt(wpCount) > 0 && parseInt(wpCount) !== total;
   const nat = Math.round(wpVal * 0.4);
   const reg = Math.round(wpVal * 0.3);
@@ -262,9 +382,7 @@ function WorkingPlan({ optionCalc, wpCount, onWpChange }) {
         <TrendingUp size={15} style={{ color: "var(--color-primary)" }} aria-hidden="true" />
         <Text variant="subheading" tone="strong" style={{ fontWeight: 700 }}>Working Plan</Text>
       </Stack>
-
       <div className="or-wp-grid">
-        {/* Agent rec — dark panel */}
         <div className="or-wp-agent">
           <div className="or-wp-agent-badge">Agent recommendation</div>
           <div className="or-wp-big">{total}</div>
@@ -278,20 +396,12 @@ function WorkingPlan({ optionCalc, wpCount, onWpChange }) {
             ))}
           </div>
         </div>
-
-        {/* Merchant override — light panel */}
         <div className="or-wp-merchant">
           <div className="or-wp-merchant-badge">Working plan</div>
           <div className="or-wp-input-row">
-            <Input
-              type="number"
-              min={1} max={999}
-              value={wpCount || ""}
-              placeholder={String(total)}
-              onChange={(e) => onWpChange(e.target.value)}
-              fullWidth
-              sx={{ fontSize: "var(--fs-heading)", fontWeight: "var(--fw-bold)" }}
-            />
+            <Input type="number" min={1} max={999} value={wpCount || ""} placeholder={String(total)}
+              onChange={(e) => onWpChange(e.target.value)} fullWidth
+              sx={{ fontSize: "var(--fs-heading)", fontWeight: "var(--fw-bold)" }} />
           </div>
           <div className="or-wp-hint">Edit to override agent recommendation</div>
           <div className="or-wp-split-row" style={{ marginTop: "var(--sp-3)" }}>
@@ -322,26 +432,56 @@ function WorkingPlan({ optionCalc, wpCount, onWpChange }) {
 /* ── Main export ─────────────────────────────────────────────────────────── */
 export default function OptionRec({ onNavigate }) {
   const acceptedScenario = CLUSTER_ACCEPTANCE.acceptedScenario || "B";
+
   const [dept,          setDept]          = useState("Tile");
   const [clustScenario, setClustScenario] = useState(acceptedScenario);
-  const [hasRun,        setHasRun]        = useState(false);
+  const [runState,      setRunState]      = useState("idle");   // "idle" | "running" | "done"
+  const [runStep,       setRunStep]       = useState(0);
+  const [runProgress,   setRunProgress]   = useState(0);
   const [wpCount,       setWpCount]       = useState("");
+  const timerRef = useRef(null);
 
   const optionCalc = useMemo(
-    () => hasRun ? plrCalcOptionCount(dept, null, clustScenario) : null,
-    [dept, clustScenario, hasRun],
+    () => runState === "done" ? plrCalcOptionCount(dept, null, clustScenario) : null,
+    [dept, clustScenario, runState],
   );
 
-  const handleRun    = useCallback(() => { setHasRun(true); setWpCount(""); }, []);
-  const handleRerun  = useCallback(() => { setHasRun(false); setTimeout(() => setHasRun(true), 50); setWpCount(""); }, []);
-  const handleDept   = useCallback((d) => { setDept(d); setHasRun(false); setWpCount(""); }, []);
-  const handleScen   = useCallback((k) => { setClustScenario(k); setHasRun(false); setWpCount(""); }, []);
+  /* Start the animated pipeline */
+  const startRun = useCallback(() => {
+    setRunState("running");
+    setRunStep(0);
+    setRunProgress(0);
+    setWpCount("");
+
+    let step = 0;
+    const tick = () => {
+      step += 1;
+      const pct = Math.round((step / TOTAL_STEPS) * 100);
+      if (step < TOTAL_STEPS) {
+        setRunStep(step);
+        setRunProgress(pct);
+        timerRef.current = setTimeout(tick, STEP_DURATION_MS);
+      } else {
+        setRunStep(TOTAL_STEPS - 1);
+        setRunProgress(100);
+        setTimeout(() => setRunState("done"), 400);
+      }
+    };
+    timerRef.current = setTimeout(tick, STEP_DURATION_MS);
+  }, []);
+
+  const handleRun   = useCallback(() => { clearTimeout(timerRef.current); startRun(); }, [startRun]);
+  const handleRerun = useCallback(() => { clearTimeout(timerRef.current); setWpCount(""); startRun(); }, [startRun]);
+  const handleDept  = useCallback((d) => { clearTimeout(timerRef.current); setDept(d); setRunState("idle"); setWpCount(""); }, []);
+  const handleScen  = useCallback((k) => { clearTimeout(timerRef.current); setClustScenario(k); setRunState("idle"); setWpCount(""); }, []);
+
+  useEffect(() => () => clearTimeout(timerRef.current), []);
 
   const scenarioKeys = Object.keys(FD_CLUST_SCENARIOS);
 
   return (
     <div className="or-root">
-      {/* ── Dark header ── */}
+      {/* ── Dark header (title + dept selector only) ── */}
       <div className="or-header">
         <div className="or-header-top">
           <Stack direction="row" align="center" gap={3} style={{ flex: 1, minWidth: 0 }}>
@@ -357,36 +497,34 @@ export default function OptionRec({ onNavigate }) {
               </Text>
             </div>
           </Stack>
-
-          {/* Dept selector */}
           <div className="or-dept-select-wrap">
             <FdSelect
               options={ALL_DEPTS.map((d) => ({ value: d, label: d }))}
-              value={dept}
-              onChange={handleDept}
-              size="small"
+              value={dept} onChange={handleDept} size="small"
             />
           </div>
         </div>
+      </div>
 
-        {/* Cluster scenario tabs — Impact Chips */}
-        <div className="or-scen-tab-bar">
-          <Text variant="micro" style={{ color: "rgba(255,255,255,.35)", whiteSpace: "nowrap", alignSelf: "center", flexShrink: 0 }}>
-            Cluster scenario:
-          </Text>
+      {/* ── Scenario tab bar — below header, above body ── */}
+      <div className="or-scen-tab-bar">
+        <span className="or-scen-tab-label">Cluster scenario</span>
+        <div className="or-scen-tabs">
           {scenarioKeys.map((key) => {
-            const sc       = FD_CLUST_SCENARIOS[key];
-            const isAcc    = key === acceptedScenario;
-            const isSel    = key === clustScenario;
-            const cleanName = sc.name.replace(/^Scenario [A-Z] — /, "").replace(/^Scenario [A-Z]$/, sc.name);
+            const sc      = FD_CLUST_SCENARIOS[key];
+            const isAcc   = key === acceptedScenario;
+            const isSel   = key === clustScenario;
+            const name    = sc.name.replace(/^Scenario [A-Z] — /, "");
             return (
-              <Chips
+              <button
                 key={key}
-                label={`Scenario ${key}${isAcc ? " ★" : ""} — ${cleanName}`}
-                isActive={isSel}
+                className={`or-scen-tab${isSel ? " or-scen-tab--active" : ""}`}
                 onClick={() => handleScen(key)}
-                size="small"
-              />
+                type="button"
+              >
+                <span className="or-scen-tab-key">Scenario {key}{isAcc ? " ★" : ""}</span>
+                <span className="or-scen-tab-name">{name}</span>
+              </button>
             );
           })}
         </div>
@@ -394,8 +532,8 @@ export default function OptionRec({ onNavigate }) {
 
       {/* ── Body ── */}
       <div className="or-body">
-        {!optionCalc ? (
-          /* Empty state + context panel side by side */
+        {/* ── Idle: empty state ── */}
+        {runState === "idle" && (
           <div className="or-top-row">
             <div className="or-main-col">
               <Card sx={{ ...panelSx, flex: 1 }}>
@@ -416,60 +554,68 @@ export default function OptionRec({ onNavigate }) {
                   </div>
                   <Button variant="primary" size="large" onClick={handleRun}
                     sx={{ marginTop: "var(--sp-6)", background: "linear-gradient(135deg,#2D6A2D,#059669)", border: "none" }}>
-                    <Calculator size={16} style={{ marginRight: 8 }} aria-hidden="true" />
-                    Run option recommendation
+                    <Play size={16} style={{ marginRight: 8 }} aria-hidden="true" />
+                    Run agent recommendation
                   </Button>
                 </div>
               </Card>
             </div>
             <ContextPanel dept={dept} clustScenario={clustScenario} optionCalc={null} />
           </div>
-        ) : (
+        )}
+
+        {/* ── Running / Done: pipeline panel always visible ── */}
+        {(runState === "running" || runState === "done") && (
           <>
-            {/* Top row — hero + context */}
-            <div className="or-top-row">
-              <div className="or-main-col">
-                <HeroCard optionCalc={optionCalc} onRerun={handleRerun} />
-                <SplitTiles optionCalc={optionCalc} />
-              </div>
-              <ContextPanel dept={dept} clustScenario={clustScenario} optionCalc={optionCalc} />
-            </div>
+            <AgentRunPanel
+              runState={runState} runStep={runStep} runProgress={runProgress}
+              optionCalc={optionCalc} clustScenario={clustScenario}
+            />
 
-            {/* Cluster breakdown table */}
-            <div className="or-section">
-              <Stack direction="row" align="center" gap={2} style={{ marginBottom: "var(--sp-3)" }}>
-                <Layers size={15} style={{ color: "var(--color-primary)" }} aria-hidden="true" />
-                <Text variant="subheading" tone="strong" style={{ fontWeight: 700 }}>Option count by cluster</Text>
-                <Badge variant="subtle" color="neutral" size="small"
-                  label={`${optionCalc.clusters.length} clusters · Scenario ${clustScenario}`} />
-              </Stack>
-              <ClusterTable optionCalc={optionCalc} />
-            </div>
+            {/* Results appear once done */}
+            {runState === "done" && optionCalc && (
+              <>
+                <div className="or-top-row">
+                  <div className="or-main-col">
+                    <HeroCard optionCalc={optionCalc} onRerun={handleRerun} />
+                    <SplitTiles optionCalc={optionCalc} />
+                  </div>
+                  <ContextPanel dept={dept} clustScenario={clustScenario} optionCalc={optionCalc} />
+                </div>
 
-            {/* Working Plan */}
-            <div className="or-section">
-              <WorkingPlan optionCalc={optionCalc} wpCount={wpCount} onWpChange={setWpCount} />
-            </div>
+                <div className="or-section">
+                  <Stack direction="row" align="center" gap={2} style={{ marginBottom: "var(--sp-3)" }}>
+                    <Layers size={15} style={{ color: "var(--color-primary)" }} aria-hidden="true" />
+                    <Text variant="subheading" tone="strong" style={{ fontWeight: 700 }}>Option count by cluster</Text>
+                    <Badge variant="subtle" color="neutral" size="small"
+                      label={`${optionCalc.clusters.length} clusters · Scenario ${clustScenario}`} />
+                  </Stack>
+                  <ClusterTable optionCalc={optionCalc} />
+                </div>
 
-            {/* Action bar */}
-            <div className="or-action-bar">
-              <Stack direction="row" align="center" gap={2}>
-                <CheckCircle2 size={14} style={{ color: "var(--color-success)" }} aria-hidden="true" />
-                <Text variant="caption" tone="muted">
-                  {optionCalc.total} options recommended for <strong>{dept}</strong> · Scenario {clustScenario}
-                </Text>
-              </Stack>
-              <Stack direction="row" gap={3} align="center">
-                <Button variant="secondary" size="medium"
-                  onClick={() => {/* apply to PLR — navigates to PLR Status */onNavigate?.("approval")}}>
-                  Apply to active PLR
-                </Button>
-                <Button variant="primary" size="medium" onClick={() => onNavigate?.("national")}>
-                  Continue to National Core
-                  <ArrowRight size={14} style={{ marginLeft: 6 }} aria-hidden="true" />
-                </Button>
-              </Stack>
-            </div>
+                <div className="or-section">
+                  <WorkingPlan optionCalc={optionCalc} wpCount={wpCount} onWpChange={setWpCount} />
+                </div>
+
+                <div className="or-action-bar">
+                  <Stack direction="row" align="center" gap={2}>
+                    <CheckCircle2 size={14} style={{ color: "var(--color-success)" }} aria-hidden="true" />
+                    <Text variant="caption" tone="muted">
+                      {optionCalc.total} options recommended for <strong>{dept}</strong> · Scenario {clustScenario}
+                    </Text>
+                  </Stack>
+                  <Stack direction="row" gap={3} align="center">
+                    <Button variant="secondary" size="medium" onClick={() => onNavigate?.("approval")}>
+                      Apply to active PLR
+                    </Button>
+                    <Button variant="primary" size="medium" onClick={() => onNavigate?.("national")}>
+                      Continue to National Core
+                      <ArrowRight size={14} style={{ marginLeft: 6 }} aria-hidden="true" />
+                    </Button>
+                  </Stack>
+                </div>
+              </>
+            )}
           </>
         )}
       </div>
