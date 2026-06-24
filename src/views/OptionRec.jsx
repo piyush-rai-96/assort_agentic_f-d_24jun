@@ -589,10 +589,6 @@ export default function OptionRec({ onNavigate }) {
                     Based on prior season sales, rates of sale and your selected cluster scenario, the
                     agent will calculate how many options <strong>{dept}</strong> should carry this season.
                   </Text>
-                  <div className="or-empty-formula-strip">
-                    <Calculator size={12} style={{ color: "var(--color-primary)", flexShrink: 0 }} aria-hidden="true" />
-                    <span>Options = Sales U / (Weeks × Store Positions × ROS)</span>
-                  </div>
                   <div className="or-empty-stats">
                     {[
                       { icon: BarChart3, label: "Cluster scenario", val: `Scenario ${clustScen}` },
