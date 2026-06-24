@@ -26,6 +26,7 @@ import { FD_ASSORTMENT } from "../data/assortment.js";
 import { nationalStats, runCatalogueAgent, apIntelModifier, CATALOGUE_SKUS } from "../data/catalogue.js";
 import { INTEL_SEED }  from "../data/intel.js";
 import { FD_OTB_DEPTS, otbNationalConsumed, otbPct, fmtCurrency } from "../data/otb.js";
+import { getNationalRec, REC_COLOR } from "../utils/skuRec.js";
 import "./National.css";
 import { panelSx, softSx } from "../styles/panelSx.js";
 
@@ -74,10 +75,10 @@ function SkuTable({ rows, onDecide, maxR13 }) {
       {rows.map((s) => {
         const rowClass = [
           "nat-sku-row",
-          s.isHard         ? "is-mandatory" :
-          s.effDec === "core" ? "is-keep" :
-          s.dec === "rejected" ? "is-drop" :
-          s.agentRec       ? "is-pending" : "",
+          s.isHard             ? "is-mandatory" :
+          s.effDec === "core"  ? "is-keep" :
+          s.dec === "modify"   ? "is-modify" :
+          s.dec === "rejected" ? "is-drop" : "is-pending",
         ].filter(Boolean).join(" ");
 
         const r13Pct = maxR13 > 0 ? Math.round((s.avgR13 / maxR13) * 100) : 0;
@@ -139,27 +140,31 @@ function SkuTable({ rows, onDecide, maxR13 }) {
               </div>
             </div>
 
-            {/* Agent Rec */}
+            {/* Agent Rec — 3-way */}
             <div className="nat-td nat-td-rec">
               {s.isHard ? (
-                <div className="nat-rec-mandatory">
-                  <Lock size={11} style={{ color: "#059669", flexShrink: 0 }} aria-hidden="true" />
-                  <span>Core / BG — mandatory</span>
+                <div className="nat-rec-chip" style={{ background: REC_COLOR.keep.bg, color: REC_COLOR.keep.text, borderColor: REC_COLOR.keep.border }}>
+                  <Lock size={10} aria-hidden="true" />
+                  <span>Keep · Mandatory</span>
                 </div>
-              ) : s.agentRec ? (
-                <div className="nat-rec-agent">
-                  <Bot size={11} style={{ color: "var(--color-primary)", flexShrink: 0 }} aria-hidden="true" />
-                  <span className="nat-rec-reason">{REASON_LABEL[s.agentRecReason] ?? "Keep · Emerging"}</span>
+              ) : s.rec ? (
+                <div
+                  className="nat-rec-chip nat-rec-chip--action"
+                  style={{ background: REC_COLOR[s.rec.action]?.bg, color: REC_COLOR[s.rec.action]?.text, borderColor: REC_COLOR[s.rec.action]?.border }}
+                  title={s.rec.detail}
+                >
+                  <Bot size={10} aria-hidden="true" />
+                  <span>{s.rec.action === "keep" ? "Keep" : s.rec.action === "modify" ? "Modify" : "Drop"}</span>
+                  <span className="nat-rec-reason-lbl">{s.rec.reason}</span>
                 </div>
               ) : (
                 <span className="nat-td-muted">—</span>
               )}
             </div>
 
-            {/* Override / Decision */}
+            {/* Override / Decision — Keep / Modify / Drop */}
             <div className="nat-td nat-td-override">
               {s.isHard ? (
-                /* Mandatory — locked Keep button */
                 <div className="nat-override-mandatory">
                   <button className="nat-btn-keep nat-btn-keep--locked" disabled type="button">
                     <Lock size={10} aria-hidden="true" />
@@ -173,14 +178,24 @@ function SkuTable({ rows, onDecide, maxR13 }) {
                     type="button"
                     className={`nat-btn-keep${s.dec === "core" ? " nat-btn-keep--active" : ""}`}
                     onClick={() => onDecide(s.sku, "core")}
+                    title="Keep in National Core"
                   >
                     <CheckCircle2 size={10} aria-hidden="true" />
                     Keep
                   </button>
                   <button
                     type="button"
+                    className={`nat-btn-modify${s.dec === "modify" ? " nat-btn-modify--active" : ""}`}
+                    onClick={() => onDecide(s.sku, "modify")}
+                    title="Flag for price / range modification"
+                  >
+                    Modify
+                  </button>
+                  <button
+                    type="button"
                     className={`nat-btn-drop${s.dec === "rejected" ? " nat-btn-drop--active" : ""}`}
                     onClick={() => onDecide(s.sku, "rejected")}
+                    title="Drop from National Core"
                   >
                     Drop
                   </button>
@@ -247,6 +262,15 @@ export default function National({ onNavigate }) {
       /* Intel modifier */
       const intel = apIntelModifier(s.sku, INTEL_SEED);
 
+      /* Full 3-way agent recommendation */
+      const rec = getNationalRec({
+        avgR13:   Math.round(avgR13),
+        velocity: vel,
+        carryPct: Math.round(carryPct),
+        status:   s.status,
+        tag:      s.tag,
+      });
+
       return {
         sku:       s.sku,
         desc:      s.desc,
@@ -261,6 +285,7 @@ export default function National({ onNavigate }) {
         velocity:  vel,
         agentRec:  agentRec ? "core" : null,
         agentRecReason: agentRec?.reason ?? null,
+        rec,       /* full 3-way rec: { action, confidence, reason, detail } */
         dec,
         effDec,
         intel,
@@ -291,15 +316,15 @@ export default function National({ onNavigate }) {
   const kpis = useMemo(() => {
     const hardLocked  = deptSkus.filter((s) => s.isHard).length;
     const keepCount   = deptSkus.filter((s) => s.effDec === "core").length;
+    const modifyCount = deptSkus.filter((s) => s.dec === "modify").length;
     const dropCount   = deptSkus.filter((s) => s.dec === "rejected").length;
-    const pending     = deptSkus.filter((s) => !s.isHard && !s.dec && s.agentRec).length;
-    const overridden  = deptSkus.filter((s) => !s.isHard && s.dec && s.agentRec && s.dec !== "core").length;
+    const pending     = deptSkus.filter((s) => !s.isHard && !s.dec).length;
     return [
       { l: "Hard locked",   v: hardLocked,  c: "#6EEDB8", sub: "Core / BG — mandatory" },
-      { l: "Keep (Nat.)",   v: keepCount,   c: "#A3DDD6", sub: "In national assortment"  },
-      { l: "Drop → NPI",    v: dropCount,   c: "#FCA5A5", sub: "Removed this cycle"       },
-      { l: "Pending review",v: pending,     c: "#FCD34D", sub: "Agent rec, needs confirm" },
-      { l: "Overridden",    v: overridden,  c: "#C4B5FD", sub: "Differs from agent rec"  },
+      { l: "Keep",          v: keepCount,   c: "#A3DDD6", sub: "In national assortment"  },
+      { l: "Modify",        v: modifyCount, c: "#FCD34D", sub: "Flagged for review"      },
+      { l: "Drop",          v: dropCount,   c: "#FCA5A5", sub: "Removed this cycle"      },
+      { l: "Pending",       v: pending,     c: "#C4B5FD", sub: "Awaiting decision"       },
     ];
   }, [deptSkus]);
 

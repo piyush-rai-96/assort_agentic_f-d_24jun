@@ -76,10 +76,10 @@
   background: var(--color-surface-alt);
 }
 
-/* Header row */
+/* Header row — 6 columns: SKU | R13 | Carry | Price | Rec | Decision */
 .rr-sku-head {
   display: grid;
-  grid-template-columns: 1fr 88px 88px 76px 140px;
+  grid-template-columns: 1fr 88px 88px 76px 110px 140px;
   align-items: center;
   gap: 0;
   background: var(--color-surface);
@@ -96,13 +96,14 @@
   color: var(--color-text-muted);
   white-space: nowrap;
 }
-.rr-th-num  { text-align: right; }
+.rr-th-num    { text-align: right; }
+.rr-th-rec    { text-align: left; padding-left: 6px; }
 .rr-th-action { text-align: right; }
 
 /* Data rows */
 .rr-sku-row {
   display: grid;
-  grid-template-columns: 1fr 88px 88px 76px 140px;
+  grid-template-columns: 1fr 88px 88px 76px 110px 140px;
   align-items: center;
   gap: 0;
   padding: 0 16px;
@@ -186,6 +187,30 @@
 }
 
 .rr-td-action { display: flex; justify-content: flex-end; align-items: center; }
+.rr-td-rec    { padding: 6px; }
+
+/* ── Agent Rec chip ──────────────────────────────────────────────────────── */
+.rr-rec-chip {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  font-size: 10px;
+  font-weight: var(--fw-bold);
+  border: 1px solid;
+  border-radius: 6px;
+  padding: 4px 7px;
+  white-space: nowrap;
+  max-width: 104px;
+}
+.rr-rec-reason {
+  font-size: 9px;
+  font-weight: 400;
+  opacity: .75;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100px;
+}
 
 /* ── Keep / Drop button pair ──────────────────────────────────────────────── */
 .rr-keep-drop-btns {

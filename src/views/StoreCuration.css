@@ -298,6 +298,30 @@
 .sc-row-r13--strong { font-weight: var(--fw-bold); color: var(--color-success); }
 .sc-row-r13--empty  { color: var(--color-text-subtle); }
 
+/* Agent rec chip */
+.sc-rec-chip {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  font-size: 10px;
+  font-weight: var(--fw-bold);
+  border: 1px solid;
+  border-radius: 6px;
+  padding: 3px 7px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  cursor: default;
+}
+.sc-rec-reason {
+  font-size: 9px;
+  font-weight: 400;
+  opacity: .72;
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* Row actions (right) */
 .sc-row-actions {
   display: flex;

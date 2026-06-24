@@ -84,11 +84,11 @@
   box-shadow: var(--sh);
 }
 
-/* 8-column grid */
+/* 8-column grid: SKU | Dept | Price | Vel | R13 | Stores | Agent Rec | Override */
 .nat-sku-head,
 .nat-sku-row {
   display: grid;
-  grid-template-columns: minmax(200px,1fr) 68px 68px 52px 88px 70px minmax(150px,180px) 158px;
+  grid-template-columns: minmax(200px,1fr) 68px 68px 52px 88px 70px minmax(160px,200px) 186px;
   align-items: center;
 }
 
@@ -127,8 +127,9 @@
 /* Row status colours */
 .nat-sku-row.is-mandatory { border-left-color: #059669; background: rgba(5,150,105,.025); }
 .nat-sku-row.is-keep      { border-left-color: #059669; background: rgba(5,150,105,.015); }
+.nat-sku-row.is-modify    { border-left-color: #D97706; background: rgba(217,119,6,.018); }
 .nat-sku-row.is-drop      { border-left-color: #DC2626; background: rgba(220,38,38,.025); }
-.nat-sku-row.is-pending   { border-left-color: #2563EB; background: rgba(37,99,235,.02); }
+.nat-sku-row.is-pending   { border-left-color: #94A3B8; background: transparent; }
 
 /* Cells */
 .nat-td {
@@ -248,31 +249,33 @@
 }
 .nat-stores-total { font-weight: 400; color: var(--color-text-muted); font-size: 10px; }
 
-/* Agent Rec */
+/* Agent Rec — 3-way chip */
 .nat-td-rec { padding-left: var(--sp-3); }
-.nat-rec-mandatory {
-  display: flex;
+.nat-rec-chip {
+  display: inline-flex;
   align-items: center;
-  gap: var(--sp-1);
-  font-size: var(--fs-micro);
-  font-weight: var(--fw-bold);
-  color: #059669;
-}
-.nat-rec-agent {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-1);
-  font-size: var(--fs-micro);
-}
-.nat-rec-reason {
+  gap: 4px;
   font-size: 10px;
   font-weight: var(--fw-semibold);
-  color: var(--color-primary);
-  background: var(--color-primary-soft);
-  border: 1px solid var(--color-primary-border, rgba(59,130,246,.2));
+  border: 1px solid;
   border-radius: 99px;
-  padding: 1px 8px;
+  padding: 3px 8px;
   white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+}
+.nat-rec-chip--action {
+  flex-wrap: nowrap;
+  gap: 3px;
+}
+.nat-rec-reason-lbl {
+  font-size: 9px;
+  font-weight: 400;
+  opacity: .75;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100px;
 }
 
 /* Override cell */
@@ -307,14 +310,15 @@
   letter-spacing: .05em;
 }
 
-/* Keep / Drop toggle buttons */
+/* Keep / Modify / Drop toggle buttons */
 .nat-override-btns {
   display: flex;
   align-items: center;
-  gap: var(--sp-2);
+  gap: 3px;
   justify-content: center;
 }
 .nat-btn-keep,
+.nat-btn-modify,
 .nat-btn-drop {
   display: inline-flex;
   align-items: center;
@@ -338,6 +342,17 @@
   background: #059669 !important;
   color: #fff !important;
   border-color: #059669 !important;
+}
+.nat-btn-modify {
+  background: transparent;
+  color: #92400E;
+  border-color: #FCD34D;
+}
+.nat-btn-modify:hover { background: #FEF3C7; }
+.nat-btn-modify--active {
+  background: #D97706 !important;
+  color: #fff !important;
+  border-color: #D97706 !important;
 }
 .nat-btn-drop {
   background: transparent;

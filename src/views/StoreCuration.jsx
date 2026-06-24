@@ -11,6 +11,7 @@ import { FD_STORES } from "../data/stores.js";
 import { FD_SKUS } from "../data/skus.js";
 import { isMandatory, clusterLockedIds, newPlrSkus, storeUniqueRows } from "../data/curation.js";
 import { storeLocationBudget, otbStoreConsumed, fmtCurrency } from "../data/otb.js";
+import { getStoreRec, REC_COLOR } from "../utils/skuRec.js";
 import "./StoreCuration.css";
 import { panelSx, softSx } from "../styles/panelSx.js";
 
@@ -36,6 +37,9 @@ function CurationRow({ sku, assocRow, locked, decision, localPrice, onDecision, 
   /* Row highlight: added=green, dropped=red, else neutral */
   const stateClass = decision === "add" ? " is-add" : decision === "drop" ? " is-drop" : "";
 
+  /* Agent recommendation */
+  const rec = getStoreRec({ r13, menuPrice, status: sku.status, tag: sku.tag, isActive });
+
   return (
     <div className={`sc-row${stateClass}`}>
       {/* Left: swatch + identity */}
@@ -53,7 +57,7 @@ function CurationRow({ sku, assocRow, locked, decision, localPrice, onDecision, 
         </div>
       </div>
 
-      {/* Middle: dept + size + prices + r13 */}
+      {/* Middle: dept + size + prices + r13 + agent rec */}
       <div className="sc-row-stats">
         <Badge variant="subtle" size="small" color={DEPT_BADGE[sku.dept] || "default"} label={sku.dept} />
         <span className="sc-row-size">{sku.size}</span>
@@ -61,6 +65,19 @@ function CurationRow({ sku, assocRow, locked, decision, localPrice, onDecision, 
         <span className={`sc-row-r13 ${r13 > 100 ? "sc-row-r13--strong" : r13 > 0 ? "" : "sc-row-r13--empty"}`}>
           {r13 ? `${Math.round(r13)} sqft` : "—"}
         </span>
+        {/* Agent rec chip */}
+        <div
+          className="sc-rec-chip"
+          style={{
+            background:  REC_COLOR[rec.action]?.bg,
+            color:       REC_COLOR[rec.action]?.text,
+            borderColor: REC_COLOR[rec.action]?.border,
+          }}
+          title={rec.detail}
+        >
+          {rec.action === "keep" ? "Keep" : rec.action === "modify" ? "Review" : "Drop"}
+          <span className="sc-rec-reason">{rec.reason}</span>
+        </div>
       </div>
 
       {/* Right: local price override + decision */}

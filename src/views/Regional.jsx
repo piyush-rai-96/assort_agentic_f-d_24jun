@@ -23,6 +23,7 @@ import {
 import { CLUSTER_SLOTS, otbClusterConsumed, fmtCurrency, otbPct } from "../data/otb.js";
 import { CATALOGUE_SKUS } from "../data/catalogue.js";
 import { plrCalcOptionCount } from "../utils/optionCalc.js";
+import { getClusterRec, REC_COLOR } from "../utils/skuRec.js";
 import "./Regional.css";
 import { panelSx, softSx } from "../styles/panelSx.js";
 
@@ -546,10 +547,25 @@ function ClusterDetail({ clusterId, activeStore, deptFilter, byDept, clusterDrop
               <div className="rr-th rr-th-num">Avg R13</div>
               <div className="rr-th rr-th-num">Carry</div>
               <div className="rr-th rr-th-num">Price</div>
+              <div className="rr-th rr-th-rec">Agent Rec</div>
               <div className="rr-th rr-th-action">Decision</div>
             </div>
             {clSkus.map((s) => {
               const isDropped = dropped.has(s.sku);
+              const avgR13Val = clusterAvgR13(cl, s.sku);
+              const carryPct  = s.totalStores > 0 ? Math.round((s.storeCount / s.totalStores) * 100) : 0;
+              /* Cluster tier from name heuristic */
+              const tier = cl.name?.toLowerCase().includes("high") || cl.name?.toLowerCase().includes("pro") ? "high"
+                         : cl.name?.toLowerCase().includes("low")  || cl.name?.toLowerCase().includes("light") ? "low"
+                         : "mid";
+              const rec = getClusterRec({
+                avgR13: typeof avgR13Val === "number" ? avgR13Val : parseInt(avgR13Val) || 0,
+                storeCount: s.storeCount,
+                totalStores: s.totalStores,
+                tier,
+                status: s.status,
+                tag: s.tag,
+              });
               return (
                 <div key={s.sku} className={`rr-sku-row${isDropped ? " is-dropped" : " is-kept"}`}>
                   {/* SKU info */}
@@ -566,7 +582,7 @@ function ClusterDetail({ clusterId, activeStore, deptFilter, byDept, clusterDrop
                   </div>
                   {/* Avg R13 */}
                   <div className="rr-td rr-td-num">
-                    <span className="rr-stat-val">{clusterAvgR13(cl, s.sku)}</span>
+                    <span className="rr-stat-val">{avgR13Val}</span>
                     <span className="rr-stat-unit">sqft</span>
                   </div>
                   {/* Carry */}
@@ -576,6 +592,21 @@ function ClusterDetail({ clusterId, activeStore, deptFilter, byDept, clusterDrop
                   </div>
                   {/* Price */}
                   <div className="rr-td rr-td-num rr-td-mono">${s.price.toFixed(2)}</div>
+                  {/* Agent Rec chip */}
+                  <div className="rr-td rr-td-rec">
+                    <div
+                      className="rr-rec-chip"
+                      style={{
+                        background:   REC_COLOR[rec.action]?.bg,
+                        color:        REC_COLOR[rec.action]?.text,
+                        borderColor:  REC_COLOR[rec.action]?.border,
+                      }}
+                      title={rec.detail}
+                    >
+                      {rec.action === "keep" ? "Keep" : rec.action === "modify" ? "Review" : "Drop"}
+                      <span className="rr-rec-reason">{rec.reason}</span>
+                    </div>
+                  </div>
                   {/* Keep / Drop buttons */}
                   <div className="rr-td rr-td-action">
                     <div className="rr-keep-drop-btns">
