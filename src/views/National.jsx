@@ -10,7 +10,7 @@
  *   6. Footer      — lock status + navigate to Regional
  */
 import React, { useMemo, useState, useEffect, useCallback } from "react";
-import { Card, Badge, Button, Table, ProgressBar, Chips } from "impact-ui";
+import { Card, Badge, Button, ProgressBar, Chips } from "impact-ui";
 import {
   Lock, Bot, CheckCircle2, AlertTriangle, ChevronRight,
   RefreshCw, TrendingUp, TrendingDown, Layers,
@@ -30,28 +30,167 @@ import "./National.css";
 import { panelSx, softSx } from "../styles/panelSx.js";
 
 /* ── Constants ───────────────────────────────────────────────────────────── */
-const REASON_BADGE = {
-  "high-carry-high-sqft": { label: "Strong — all stores", color: "success" },
-  "high-carry":            { label: "Wide adoption",       color: "info"    },
-  "high-sqft":             { label: "High performer",      color: "warning" },
-  emerging:                { label: "Emerging",            color: "default" },
+const REASON_LABEL = {
+  "high-carry-high-sqft": "Strong — all stores",
+  "high-carry":            "Wide adoption",
+  "high-sqft":             "High performer",
+  emerging:                "Emerging",
 };
 const VEL_COLOR  = { A: "#059669", B: "#2563EB", C: "#D97706", D: "#DC2626" };
-const VEL_BG     = { A: "#ECFDF5", B: "#EFF6FF", C: "#FFFBEB", D: "#FEF2F2" };
+const VEL_BG     = { A: "#DCFCE7", B: "#DBEAFE", C: "#FEF3C7", D: "#FEF2F2" };
 const DEPT_COLOR = { Wood: "#B45309", Tile: "#0B7A6C", "Laminate & Vinyl": "#2563EB" };
 const DEPT_BG    = { Wood: "#FEF3C7", Tile: "#E6F7F4", "Laminate & Vinyl": "#DBEAFE" };
 const DEPT_FILTERS = ["All", "Wood", "Tile", "Laminate & Vinyl"];
+const TOTAL_STORES = FD_STORES.length;
 
 /* ── Helpers ──────────────────────────────────────────────────────────────── */
 function fmt$(n) { return `$${n.toFixed(2)}`; }
 
-/* ── Velocity badge cell ─────────────────────────────────────────────────── */
+/* ── Velocity badge ──────────────────────────────────────────────────────── */
 function VelBadge({ vel }) {
-  if (!vel || vel === "—") return <span style={{ color: "var(--color-text-muted)", fontSize: "var(--fs-micro)" }}>—</span>;
+  if (!vel || vel === "—") return <span className="nat-td-muted">—</span>;
   return (
-    <span style={{ background: VEL_BG[vel], color: VEL_COLOR[vel], borderRadius: 10, padding: "1px 7px", fontSize: "var(--fs-micro)", fontWeight: 700 }}>
-      {vel}
-    </span>
+    <span className="nat-vel-chip" style={{ background: VEL_BG[vel], color: VEL_COLOR[vel] }}>{vel}</span>
+  );
+}
+
+/* ── Custom SKU table ────────────────────────────────────────────────────── */
+function SkuTable({ rows, onDecide, maxR13 }) {
+  return (
+    <div className="nat-sku-table">
+      {/* Header */}
+      <div className="nat-sku-head">
+        <div className="nat-th nat-th-sku">SKU / Description</div>
+        <div className="nat-th nat-th-dept">Dept</div>
+        <div className="nat-th nat-th-num">Price</div>
+        <div className="nat-th nat-th-num">Vel.</div>
+        <div className="nat-th nat-th-num">Avg R13</div>
+        <div className="nat-th nat-th-num">Stores</div>
+        <div className="nat-th nat-th-rec">Agent Rec</div>
+        <div className="nat-th nat-th-override">Override</div>
+      </div>
+
+      {/* Rows */}
+      {rows.map((s) => {
+        const rowClass = [
+          "nat-sku-row",
+          s.isHard         ? "is-mandatory" :
+          s.effDec === "core" ? "is-keep" :
+          s.dec === "rejected" ? "is-drop" :
+          s.agentRec       ? "is-pending" : "",
+        ].filter(Boolean).join(" ");
+
+        const r13Pct = maxR13 > 0 ? Math.round((s.avgR13 / maxR13) * 100) : 0;
+        const r13Color = s.avgR13 >= 100 ? "#059669" : s.avgR13 >= 50 ? "#2563EB" : "#DC2626";
+        const storePct = Math.round((s.storeCount / TOTAL_STORES) * 100);
+        const skuObj = FD_SKUS.find((sk) => sk.sku === s.sku);
+
+        return (
+          <div key={s.sku} className={rowClass}>
+            {/* SKU / Description */}
+            <div className="nat-td nat-td-sku">
+              <SkuMedia sku={skuObj || { desc: s.desc }} size={36} />
+              <div className="nat-td-sku-info">
+                <div className="nat-td-sku-name">{s.desc}</div>
+                <div className="nat-td-sku-meta">
+                  <span className="nat-td-sku-code">{s.sku}</span>
+                  {s.tag && <span className="nat-tag-chip nat-tag-chip--core">{s.tag}</span>}
+                  {s.status === "Discontinued" && <span className="nat-tag-chip nat-tag-chip--disc">Disc.</span>}
+                  {s.dec && s.agentRec && s.dec !== s.agentRec && <span className="nat-tag-chip nat-tag-chip--override">Overridden</span>}
+                  {s.intel?.delta !== 0 && (
+                    <span className={`nat-tag-chip ${s.intel.delta > 0 ? "nat-tag-chip--intel-pos" : "nat-tag-chip--intel-neg"}`}>
+                      Intel {s.intel.delta > 0 ? "+" : ""}{s.intel.delta}pts
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Dept */}
+            <div className="nat-td nat-td-dept">
+              <span className="nat-dept-chip" style={{ background: DEPT_BG[s.dept] || "#F2F6EE", color: DEPT_COLOR[s.dept] || "#456845" }}>
+                {s.dept === "Laminate & Vinyl" ? "Lam." : s.dept}
+              </span>
+            </div>
+
+            {/* Price */}
+            <div className="nat-td nat-td-num nat-td-mono">{fmt$(s.price)}</div>
+
+            {/* Velocity */}
+            <div className="nat-td nat-td-num"><VelBadge vel={s.velocity} /></div>
+
+            {/* Avg R13 */}
+            <div className="nat-td nat-td-num">
+              <div className="nat-r13-wrap">
+                <span className="nat-r13-val" style={{ color: r13Color }}>{s.avgR13}</span>
+                <div className="nat-r13-bar-track">
+                  <div className="nat-r13-bar-fill" style={{ width: `${r13Pct}%`, background: r13Color }} />
+                </div>
+              </div>
+            </div>
+
+            {/* Stores */}
+            <div className="nat-td nat-td-num">
+              <div className="nat-stores-wrap">
+                <span className="nat-stores-val">{s.storeCount}<span className="nat-stores-total">/{TOTAL_STORES}</span></span>
+                <div className="nat-r13-bar-track">
+                  <div className="nat-r13-bar-fill" style={{ width: `${storePct}%`, background: storePct >= 80 ? "#059669" : storePct >= 50 ? "#2563EB" : "#D97706" }} />
+                </div>
+              </div>
+            </div>
+
+            {/* Agent Rec */}
+            <div className="nat-td nat-td-rec">
+              {s.isHard ? (
+                <div className="nat-rec-mandatory">
+                  <Lock size={11} style={{ color: "#059669", flexShrink: 0 }} aria-hidden="true" />
+                  <span>Core / BG — mandatory</span>
+                </div>
+              ) : s.agentRec ? (
+                <div className="nat-rec-agent">
+                  <Bot size={11} style={{ color: "var(--color-primary)", flexShrink: 0 }} aria-hidden="true" />
+                  <span className="nat-rec-reason">{REASON_LABEL[s.agentRecReason] ?? "Keep · Emerging"}</span>
+                </div>
+              ) : (
+                <span className="nat-td-muted">—</span>
+              )}
+            </div>
+
+            {/* Override / Decision */}
+            <div className="nat-td nat-td-override">
+              {s.isHard ? (
+                /* Mandatory — locked Keep button */
+                <div className="nat-override-mandatory">
+                  <button className="nat-btn-keep nat-btn-keep--locked" disabled type="button">
+                    <Lock size={10} aria-hidden="true" />
+                    Keep
+                  </button>
+                  <span className="nat-mandatory-lbl">Mandatory</span>
+                </div>
+              ) : (
+                <div className="nat-override-btns">
+                  <button
+                    type="button"
+                    className={`nat-btn-keep${s.dec === "core" ? " nat-btn-keep--active" : ""}`}
+                    onClick={() => onDecide(s.sku, "core")}
+                  >
+                    <CheckCircle2 size={10} aria-hidden="true" />
+                    Keep
+                  </button>
+                  <button
+                    type="button"
+                    className={`nat-btn-drop${s.dec === "rejected" ? " nat-btn-drop--active" : ""}`}
+                    onClick={() => onDecide(s.sku, "rejected")}
+                  >
+                    Drop
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
@@ -178,113 +317,6 @@ export default function National({ onNavigate }) {
     ];
   }, [tabSkus]);
 
-  /* ── Table column defs ───────────────────────────────────────────────── */
-  const columnDefs = useMemo(() => [
-    {
-      field: "desc", headerName: "SKU / Description", minWidth: 220, flex: 2,
-      cellRenderer: (p) => {
-        const skuObj = FD_SKUS.find((s) => s.sku === p.data.sku);
-        const intel  = p.data.intel;
-        return (
-          <div style={{ display: "flex", alignItems: "center", gap: 8, height: "100%" }}>
-            <SkuMedia sku={skuObj || { desc: p.data.desc }} size={32} />
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: "var(--fs-caption)", fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                {p.value}
-              </div>
-              <div style={{ display: "flex", gap: 3, marginTop: 2, flexWrap: "wrap" }}>
-                <span style={{ fontFamily: "var(--font-mono,monospace)", fontSize: 9, color: "var(--color-text-muted)" }}>{p.data.sku}</span>
-                {p.data.tag && <Badge variant="subtle" size="small" color="success" label={p.data.tag} />}
-                {p.data.status === "Discontinued" && <Badge variant="subtle" size="small" color="error" label="Disc." />}
-                {p.data.dec && p.data.agentRec && p.data.dec !== p.data.agentRec && <Badge variant="subtle" size="small" color="warning" label="Overridden" />}
-                {intel?.delta !== 0 && <Badge variant="subtle" size="small" color={intel.delta > 0 ? "success" : "error"} label={`Intel ${intel.delta > 0 ? "+" : ""}${intel.delta}pts`} />}
-              </div>
-            </div>
-          </div>
-        );
-      },
-    },
-    {
-      field: "dept", headerName: "Dept", width: 90,
-      cellRenderer: (p) => (
-        <span style={{ background: DEPT_BG[p.value] || "#F2F6EE", color: DEPT_COLOR[p.value] || "#456845", borderRadius: 4, padding: "2px 6px", fontSize: "var(--fs-micro)", fontWeight: 700 }}>
-          {p.value}
-        </span>
-      ),
-    },
-    {
-      field: "price", headerName: "Price", width: 72,
-      cellStyle: { fontFamily: "var(--font-mono,monospace)", fontSize: "var(--fs-micro)", display: "flex", alignItems: "center" },
-      valueFormatter: (p) => fmt$(p.value),
-    },
-    {
-      field: "velocity", headerName: "Vel.", width: 60,
-      cellRenderer: (p) => <VelBadge vel={p.value} />,
-    },
-    {
-      field: "avgR13", headerName: "Avg R13", width: 80,
-      cellStyle: (p) => ({
-        fontFamily: "var(--font-mono,monospace)", fontSize: "var(--fs-micro)", display: "flex", alignItems: "center", justifyContent: "flex-end",
-        color: p.value >= 100 ? "#059669" : p.value >= 50 ? "var(--color-text)" : "#DC2626",
-        fontWeight: p.value >= 100 ? 700 : 400,
-      }),
-    },
-    {
-      field: "storeCount", headerName: "Stores", width: 72,
-      cellStyle: { fontSize: "var(--fs-micro)", color: "var(--color-text-muted)", display: "flex", alignItems: "center", justifyContent: "flex-end" },
-      valueFormatter: (p) => `${p.value}/${FD_STORES.length}`,
-    },
-    {
-      field: "agentRec", headerName: "Agent Rec", width: 170,
-      cellRenderer: (p) => {
-        if (p.data.isHard) {
-          return (
-            <Stack direction="row" align="center" gap={1} style={{ height: "100%" }}>
-              <Lock size={11} style={{ color: "var(--color-success)", flexShrink: 0 }} />
-              <span style={{ fontSize: "var(--fs-micro)", color: "var(--color-success)", fontWeight: 700 }}>Core / BG — mandatory</span>
-            </Stack>
-          );
-        }
-        if (p.data.agentRec) {
-          const rb = REASON_BADGE[p.data.agentRecReason] || REASON_BADGE.emerging;
-          return (
-            <Stack direction="row" align="center" gap={1} style={{ height: "100%" }}>
-              <Bot size={11} style={{ color: "var(--color-primary)", flexShrink: 0 }} />
-              <Badge variant="subtle" size="small" color={rb.color} label={`Keep · ${rb.label}`} />
-            </Stack>
-          );
-        }
-        return <span style={{ color: "var(--color-text-muted)", fontSize: "var(--fs-micro)" }}>—</span>;
-      },
-    },
-    {
-      field: "dec", headerName: "Override", width: 155, sortable: false,
-      cellRenderer: (p) => {
-        if (p.data.isHard) {
-          return <Badge variant="subtle" size="small" color="success" label="Mandatory" />;
-        }
-        const dec = p.data.dec;
-        return (
-          <div style={{ display: "flex", gap: 4, height: "100%", alignItems: "center" }}>
-            <Button
-              variant={dec === "core" ? "primary" : "ghost"} size="small"
-              onClick={() => handleDecide(p.data.sku, "core")}
-              sx={{ fontSize: "var(--fs-micro)", padding: "2px 8px", minWidth: 0, ...(dec === "core" ? { background: "var(--color-success)", color: "#fff", border: "none" } : { color: "var(--color-success)", border: "1px solid var(--color-success)" }) }}
-            >
-              <CheckCircle2 size={10} style={{ marginRight: 3 }} />Keep
-            </Button>
-            <Button
-              variant={dec === "rejected" ? "secondary" : "ghost"} size="small" type={dec === "rejected" ? "destructive" : "default"}
-              onClick={() => handleDecide(p.data.sku, "rejected")}
-              sx={{ fontSize: "var(--fs-micro)", padding: "2px 8px", minWidth: 0, ...(dec === "rejected" ? { background: "var(--color-error)", color: "#fff", border: "none" } : { color: "var(--color-text-muted)" }) }}
-            >
-              Drop
-            </Button>
-          </div>
-        );
-      },
-    },
-  ], [handleDecide]);
 
   /* ── OTB summary ─────────────────────────────────────────────────────── */
   const otbRows = useMemo(() => {
@@ -416,24 +448,10 @@ export default function National({ onNavigate }) {
               <Text variant="caption" tone="muted">Pending agent review items appear first · sorted by R13 performance</Text>
             )}
           </Stack>
-          <Table
-            cardContainer
-            rowHeight="default"
-            tableHeader=""
-            columnDefs={columnDefs}
-            rowData={tabSkus}
-            domLayout="autoHeight"
-            defaultColDef={{ floatingFilter: false, resizable: true, sortable: true }}
-            hideTableSetting
-            hideTableActions
-            pagination={false}
-            getRowStyle={(p) => {
-              if (p.data.isHard) return { borderLeft: "3px solid var(--color-success)", background: "rgba(5,150,105,.03)" };
-              if (p.data.effDec === "core") return { borderLeft: "3px solid var(--color-success)", background: "rgba(5,150,105,.02)" };
-              if (p.data.dec === "rejected") return { borderLeft: "3px solid var(--color-error)", background: "rgba(220,38,38,.03)" };
-              if (p.data.agentRec) return { borderLeft: "3px solid var(--color-primary)", background: "rgba(37,99,235,.02)" };
-              return { borderLeft: "3px solid transparent" };
-            }}
+          <SkuTable
+            rows={tabSkus}
+            onDecide={handleDecide}
+            maxR13={Math.max(...tabSkus.map((s) => s.avgR13), 1)}
           />
         </Stack>
 

@@ -73,6 +73,284 @@
 .nat-rec-row.is-approved { border-left-color: var(--color-success); }
 .nat-rec-row.is-rejected { border-left-color: var(--color-error); }
 
+/* ══════════════════════════════════════════════════════════════════════════
+   Custom SKU Table
+   ══════════════════════════════════════════════════════════════════════════ */
+.nat-sku-table {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--r);
+  overflow: hidden;
+  box-shadow: var(--sh);
+}
+
+/* 8-column grid */
+.nat-sku-head,
+.nat-sku-row {
+  display: grid;
+  grid-template-columns: minmax(200px,1fr) 68px 68px 52px 88px 70px minmax(150px,180px) 158px;
+  align-items: center;
+}
+
+/* Header */
+.nat-sku-head {
+  background: var(--color-surface-alt);
+  border-bottom: 1.5px solid var(--color-border);
+  padding: 0 var(--sp-2);
+}
+.nat-th {
+  padding: var(--sp-3) var(--sp-2);
+  font-size: 10px;
+  font-weight: var(--fw-bold);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  white-space: nowrap;
+}
+.nat-th-sku      { padding-left: var(--sp-4); }
+.nat-th-num      { text-align: right; }
+.nat-th-rec      { padding-left: var(--sp-3); }
+.nat-th-override { text-align: center; }
+.nat-th-dept     { text-align: center; }
+
+/* Rows */
+.nat-sku-row {
+  border-bottom: 1px solid var(--color-border);
+  border-left: 3px solid transparent;
+  padding: var(--sp-1) var(--sp-2);
+  transition: background .1s;
+  position: relative;
+}
+.nat-sku-row:last-child { border-bottom: none; }
+.nat-sku-row:hover { background: rgba(0,0,0,.018); }
+
+/* Row status colours */
+.nat-sku-row.is-mandatory { border-left-color: #059669; background: rgba(5,150,105,.025); }
+.nat-sku-row.is-keep      { border-left-color: #059669; background: rgba(5,150,105,.015); }
+.nat-sku-row.is-drop      { border-left-color: #DC2626; background: rgba(220,38,38,.025); }
+.nat-sku-row.is-pending   { border-left-color: #2563EB; background: rgba(37,99,235,.02); }
+
+/* Cells */
+.nat-td {
+  padding: var(--sp-2) var(--sp-2);
+  font-size: var(--fs-micro);
+}
+.nat-td-num   { text-align: right; }
+.nat-td-mono  { font-family: var(--font-mono,monospace); color: var(--color-text-strong); }
+.nat-td-muted { color: var(--color-text-muted); }
+
+/* SKU cell */
+.nat-td-sku {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding-left: var(--sp-3);
+  overflow: hidden;
+}
+.nat-td-sku-info { min-width: 0; }
+.nat-td-sku-name {
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text-strong);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 240px;
+}
+.nat-td-sku-meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 3px;
+  flex-wrap: wrap;
+}
+.nat-td-sku-code {
+  font-family: var(--font-mono,monospace);
+  font-size: 9px;
+  color: var(--color-text-muted);
+}
+
+/* Tag chips */
+.nat-tag-chip {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: var(--fw-bold);
+  border-radius: 99px;
+  padding: 1px 6px;
+  letter-spacing: .03em;
+}
+.nat-tag-chip--core         { background: #DCFCE7; color: #166534; }
+.nat-tag-chip--disc         { background: #FEF2F2; color: #991B1B; }
+.nat-tag-chip--override     { background: #FEF3C7; color: #92400E; }
+.nat-tag-chip--intel-pos    { background: #DCFCE7; color: #166534; }
+.nat-tag-chip--intel-neg    { background: #FEF2F2; color: #991B1B; }
+
+/* Dept chip */
+.nat-td-dept { text-align: center; }
+.nat-dept-chip {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: var(--fw-bold);
+  border-radius: 4px;
+  padding: 2px 6px;
+  text-align: center;
+}
+
+/* Velocity chip */
+.nat-vel-chip {
+  display: inline-block;
+  font-size: var(--fs-micro);
+  font-weight: 800;
+  border-radius: 99px;
+  padding: 1px 8px;
+  line-height: 1.5;
+}
+
+/* Avg R13 with mini bar */
+.nat-r13-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+}
+.nat-r13-val {
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-bold);
+  font-family: var(--font-mono,monospace);
+  line-height: 1;
+}
+.nat-r13-bar-track {
+  width: 52px;
+  height: 3px;
+  background: var(--color-border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.nat-r13-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width .4s ease;
+}
+
+/* Stores */
+.nat-stores-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+}
+.nat-stores-val {
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-bold);
+  font-family: var(--font-mono,monospace);
+  color: var(--color-text-strong);
+  line-height: 1;
+}
+.nat-stores-total { font-weight: 400; color: var(--color-text-muted); font-size: 10px; }
+
+/* Agent Rec */
+.nat-td-rec { padding-left: var(--sp-3); }
+.nat-rec-mandatory {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  font-size: var(--fs-micro);
+  font-weight: var(--fw-bold);
+  color: #059669;
+}
+.nat-rec-agent {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  font-size: var(--fs-micro);
+}
+.nat-rec-reason {
+  font-size: 10px;
+  font-weight: var(--fw-semibold);
+  color: var(--color-primary);
+  background: var(--color-primary-soft);
+  border: 1px solid var(--color-primary-border, rgba(59,130,246,.2));
+  border-radius: 99px;
+  padding: 1px 8px;
+  white-space: nowrap;
+}
+
+/* Override cell */
+.nat-td-override { text-align: center; padding: var(--sp-2) var(--sp-3); }
+
+/* Mandatory override — locked green Keep */
+.nat-override-mandatory {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+.nat-btn-keep--locked {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--fs-micro);
+  font-weight: var(--fw-bold);
+  background: #059669;
+  color: #fff;
+  border: none;
+  border-radius: var(--r1);
+  padding: 4px 12px;
+  cursor: default;
+  opacity: .9;
+}
+.nat-mandatory-lbl {
+  font-size: 9px;
+  font-weight: var(--fw-bold);
+  color: #059669;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+/* Keep / Drop toggle buttons */
+.nat-override-btns {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  justify-content: center;
+}
+.nat-btn-keep,
+.nat-btn-drop {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--fs-micro);
+  font-weight: var(--fw-semibold);
+  border-radius: var(--r1);
+  padding: 4px 10px;
+  cursor: pointer;
+  border: 1px solid;
+  transition: background .12s, color .12s;
+  white-space: nowrap;
+}
+.nat-btn-keep {
+  background: transparent;
+  color: #059669;
+  border-color: #86EFAC;
+}
+.nat-btn-keep:hover { background: #DCFCE7; }
+.nat-btn-keep--active {
+  background: #059669 !important;
+  color: #fff !important;
+  border-color: #059669 !important;
+}
+.nat-btn-drop {
+  background: transparent;
+  color: var(--color-text-muted);
+  border-color: var(--color-border);
+}
+.nat-btn-drop:hover { background: #FEF2F2; color: #DC2626; border-color: #FCA5A5; }
+.nat-btn-drop--active {
+  background: #DC2626 !important;
+  color: #fff !important;
+  border-color: #DC2626 !important;
+}
+
 /* ── Intel / flag badges ─────────────────────────────────────────────────── */
 .nat-intel-badge {
   padding: 2px 8px; border-radius: var(--r2);
