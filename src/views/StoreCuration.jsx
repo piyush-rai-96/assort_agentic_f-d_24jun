@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { Card, Button, Badge, EmptyState, Alert, Chips, Input, FiltersStrip, FilterPanel } from "impact-ui";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Lock, Layers, Store, TrendingUp, ChevronRight, ShoppingBag } from "lucide-react";
 import FdSelect from "../components/FdSelect.jsx";
 import Text from "../components/Text.jsx";
 import Stack from "../components/Stack.jsx";
@@ -430,96 +430,288 @@ export default function StoreCuration({ onNavigate, user }) {
 }
 
 /* ════════════ SUMMARY ROLL-UP VIEW ════════════════════════════════════════ */
+/* ── Summary helpers ─────────────────────────────────────────────────────── */
+const MANDATORY_COUNT = MANDATORY.length; /* = 5 */
+const DEPT_COLORS = {
+  "Wood":            { bg: "#FEF3C7", text: "#92400E", bar: "#D97706" },
+  "Tile":            { bg: "#E6F7F4", text: "#0B7A6C", bar: "#0B7A6C" },
+  "Laminate & Vinyl":{ bg: "#DBEAFE", text: "#1E40AF", bar: "#2563EB" },
+};
+const REGIONS_ORDER = ["South", "West", "East", "North", "Central", "Midwest"];
+
+function sumStoreplan(storeId, decisions) {
+  const clSet     = clusterLockedIds(storeId);
+  const existing  = storeUniqueRows(storeId);
+  const existIds  = new Set(existing.map((r) => r.sku));
+  const existNonCore = existing.filter((r) => {
+    const s = FD_SKUS.find((x) => x.sku === r.sku);
+    return s && !isMandatory(s);
+  });
+  const clusterLocked = existNonCore.filter((r) =>  clSet.has(r.sku)).length;
+  const existingFree  = existNonCore.filter((r) => !clSet.has(r.sku));
+
+  const prefix = `${storeId}:`;
+  const drops  = Object.entries(decisions).filter(([k, v]) => k.startsWith(prefix) && v === "drop").length;
+  const adds   = Object.entries(decisions).filter(([k, v]) => k.startsWith(prefix) && v === "add").length;
+  const priceEdits = Object.keys(decisions).filter((k) => k.startsWith(prefix) && decisions[k] === "price_edit").length;
+
+  const keptFree = Math.max(0, existingFree.length - drops);
+  const total    = MANDATORY_COUNT + clusterLocked + keptFree + adds;
+
+  return { mandatory: MANDATORY_COUNT, clusterLocked, keptFree, adds, drops, total };
+}
+
 function SummaryRollup({ decisions, localPrices, deptFilter, viewToggle, onEdit, onOpenForm }) {
-  const relevantIds = useMemo(
-    () => new Set((deptFilter === "All" ? FD_SKUS : FD_SKUS.filter((s) => s.dept === deptFilter)).map((s) => s.sku)),
-    [deptFilter]
-  );
-  const decKeys   = Object.keys(decisions).filter((k) => relevantIds.has(parseInt(k.split(":")[1], 10)));
-  const regions   = [...new Set(FD_STORES.map((s) => s.region))].sort();
-  const totalAdds = decKeys.filter((k) => decisions[k] === "add").length;
-  const totalDrops= decKeys.filter((k) => decisions[k] === "drop").length;
-  const storeCount= new Set(decKeys.map((k) => k.split(":")[0])).size;
+  /* ── Per-store plan computations ────────────────────────────────────────── */
+  const storePlans = useMemo(() => {
+    return FD_STORES.map((s) => ({ store: s, plan: sumStoreplan(s.id, decisions) }));
+  }, [decisions]);
+
+  /* ── Network-wide KPIs ───────────────────────────────────────────────────── */
+  const kpi = useMemo(() => {
+    const totalInPlan = storePlans.reduce((a, x) => a + x.plan.total, 0);
+    const totalAdds   = storePlans.reduce((a, x) => a + x.plan.adds, 0);
+    const totalDrops  = storePlans.reduce((a, x) => a + x.plan.drops, 0);
+    const netChange   = totalAdds - totalDrops;
+    const clusterSKUs = [...new Set(
+      FD_STORES.flatMap((s) => [...clusterLockedIds(s.id)])
+    )].length;
+    const priceOverrides = Object.keys(localPrices).length;
+    return { totalInPlan, totalAdds, totalDrops, netChange, clusterSKUs, priceOverrides };
+  }, [storePlans, localPrices]);
+
+  /* ── Dept breakdown across network ──────────────────────────────────────── */
+  const deptBreakdown = useMemo(() => {
+    const counts = {};
+    FD_SKUS.forEach((s) => { counts[s.dept] = (counts[s.dept] || 0) + 1; });
+    const max = Math.max(...Object.values(counts));
+    return Object.entries(counts).map(([dept, count]) => ({ dept, count, pct: Math.round((count / max) * 100) }));
+  }, []);
+
+  /* ── Regions sorted ──────────────────────────────────────────────────────── */
+  const regions = useMemo(() => {
+    const rSet = [...new Set(FD_STORES.map((s) => s.region))];
+    return rSet.sort((a, b) => {
+      const ia = REGIONS_ORDER.indexOf(a), ib = REGIONS_ORDER.indexOf(b);
+      return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+    });
+  }, []);
+
+  /* ── Price-override lookup ───────────────────────────────────────────────── */
+  const lpKey  = (sid, skuId) => `${sid}:${skuId}`;
 
   return (
-    <Stack direction="column" gap={4}>
-      <Card sx={panelSx}>
-        <Stack direction="row" justify="space-between" align="center" gap={4} wrap>
-          <Stack direction="column" gap={1} flex="1 1 auto" style={{ minWidth: 0 }}>
-            <Text variant="title">Add / Drop Summary</Text>
-            <Text variant="caption" tone="muted">Roll-up by region and store · validate before submission</Text>
-          </Stack>
-          {viewToggle}
-        </Stack>
-      </Card>
+    <div className="sc-sum-wrap">
 
-      {!decKeys.length ? (
-        <Card sx={softSx}>
-          <Stack direction="column" gap={3} align="center" paddingY={5}>
-            <EmptyState heading="No decisions yet" description="Go to the Store Form and use + / − to make add/drop decisions per store." />
-            <Button variant="primary" size="medium" onClick={onOpenForm}>Open Store Form →</Button>
-          </Stack>
-        </Card>
-      ) : (
-        <>
-          {regions.map((region) => {
-            const regionStores   = FD_STORES.filter((s) => s.region === region);
-            const storesWithDecs = regionStores.filter((s) => decKeys.some((k) => k.startsWith(`${s.id}:`)));
-            if (!storesWithDecs.length) return null;
+      {/* ── Dark hero header ──────────────────────────────────────────────── */}
+      <div className="sc-sum-hero">
+        <div className="sc-sum-hero-left">
+          <div className="sc-sum-hero-icon"><ShoppingBag size={20} /></div>
+          <div>
+            <div className="sc-sum-hero-title">Assortment Plan Summary</div>
+            <div className="sc-sum-hero-sub">Built across National Core · Regional Review · Store Curation · {FD_STORES.length} stores</div>
+          </div>
+        </div>
+        <div className="sc-sum-hero-right">
+          {viewToggle}
+          <button className="sc-sum-submit-btn" onClick={() => alert("Plan locked and submitted to OMS.")}>
+            Validate &amp; Submit →
+          </button>
+        </div>
+      </div>
+
+      {/* ── KPI tiles ─────────────────────────────────────────────────────── */}
+      <div className="sc-sum-kpis">
+        <div className="sc-sum-kpi sc-sum-kpi--national">
+          <div className="sc-sum-kpi-icon"><Lock size={15} /></div>
+          <div className="sc-sum-kpi-num">16</div>
+          <div className="sc-sum-kpi-label">National Core SKUs</div>
+          <div className="sc-sum-kpi-sub">5 mandatory · 11 decided</div>
+        </div>
+        <div className="sc-sum-kpi sc-sum-kpi--cluster">
+          <div className="sc-sum-kpi-icon"><Layers size={15} /></div>
+          <div className="sc-sum-kpi-num">{kpi.clusterSKUs}</div>
+          <div className="sc-sum-kpi-label">Cluster-Locked SKUs</div>
+          <div className="sc-sum-kpi-sub">Set in Regional Review</div>
+        </div>
+        <div className="sc-sum-kpi sc-sum-kpi--adds">
+          <div className="sc-sum-kpi-icon"><TrendingUp size={15} /></div>
+          <div className="sc-sum-kpi-num">{kpi.totalAdds > 0 ? `+${kpi.totalAdds}` : "—"}</div>
+          <div className="sc-sum-kpi-label">Store Adds</div>
+          <div className="sc-sum-kpi-sub">New PLR picks added</div>
+        </div>
+        <div className={`sc-sum-kpi ${kpi.totalDrops > 0 ? "sc-sum-kpi--drops" : "sc-sum-kpi--neutral"}`}>
+          <div className="sc-sum-kpi-icon"><Store size={15} /></div>
+          <div className="sc-sum-kpi-num">{kpi.totalDrops > 0 ? `−${kpi.totalDrops}` : "—"}</div>
+          <div className="sc-sum-kpi-label">Store Drops</div>
+          <div className="sc-sum-kpi-sub">Existing items removed</div>
+        </div>
+        <div className="sc-sum-kpi sc-sum-kpi--overrides">
+          <div className="sc-sum-kpi-num">{kpi.priceOverrides > 0 ? kpi.priceOverrides : "—"}</div>
+          <div className="sc-sum-kpi-label">Price Overrides</div>
+          <div className="sc-sum-kpi-sub">Local price edits</div>
+        </div>
+      </div>
+
+      {/* ── Dept breakdown + Plan hierarchy ──────────────────────────────── */}
+      <div className="sc-sum-mid">
+        {/* Dept mix */}
+        <div className="sc-sum-dept-panel">
+          <div className="sc-sum-panel-head">
+            <span className="sc-sum-panel-title">Department Mix</span>
+            <span className="sc-sum-panel-sub">{FD_SKUS.length} total catalogue SKUs</span>
+          </div>
+          {deptBreakdown.map(({ dept, count, pct }) => {
+            const dc = DEPT_COLORS[dept] || { bg: "#F2F2F2", text: "#444", bar: "#888" };
             return (
-              <Stack key={region} direction="column" gap={2}>
-                <Text variant="overline" tone="muted">{region}</Text>
-                {storesWithDecs.map((s) => {
-                  const storeDecKeys = decKeys.filter((k) => k.startsWith(`${s.id}:`));
-                  const adds  = storeDecKeys.filter((k) => decisions[k] === "add").length;
-                  const drops = storeDecKeys.filter((k) => decisions[k] === "drop").length;
-                  return (
-                    <Card key={s.id} sx={paneSx}>
-                      <Stack direction="row" align="center" gap={3} wrap paddingX={4} paddingY={2} style={{ background: "var(--color-surface-alt)", borderBottom: "1px solid var(--color-border)" }}>
-                        <Text variant="body-strong" tone="strong" style={{ flex: "1 1 auto", minWidth: 0 }}>{s.name}</Text>
-                        <Badge variant="subtle" size="small" color="success" label={`+${adds} adds`} />
-                        <Badge variant="subtle" size="small" color="error"   label={`−${drops} drops`} />
-                        <Button variant="tertiary" size="small" onClick={() => onEdit(s.id)}>Edit →</Button>
-                      </Stack>
-                      {storeDecKeys.map((k) => {
-                        const skuId = parseInt(k.split(":")[1], 10);
-                        const sku   = FD_SKUS.find((x) => x.sku === skuId);
-                        if (!sku) return null;
-                        const dec      = decisions[k];
-                        const lpOverride = localPrices[k];
-                        const lp       = lpOverride != null ? lpOverride : sku.price;
-                        const lpEdited = lpOverride != null && lpOverride !== sku.price;
-                        return (
-                          <div key={k} className={`sc-row ${dec === "drop" ? "is-drop" : "is-add"}`} style={{ padding: "var(--sp-2) var(--sp-4)", display: "flex", alignItems: "center", gap: "var(--sp-3)", flexWrap: "wrap" }}>
-                            <span style={{ fontWeight: 800, fontSize: "var(--fs-heading)", color: dec === "drop" ? color.error : color.success, width: 20, flexShrink: 0 }}>{dec === "drop" ? "−" : "+"}</span>
-                            <div style={{ flex: "1 1 220px", minWidth: 0 }}>
-                              <Text variant="caption" tone="strong">{sku.desc}</Text>
-                              <Text variant="micro" tone="subtle" mono>{sku.sku} · {sku.vsn}</Text>
-                            </div>
-                            <Badge variant="subtle" size="small" color={DEPT_BADGE[sku.dept] || "default"} label={sku.dept} />
-                            <Text variant="micro" tone="muted" style={{ width: 110, flexShrink: 0 }}>{sku.subDept}</Text>
-                            <Text variant="caption" tone="strong" mono style={{ width: 60, flexShrink: 0 }}>${sku.price.toFixed(2)}</Text>
-                            <Text variant="caption" mono tone={lpEdited ? "info" : "muted"} style={{ width: 90, flexShrink: 0 }}>${lp.toFixed(2)}{lpEdited ? " ✎" : ""}</Text>
-                          </div>
-                        );
-                      })}
-                    </Card>
-                  );
-                })}
-              </Stack>
+              <div key={dept} className="sc-sum-dept-row">
+                <div className="sc-sum-dept-label" style={{ color: dc.text }}>{dept === "Laminate & Vinyl" ? "Lam & Vinyl" : dept}</div>
+                <div className="sc-sum-dept-bar-track">
+                  <div className="sc-sum-dept-bar-fill" style={{ width: `${pct}%`, background: dc.bar }} />
+                </div>
+                <div className="sc-sum-dept-count">{count}</div>
+              </div>
             );
           })}
+        </div>
 
-          <Card sx={{ ...panelSx, background: "var(--color-success-soft)", border: "1.5px solid var(--color-success)" }}>
-            <Stack direction="row" align="center" justify="space-between" gap={3} wrap>
-              <Text variant="caption" tone="strong">
-                {totalAdds} adds · {totalDrops} drops across {storeCount} {storeCount === 1 ? "store" : "stores"}
-              </Text>
-              <Button variant="primary" size="medium" onClick={() => alert("Assortment submitted to OMS.")}>Validate &amp; Submit all →</Button>
-            </Stack>
-          </Card>
-        </>
-      )}
-    </Stack>
+        {/* Plan hierarchy */}
+        <div className="sc-sum-hier-panel">
+          <div className="sc-sum-panel-head">
+            <span className="sc-sum-panel-title">Plan Hierarchy</span>
+            <span className="sc-sum-panel-sub">How SKUs flow into the plan</span>
+          </div>
+          <div className="sc-sum-hier">
+            <div className="sc-sum-hier-tier sc-sum-hier-tier--national">
+              <div className="sc-sum-hier-tier-label">
+                <Lock size={11} />
+                <span>National Core</span>
+              </div>
+              <div className="sc-sum-hier-tier-count">16 SKUs</div>
+              <div className="sc-sum-hier-tier-sub">All 21 stores · 5 mandatory + 11 decided</div>
+            </div>
+            <div className="sc-sum-hier-arrow">↓</div>
+            <div className="sc-sum-hier-tier sc-sum-hier-tier--cluster">
+              <div className="sc-sum-hier-tier-label">
+                <Layers size={11} />
+                <span>Cluster Assortment</span>
+              </div>
+              <div className="sc-sum-hier-tier-count">{kpi.clusterSKUs} unique SKUs</div>
+              <div className="sc-sum-hier-tier-sub">Locked per cluster · set in Regional Review</div>
+            </div>
+            <div className="sc-sum-hier-arrow">↓</div>
+            <div className="sc-sum-hier-tier sc-sum-hier-tier--store">
+              <div className="sc-sum-hier-tier-label">
+                <Store size={11} />
+                <span>Store-Level Picks</span>
+              </div>
+              <div className="sc-sum-hier-tier-count">{kpi.totalAdds > 0 ? `+${kpi.totalAdds} adds` : "Existing only"}</div>
+              <div className="sc-sum-hier-tier-sub">Localised per store · {kpi.totalDrops} drops applied</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Region / Store rollup table ───────────────────────────────────── */}
+      {regions.map((region) => {
+        const regionStores = FD_STORES.filter((s) => s.region === region);
+        if (!regionStores.length) return null;
+        return (
+          <div key={region} className="sc-sum-region">
+            <div className="sc-sum-region-head">
+              <span className="sc-sum-region-name">{region}</span>
+              <span className="sc-sum-region-meta">{regionStores.length} stores</span>
+            </div>
+
+            {/* Store table */}
+            <div className="sc-sum-store-table">
+              <div className="sc-sum-store-head">
+                <div className="sc-sum-sth sc-sum-sth--store">Store</div>
+                <div className="sc-sum-sth sc-sum-sth--num">Mandatory</div>
+                <div className="sc-sum-sth sc-sum-sth--num">Cluster</div>
+                <div className="sc-sum-sth sc-sum-sth--num">Existing</div>
+                <div className="sc-sum-sth sc-sum-sth--num">+Adds</div>
+                <div className="sc-sum-sth sc-sum-sth--num">−Drops</div>
+                <div className="sc-sum-sth sc-sum-sth--total">Total</div>
+                <div className="sc-sum-sth sc-sum-sth--action" />
+              </div>
+
+              {regionStores.map((s) => {
+                const { mandatory, clusterLocked, keptFree, adds, drops, total } = sumStoreplan(s.id, decisions);
+                const hasChanges = adds > 0 || drops > 0;
+                return (
+                  <div key={s.id} className={`sc-sum-store-row${hasChanges ? " has-changes" : ""}`}>
+                    <div className="sc-sum-std sc-sum-std--store">
+                      <div className="sc-sum-store-dot" />
+                      <div>
+                        <div className="sc-sum-store-name">{s.name}</div>
+                        <div className="sc-sum-store-id">A-{s.id}</div>
+                      </div>
+                    </div>
+                    <div className="sc-sum-std sc-sum-std--num">
+                      <span className="sc-sum-pill sc-sum-pill--nat">{mandatory}</span>
+                    </div>
+                    <div className="sc-sum-std sc-sum-std--num">
+                      <span className="sc-sum-pill sc-sum-pill--cl">{clusterLocked}</span>
+                    </div>
+                    <div className="sc-sum-std sc-sum-std--num">
+                      <span className="sc-sum-pill sc-sum-pill--ex">{keptFree}</span>
+                    </div>
+                    <div className="sc-sum-std sc-sum-std--num">
+                      {adds > 0
+                        ? <span className="sc-sum-pill sc-sum-pill--add">+{adds}</span>
+                        : <span className="sc-sum-muted">—</span>}
+                    </div>
+                    <div className="sc-sum-std sc-sum-std--num">
+                      {drops > 0
+                        ? <span className="sc-sum-pill sc-sum-pill--drop">−{drops}</span>
+                        : <span className="sc-sum-muted">—</span>}
+                    </div>
+                    <div className="sc-sum-std sc-sum-std--total">
+                      <span className="sc-sum-total-num">{total}</span>
+                    </div>
+                    <div className="sc-sum-std sc-sum-std--action">
+                      <button className="sc-sum-edit-btn" onClick={() => onEdit(s.id)} title="Edit this store's plan">
+                        Edit <ChevronRight size={11} />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {/* Region totals row */}
+              <div className="sc-sum-store-row sc-sum-store-row--total">
+                <div className="sc-sum-std sc-sum-std--store sc-sum-total-label">Region total</div>
+                <div className="sc-sum-std sc-sum-std--num">{regionStores.reduce((a, s) => a + MANDATORY_COUNT, 0)}</div>
+                <div className="sc-sum-std sc-sum-std--num">{regionStores.reduce((a, s) => a + sumStoreplan(s.id, decisions).clusterLocked, 0)}</div>
+                <div className="sc-sum-std sc-sum-std--num">{regionStores.reduce((a, s) => a + sumStoreplan(s.id, decisions).keptFree, 0)}</div>
+                <div className="sc-sum-std sc-sum-std--num">{regionStores.reduce((a, s) => a + sumStoreplan(s.id, decisions).adds, 0) || "—"}</div>
+                <div className="sc-sum-std sc-sum-std--num">{regionStores.reduce((a, s) => a + sumStoreplan(s.id, decisions).drops, 0) || "—"}</div>
+                <div className="sc-sum-std sc-sum-std--total sc-sum-total-num">{regionStores.reduce((a, s) => a + sumStoreplan(s.id, decisions).total, 0)}</div>
+                <div className="sc-sum-std sc-sum-std--action" />
+              </div>
+            </div>
+          </div>
+        );
+      })}
+
+      {/* ── Submission footer ─────────────────────────────────────────────── */}
+      <div className="sc-sum-footer">
+        <div className="sc-sum-footer-stats">
+          <span>{FD_STORES.length} stores</span>
+          <span>·</span>
+          <span>16 national SKUs</span>
+          <span>·</span>
+          <span>{kpi.totalAdds > 0 ? `${kpi.totalAdds} adds` : "No new adds"}</span>
+          <span>·</span>
+          <span>{kpi.totalDrops > 0 ? `${kpi.totalDrops} drops` : "No drops"}</span>
+          {kpi.priceOverrides > 0 && <><span>·</span><span>{kpi.priceOverrides} price overrides</span></>}
+        </div>
+        <button className="sc-sum-submit-btn" onClick={() => alert("Plan locked and submitted to OMS.")}>
+          Validate &amp; Submit plan →
+        </button>
+      </div>
+
+    </div>
   );
 }
